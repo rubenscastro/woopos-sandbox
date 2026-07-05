@@ -1,0 +1,77 @@
+/* Hide the system cursor everywhere while a cursor tool is active. */
+html.tool-cursor-active,
+html.tool-cursor-active * {
+  cursor: none !important;
+}
+
+/* ...but keep the normal arrow (and pointer on controls) over the navigation top bar. */
+html.tool-cursor-active .chrome-bar,
+html.tool-cursor-active .chrome-bar * {
+  cursor: default !important;
+}
+html.tool-cursor-active .chrome-bar button,
+html.tool-cursor-active .chrome-bar a,
+html.tool-cursor-active .chrome-bar label,
+html.tool-cursor-active .chrome-bar input {
+  cursor: pointer !important;
+}
+
+.scanner-cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.scanner-img {
+  position: fixed;
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.5));
+  transition: transform 0.08s ease-out;
+  transform-origin: 50% 9%;
+}
+
+.scanner-img.is-scanning {
+  transform: scale(1.03);
+}
+
+/* Horizontal red laser line projecting from the read-head. */
+.scanner-beam {
+  position: fixed;
+  width: 220px;
+  height: 3px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(
+    to right,
+    rgba(214, 54, 56, 0),
+    rgba(214, 54, 56, 0.95) 20%,
+    rgba(214, 54, 56, 0.95) 80%,
+    rgba(214, 54, 56, 0)
+  );
+  box-shadow: 0 0 8px 1px rgba(214, 54, 56, 0.7);
+}
+
+.scanner-beam.is-scanning {
+  background: linear-gradient(
+    to right,
+    rgba(0, 163, 42, 0),
+    rgba(0, 163, 42, 0.95) 20%,
+    rgba(0, 163, 42, 0.95) 80%,
+    rgba(0, 163, 42, 0)
+  );
+  box-shadow: 0 0 10px 2px rgba(0, 163, 42, 0.6);
+}
+
+.scanner-point {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(214, 54, 56, 0.95);
+  box-shadow: 0 0 10px 3px rgba(214, 54, 56, 0.6);
+}
+
+.scanner-point.is-scanning {
+  background: rgba(0, 163, 42, 0.95);
+  box-shadow: 0 0 14px 5px rgba(0, 163, 42, 0.55);
+}

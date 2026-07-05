@@ -1,0 +1,230 @@
+.chrome {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #dfe1e4;
+}
+
+[data-theme='dark'] .chrome {
+  background: #202327;
+}
+
+.chrome-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #17181c;
+  color: #f2f2f4;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.chrome-left,
+.chrome-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chrome-brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  color: #f2f2f4;
+  text-decoration: none;
+}
+
+/* ---- Dropdown menus (Flows + Preview state) ---- */
+.chrome-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chrome-menu__label {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #9698a0;
+}
+
+.chrome-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f2f2f4;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chrome-menu__trigger:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.chrome-menu__trigger.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.chrome-menu__caret {
+  opacity: 0.7;
+  font-size: 10px;
+}
+
+.chrome-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  background: #1f2024;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+  z-index: 20;
+}
+
+.chrome-menu--state .chrome-menu__dropdown {
+  left: auto;
+}
+
+.chrome-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #e6e6e9;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.chrome-menu__item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.chrome-menu__item.is-active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.chrome-menu__item--all {
+  color: #a9abb3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px 6px 0 0;
+  margin-bottom: 4px;
+}
+
+.chrome-menu__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chrome-menu__item.is-active .chrome-menu__num {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ---- Tool toggle button (selected / unselected) ---- */
+.chrome-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cfd0d5;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chrome-tool-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.chrome-tool-btn.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.chrome-reader__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #e6e6e9;
+  cursor: pointer;
+}
+
+.chrome-reader__toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.chrome-reader__divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
+
+.chrome-reader__hint {
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #9698a0;
+}
+
+/* ---- Segmented control (device / theme) ---- */
+.segmented {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.segmented button {
+  background: none;
+  border: none;
+  color: #cfd0d5;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.segmented button:hover {
+  color: #fff;
+}
+
+.segmented button.is-active {
+  background: var(--color-primary);
+  color: #fff;
+}

@@ -1,0 +1,28 @@
+<svg width="180" height="300" viewBox="0 0 180 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Handheld barcode scanner, front view, resembling the reference photo.
+       The "read point" is the top-center of the head (y≈24). -->
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2b2b2f"/>
+      <stop offset="0.5" stop-color="#141417"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <radialGradient id="head" cx="0.4" cy="0.35" r="0.8">
+      <stop offset="0" stop-color="#3a3a40"/>
+      <stop offset="0.6" stop-color="#161619"/>
+      <stop offset="1" stop-color="#000000"/>
+    </radialGradient>
+  </defs>
+  <!-- head -->
+  <ellipse cx="90" cy="60" rx="78" ry="46" fill="url(#head)"/>
+  <ellipse cx="90" cy="52" rx="46" ry="24" fill="#000" opacity="0.5"/>
+  <ellipse cx="90" cy="50" rx="30" ry="12" fill="#26262b"/>
+  <!-- neck + handle -->
+  <path d="M52 88 C60 150 66 210 70 250 C72 272 108 272 110 250 C114 210 120 150 128 88 Z" fill="url(#body)"/>
+  <!-- trigger hint -->
+  <ellipse cx="60" cy="150" rx="6" ry="12" fill="#000" opacity="0.6"/>
+  <ellipse cx="120" cy="150" rx="6" ry="12" fill="#000" opacity="0.6"/>
+  <!-- strain relief + cable -->
+  <path d="M78 250 C78 270 102 270 102 250 L100 268 C100 280 80 280 80 268 Z" fill="#0b0b0d"/>
+  <rect x="85" y="268" width="10" height="30" rx="5" fill="#0b0b0d"/>
+</svg>

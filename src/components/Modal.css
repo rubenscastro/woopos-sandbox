@@ -1,0 +1,57 @@
+.woopos-modal-root {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.woopos-modal-scrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.4);
+  animation: woopos-modal-scrim-in 0.3s ease;
+  cursor: default;
+}
+
+.woopos-modal-card {
+  position: relative;
+  background: var(--color-surface-bright);
+  color: var(--color-on-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-normal-large);
+  padding: var(--space-xl);
+  overflow: auto;
+  animation: woopos-modal-card-in 0.3s ease;
+}
+
+.woopos-modal-close {
+  border: none;
+  background: none;
+  display: flex;
+  padding: 4px;
+  color: var(--color-on-surface);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.woopos-modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes woopos-modal-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes woopos-modal-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12%);
+  }
+}

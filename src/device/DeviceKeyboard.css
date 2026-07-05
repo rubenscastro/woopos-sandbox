@@ -1,0 +1,84 @@
+.device-keyboard {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  background: #c9ccd1;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.18);
+  animation: kb-slide-up 0.2s ease;
+  user-select: none;
+}
+
+[data-theme='dark'] .device-keyboard {
+  background: #2b2d31;
+}
+
+@keyframes kb-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.kb-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  /* Rows share the keyboard height, so keys grow taller when the keyboard is tall
+     (e.g. the 40%-height tablet keyboard) instead of leaving big gaps. */
+  flex: 1 1 0;
+  min-height: 48px;
+}
+
+.kb-key {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 6px;
+  background: #fff;
+  color: #101517;
+  font-family: var(--font-family);
+  font-size: 18px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme='dark'] .kb-key {
+  background: #4b4e54;
+  color: #fff;
+}
+
+.kb-key:active {
+  background: #e3e5e8;
+}
+
+.kb-key--mod {
+  flex: 1.5;
+  background: #adb1b8;
+  font-size: 14px;
+}
+
+[data-theme='dark'] .kb-key--mod {
+  background: #35373c;
+}
+
+.kb-key--mod.is-active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.kb-key--space {
+  flex: 5;
+}
+
+.kb-key--return {
+  flex: 2;
+}

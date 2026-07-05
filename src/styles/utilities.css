@@ -1,0 +1,24 @@
+/*
+ * Adaptive width utilities mirroring the app's Modifier helpers.
+ * Baseline is tablet; [data-device] on an ancestor (the device screen) widens for
+ * smaller breakpoints — same attribute-driven approach as the sizing tokens.
+ */
+
+/* adaptiveContentWidth(): tablet 0.55, smallTablet 2/3, phone full */
+.woopos-adaptive-content-width {
+  width: 55%;
+}
+[data-device='smallTablet'] .woopos-adaptive-content-width {
+  width: 66.6667%;
+}
+[data-device='phone'] .woopos-adaptive-content-width {
+  width: 100%;
+}
+
+/* wooPosFullScreenActionButton(): tablet 0.5, phone full */
+.woopos-fullscreen-action {
+  width: 50%;
+}
+[data-device='phone'] .woopos-fullscreen-action {
+  width: 100%;
+}

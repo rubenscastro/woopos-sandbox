@@ -1,0 +1,89 @@
+.device-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #dfe1e4;
+}
+
+[data-theme='dark'] .device-stage {
+  background: #202327;
+}
+
+/* Layout box carries the *scaled* footprint so the stage centers correctly. */
+.device-slot {
+  position: relative;
+  flex: none;
+}
+
+/* The physical device shell (bezel). */
+.device-bezel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #0e0f12;
+  box-sizing: border-box;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.55),
+    0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+.device-notch {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 26px;
+  background: #0e0f12;
+  border-radius: 0 0 16px 16px;
+  z-index: 2;
+}
+
+/* The screen glass — clips the app and holds the scroll viewport. */
+.device-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+.device-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  cursor: grab;
+  overscroll-behavior: contain;
+  /* Momentum feel + hide the scrollbar for a device-like look. */
+  scrollbar-width: none;
+}
+
+.device-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.device-scroll.is-grabbing {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Holds the screen at a definite height so percentage-height layouts resolve, and reserves
+   the top safe-area (notch clearance / breathing room). The screen background is painted on
+   .device-screen behind this, so the padding strip shares the page's background. Screens that
+   want their own background to fill the safe area can opt in with .woopos-fills-safe-top. */
+.device-scroll {
+  --device-safe-top: 44px;
+}
+
+.device-canvas {
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: var(--device-safe-top);
+}

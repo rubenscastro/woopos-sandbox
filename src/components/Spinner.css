@@ -1,0 +1,22 @@
+.woopos-spinner {
+  display: inline-block;
+  box-sizing: border-box;
+  border-radius: 50%;
+  /* Static light-purple track disc + a 110deg Woo-Purple arc. Rotating the whole
+     conic gradient moves the arc around the uniform track — same look as an arc
+     spinning over a static ring. */
+  background: conic-gradient(
+    var(--woopos-spinner-arc) 0deg 110deg,
+    var(--woopos-spinner-track) 110deg 360deg
+  );
+  /* Punch out the center at 40% of the radius, leaving a thick donut ring. */
+  -webkit-mask: radial-gradient(closest-side, transparent 39%, #000 40%);
+  mask: radial-gradient(closest-side, transparent 39%, #000 40%);
+  animation: woopos-spin 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes woopos-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
