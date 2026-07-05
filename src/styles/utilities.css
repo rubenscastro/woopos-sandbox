@@ -43,6 +43,15 @@
   background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
 }
 
+/* Hide the native scrollbar on scrollable content (keeps scrolling, drops the track). */
+.woopos-no-scrollbar {
+  scrollbar-width: none;
+}
+.woopos-no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 /* Nested settings/detail page transition. */
 @keyframes woopos-page-slide-in {
   from {

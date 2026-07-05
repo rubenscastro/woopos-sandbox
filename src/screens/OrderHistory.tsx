@@ -4,6 +4,7 @@ import { Text } from '../components/Text';
 import { Card } from '../components/Card';
 import { Button, OutlinedButton } from '../components/Button';
 import { Toolbar } from '../components/Toolbar';
+import { SearchInput } from '../components/SearchInput';
 import { Inventory } from '../components/icons';
 import { useIsPhone } from '../hooks/useBreakpoint';
 import { formatUsd } from '../lib/currency';
@@ -19,13 +20,28 @@ export function OrderHistory() {
   const isPhone = useIsPhone();
   const [selectedId, setSelectedId] = useState<number>(orders[0].id);
   const [showDetailOnPhone, setShowDetailOnPhone] = useState(false);
+  const [query, setQuery] = useState('');
   const selected = orders.find((o) => o.id === selectedId) ?? orders[0];
+
+  const q = query.trim().toLowerCase();
+  const filteredOrders = q
+    ? orders.filter((o) => o.number.toLowerCase().includes(q) || (o.customerEmail ?? '').toLowerCase().includes(q))
+    : orders;
 
   const list = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar title="Orders" onBack={() => navigate('/products')} />
+      <Toolbar
+        title="Orders"
+        onBack={() => navigate('/products')}
+        backIcon="close"
+        trailing={
+          <div style={{ width: 'min(46%, 260px)' }}>
+            <SearchInput value={query} onChange={setQuery} placeholder="Search orders" />
+          </div>
+        }
+      />
       <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm) var(--space-md) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-        {orders.map((o) => (
+        {filteredOrders.map((o) => (
           <OrderRow
             key={o.id}
             order={o}
@@ -54,7 +70,7 @@ export function OrderHistory() {
 
   return (
     <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
-      <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0, borderRight: '1px solid var(--color-outline-variant)' }}>{list}</div>
+      <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0 }}>{list}</div>
       <div className="woopos-safe-pane" style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{detail}</div>
     </div>
   );
@@ -178,7 +194,7 @@ function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: ()
         </Section>
       </div>
 
-      <div style={{ padding: 'var(--space-md)', borderTop: '1px solid var(--color-outline-variant)', display: 'flex', gap: 'var(--space-md)' }}>
+      <div style={{ padding: 'var(--space-md)', display: 'flex', gap: 'var(--space-md)' }}>
         <div style={{ flex: 1 }}>
           <Button text="Issue refund" fullWidth onClick={() => setRefunding(true)} />
         </div>
@@ -255,7 +271,7 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
           ))}
         </div>
       </div>
-      <div style={{ padding: 'var(--space-md)', borderTop: '1px solid var(--color-outline-variant)' }}>
+      <div style={{ padding: 'var(--space-md)' }}>
         <Button text={`Continue · ${formatUsd(refundTotal)}`} fullWidth state={count > 0 ? 'enabled' : 'disabled'} onClick={() => setConfirming(true)} />
       </div>
     </div>

@@ -32,8 +32,8 @@ export function Settings({ initialCategory = 'store' }: { initialCategory?: Cate
 
   const categoryList = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar title="Settings" onBack={() => navigate('/products')} />
-      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm) var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+      <Toolbar title="Settings" onBack={() => navigate('/products')} backIcon="close" />
+      <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm) var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
         {CATEGORIES.map((c) => (
           <MenuItem
             key={c.id}
@@ -60,7 +60,7 @@ export function Settings({ initialCategory = 'store' }: { initialCategory?: Cate
 
   return (
     <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
-      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0, borderRight: '1px solid var(--color-outline-variant)' }}>
+      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0 }}>
         {categoryList}
       </div>
       <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-bright)' }}>
@@ -98,7 +98,7 @@ function SettingsDetail({ category, onBack }: { category: Category; onBack?: () 
       <Toolbar title={title} onBack={toolbarBack} />
       <div
         key={`${category}-${hw}`}
-        className="woopos-page-anim"
+        className="woopos-page-anim woopos-no-scrollbar"
         style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
       >
         {category === 'store' && <StorePane />}

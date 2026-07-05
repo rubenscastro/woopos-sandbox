@@ -5,8 +5,10 @@ import './ScannerCursor.css';
 // Read-head anchor within the scanner image (fractions of its width/height).
 const HEAD_X = 0.5;
 const HEAD_Y = 0.09;
-const IMG_W = 290;
+const IMG_W = 406;
 const IMG_H = (IMG_W * 300) / 180;
+// Laser line projects out a bit past both sides of the reader.
+const BEAM_W = IMG_W * 1.7;
 const DWELL_MS = 420;
 
 /**
@@ -94,7 +96,7 @@ export function ScannerCursor() {
   return (
     <div className="scanner-cursor-layer" aria-hidden>
       {/* Horizontal laser line through the read-head. */}
-      <div className={`scanner-beam${flash ? ' is-scanning' : ''}`} style={{ left: pos.x, top: pos.y }} />
+      <div className={`scanner-beam${flash ? ' is-scanning' : ''}`} style={{ left: pos.x, top: pos.y, width: BEAM_W }} />
       <div className={`scanner-point${flash ? ' is-scanning' : ''}`} style={{ left: pos.x, top: pos.y }} />
       <img
         className={`scanner-img${flash ? ' is-scanning' : ''}`}

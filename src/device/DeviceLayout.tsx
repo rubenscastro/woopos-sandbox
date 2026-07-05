@@ -11,8 +11,9 @@ import { DeviceKeyboard } from './DeviceKeyboard';
 import { useTools } from '../tools/ToolsContext';
 import { useCardReader } from '../tools/CardReaderContext';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
+import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { CardReaderConnectionHost } from '../tools/CardReaderConnectionDialog';
-import { Barcode, Card as CardIcon, Check } from '../components/icons';
+import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } from '../components/icons';
 import { useCart } from '../state/CartContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { products } from '../mocks/products';
@@ -33,6 +34,7 @@ export function DeviceLayout() {
     <PreviewStateProvider>
       <PageBackgroundProvider>
       <BarcodeSetupProvider>
+      <CartSheetProvider>
       <div className="chrome">
         <aside className="chrome-bar">
           <div className="chrome-left">
@@ -45,24 +47,30 @@ export function DeviceLayout() {
             <PreviewStateMenu />
           </div>
           <div className="chrome-right">
-            <Segmented<DeviceId>
-              ariaLabel="Device"
-              value={device}
-              onChange={setDevice}
-              options={[
-                { id: 'tablet', label: 'Tablet' },
-                { id: 'phone', label: 'Phone' },
-              ]}
-            />
-            <Segmented<ThemeId>
-              ariaLabel="Color scheme"
-              value={theme}
-              onChange={setTheme}
-              options={[
-                { id: 'light', label: 'Light' },
-                { id: 'dark', label: 'Dark' },
-              ]}
-            />
+            <div className="chrome-segmented-group">
+              <span className="chrome-segmented-label">Device</span>
+              <Segmented<DeviceId>
+                ariaLabel="Device"
+                value={device}
+                onChange={setDevice}
+                options={[
+                  { id: 'tablet', label: 'Tablet', icon: <TabletIcon size="18px" /> },
+                  { id: 'phone', label: 'Phone', icon: <PhoneIcon size="18px" /> },
+                ]}
+              />
+            </div>
+            <div className="chrome-segmented-group">
+              <span className="chrome-segmented-label">Theme</span>
+              <Segmented<ThemeId>
+                ariaLabel="Color scheme"
+                value={theme}
+                onChange={setTheme}
+                options={[
+                  { id: 'light', label: 'Light', icon: <Sun size="18px" /> },
+                  { id: 'dark', label: 'Dark', icon: <Moon size="18px" /> },
+                ]}
+              />
+            </div>
           </div>
         </aside>
 
@@ -71,6 +79,7 @@ export function DeviceLayout() {
             <>
               <BarcodeSetupHost />
               <CardReaderConnectionHost />
+              <CartSheetHost />
               <DeviceKeyboard />
             </>
           }
@@ -78,6 +87,7 @@ export function DeviceLayout() {
           <Outlet />
         </DeviceFrame>
       </div>
+      </CartSheetProvider>
       </BarcodeSetupProvider>
       </PageBackgroundProvider>
     </PreviewStateProvider>
@@ -181,6 +191,22 @@ function CardReaderMenu() {
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 280 }}>
+          {/* ---- Quick toggle — set connected directly, skipping the connect flow ---- */}
+          <button
+            type="button"
+            className="chrome-reader__toggle"
+            role="switch"
+            aria-checked={cr.connected}
+            onClick={() => cr.setConnected(!cr.connected)}
+          >
+            <span>Connected</span>
+            <span className={`chrome-switch${cr.connected ? ' is-on' : ''}`} aria-hidden>
+              <span className="chrome-switch__knob" />
+            </span>
+          </button>
+
+          <div className="chrome-reader__divider" />
+
           {/* ---- Connection ---- */}
           {!cr.connected && s === 'idle' && (
             <ReaderItem label="Connect card reader" onClick={() => { setOpen(false); cr.startConnecting(); }} />
@@ -244,7 +270,7 @@ function Segmented<T extends string>({
   ariaLabel: string;
   value: T;
   onChange: (v: T) => void;
-  options: { id: T; label: string }[];
+  options: { id: T; label: string; icon?: React.ReactNode }[];
 }) {
   return (
     <div className="segmented" role="group" aria-label={ariaLabel}>
@@ -254,8 +280,11 @@ function Segmented<T extends string>({
           type="button"
           className={o.id === value ? 'is-active' : ''}
           aria-pressed={o.id === value}
+          aria-label={o.label}
+          title={o.label}
           onClick={() => onChange(o.id)}
         >
+          {o.icon && <span className="segmented__icon">{o.icon}</span>}
           {o.label}
         </button>
       ))}

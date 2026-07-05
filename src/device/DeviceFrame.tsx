@@ -170,6 +170,7 @@ function DeviceScreen({
       className="device-screen"
       style={{ borderRadius: radius, background: pageBg }}
       data-theme={theme}
+      data-device={device}
     >
       <div
         ref={scrollRef}

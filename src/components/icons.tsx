@@ -248,6 +248,87 @@ export function AddShoppingCart({ size, ...props }: IconProps) {
   );
 }
 
+/** ic_description_filled_24dp — Orders menu item. */
+export function Description({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 960 960" fill="none" {...base(size)} {...props}>
+      <path
+        fill="currentColor"
+        d="M320,720L640,720L640,640L320,640L320,720ZM320,560L640,560L640,480L320,480L320,560ZM240,880Q207,880 183.5,856.5Q160,833 160,800L160,160Q160,127 183.5,103.5Q207,80 240,80L560,80L800,320L800,800Q800,833 776.5,856.5Q753,880 720,880L240,880ZM520,360L720,360L520,160L520,360Z"
+      />
+    </svg>
+  );
+}
+
+/** ic_settings_filled_24dp — Settings menu item. */
+export function SettingsFilled({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 960 960" fill="none" {...base(size)} {...props}>
+      <path
+        fill="currentColor"
+        d="M370,880L354,752Q341,747 329.5,740Q318,733 307,725L188,775L78,585L181,507Q180,500 180,493.5Q180,487 180,480Q180,473 180,466.5Q180,460 181,453L78,375L188,185L307,235Q318,227 330,220Q342,213 354,208L370,80L590,80L606,208Q619,213 630.5,220Q642,227 653,235L772,185L882,375L779,453Q780,460 780,466.5Q780,473 780,480Q780,487 780,493.5Q780,500 778,507L881,585L771,775L653,725Q642,733 630,740Q618,747 606,752L590,880L370,880ZM482,620Q540,620 581,579Q622,538 622,480Q622,422 581,381Q540,340 482,340Q423,340 382.5,381Q342,422 342,480Q342,538 382.5,579Q423,620 482,620Z"
+      />
+    </svg>
+  );
+}
+
+/** ic_exit_to_app_24dp — Exit POS menu item. */
+export function ExitToApp({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 960 960" fill="none" {...base(size)} {...props}>
+      <path
+        fill="currentColor"
+        d="M200,840Q167,840 143.5,816.5Q120,793 120,760L120,600L200,600L200,760Q200,760 200,760Q200,760 200,760L760,760Q760,760 760,760Q760,760 760,760L760,200Q760,200 760,200Q760,200 760,200L200,200Q200,200 200,200Q200,200 200,200L200,360L120,360L120,200Q120,167 143.5,143.5Q167,120 200,120L760,120Q793,120 816.5,143.5Q840,167 840,200L840,760Q840,793 816.5,816.5Q793,840 760,840L200,840ZM420,680L364,622L466,520L120,520L120,440L466,440L364,338L420,280L620,480L420,680Z"
+      />
+    </svg>
+  );
+}
+
+export function TabletIcon({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <rect x="4" y="2.5" width="16" height="19" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="18.6" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function PhoneIcon({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="18.6" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function Sun({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function Moon({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <path
+        d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Three vertical dots — the floating menu button glyph. */
 export function DotsVertical({ size, ...props }: IconProps) {
   return (

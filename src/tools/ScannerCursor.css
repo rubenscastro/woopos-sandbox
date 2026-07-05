@@ -37,14 +37,14 @@ html.tool-cursor-active .chrome-bar input {
 /* Horizontal red laser line projecting from the read-head. */
 .scanner-beam {
   position: fixed;
-  width: 220px;
+  /* width is set inline, tied to the reader size (see ScannerCursor.tsx) */
   height: 3px;
   transform: translate(-50%, -50%);
   background: linear-gradient(
     to right,
     rgba(214, 54, 56, 0),
-    rgba(214, 54, 56, 0.95) 20%,
-    rgba(214, 54, 56, 0.95) 80%,
+    rgba(214, 54, 56, 0.95) 35%,
+    rgba(214, 54, 56, 0.95) 65%,
     rgba(214, 54, 56, 0)
   );
   box-shadow: 0 0 8px 1px rgba(214, 54, 56, 0.7);

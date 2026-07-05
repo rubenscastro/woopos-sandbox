@@ -14,7 +14,7 @@
  *   spacing   phone*0.5  smallTablet*0.75   (rounded up to /4)
  *   component phone*0.75 smallTablet*0.9    (rounded up to /4)
  *   icon      phone*0.9  smallTablet*0.95   (rounded up to /4)
- *   font      phone*0.85 smallTablet*0.9    (floor 14)
+ *   font      phone*0.75 smallTablet*0.9    (floor 14, via --font-scale)
  *   radius md 8/8/4, lg 16/12/8, xl 24/20/16 (tablet/small/phone)
  */
 
@@ -60,21 +60,16 @@
   --color-on-surface-variant-highest: #50575e;
   --color-tertiary-icon: #3c087e;
 
-  /* ---- Typography ---- */
+  /* ---- Typography ----
+     Two knobs: --font-scale (base × scale) and --font-floor (the min size the scale can shrink
+     to), mirroring WooPosTypography.toAdaptiveTextStyle(). The size/line tokens (computed just
+     below) are declared on both :root and [data-device] so they RE-resolve on the device screen
+     using that element's own --font-scale/--font-floor — a custom property that references
+     another only substitutes at its own declaring element, so declaring them once on :root
+     wouldn't pick up the device override. */
   --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
-  --font-heading-size: 36px;
-  --font-heading-line: 40px;
-  --font-body-xl-size: 30px;
-  --font-body-xl-line: 32px;
-  --font-body-lg-size: 24px;
-  --font-body-lg-line: 32px;
-  --font-body-md-size: 20px;
-  --font-body-md-line: 32px;
-  --font-body-sm-size: 16px;
-  --font-body-sm-line: 24px;
-  --font-caption-size: 14px;
-  --font-caption-line: 20px;
+  --font-scale: 1;
+  --font-floor: 14px;
 
   /* ---- Spacing (tablet baseline) ---- */
   --space-none: 0px;
@@ -148,20 +143,28 @@
   --color-on-surface-variant-highest: #a7aaad;
 }
 
+/* Type ramp derived from --font-scale. Declared on :root AND [data-device] so it resolves
+   against whichever --font-scale is in effect on that element (see the typography note above).
+   Device blocks only set --font-scale. */
+:root,
+[data-device] {
+  --font-heading-size: max(var(--font-floor), calc(36px * var(--font-scale)));
+  --font-heading-line: max(var(--font-floor), calc(40px * var(--font-scale)));
+  --font-body-xl-size: max(var(--font-floor), calc(30px * var(--font-scale)));
+  --font-body-xl-line: max(var(--font-floor), calc(32px * var(--font-scale)));
+  --font-body-lg-size: max(var(--font-floor), calc(24px * var(--font-scale)));
+  --font-body-lg-line: max(var(--font-floor), calc(32px * var(--font-scale)));
+  --font-body-md-size: max(var(--font-floor), calc(20px * var(--font-scale)));
+  --font-body-md-line: max(var(--font-floor), calc(32px * var(--font-scale)));
+  --font-body-sm-size: max(var(--font-floor), calc(16px * var(--font-scale)));
+  --font-body-sm-line: max(var(--font-floor), calc(24px * var(--font-scale)));
+  --font-caption-size: max(var(--font-floor), calc(14px * var(--font-scale)));
+  --font-caption-line: max(var(--font-floor), calc(20px * var(--font-scale)));
+}
+
 /* ---- Small tablet (short side < 800dp): ~0.75x spacing, 0.9x component/font ---- */
 [data-device='smallTablet'] {
-  --font-heading-size: 32.4px;
-  --font-heading-line: 36px;
-  --font-body-xl-size: 27px;
-  --font-body-xl-line: 28.8px;
-  --font-body-lg-size: 21.6px;
-  --font-body-lg-line: 28.8px;
-  --font-body-md-size: 18px;
-  --font-body-md-line: 28.8px;
-  --font-body-sm-size: 14.4px;
-  --font-body-sm-line: 21.6px;
-  --font-caption-size: 14px;
-  --font-caption-line: 18px;
+  --font-scale: 0.9;
 
   --space-xxs: 4px;
   --space-xs: 4px;
@@ -192,20 +195,13 @@
   --shadow-normal-large: 0 4px 20px rgba(0, 0, 0, 0.24);
 }
 
-/* ---- Phone: ~0.5x spacing, 0.75x component, 0.85x font ---- */
+/* ---- Phone: ~0.5x spacing, 0.75x component, 0.65x font ----
+   Font is dialed well below the app's 0.85 because in the scaled device frame the type read
+   too large relative to the shrunk spacing/components; the floor is also lowered to 11px so
+   the smaller styles can keep shrinking instead of piling up at 14. Tune these two to taste. */
 [data-device='phone'] {
-  --font-heading-size: 30.6px;
-  --font-heading-line: 34px;
-  --font-body-xl-size: 25.5px;
-  --font-body-xl-line: 27.2px;
-  --font-body-lg-size: 20.4px;
-  --font-body-lg-line: 27.2px;
-  --font-body-md-size: 17px;
-  --font-body-md-line: 27.2px;
-  --font-body-sm-size: 14px;
-  --font-body-sm-line: 20.4px;
-  --font-caption-size: 14px;
-  --font-caption-line: 17px;
+  --font-scale: 0.65;
+  --font-floor: 11px;
 
   --space-xxs: 4px;
   --space-xs: 4px;

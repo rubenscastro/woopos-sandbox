@@ -9,8 +9,23 @@
   background: #202327;
 }
 
-/* Left side menu (kept class name .chrome-bar so the cursor-tool logic still targets it). */
+/* Left side menu (kept class name .chrome-bar so the cursor-tool logic still targets it).
+   Colors are theme-scoped via the menu-* variables below. */
 .chrome-bar {
+  --menu-bg: #ffffff;
+  --menu-fg: #1d2327;
+  --menu-muted: #646970;
+  --menu-ctrl-bg: rgba(0, 0, 0, 0.04);
+  --menu-ctrl-border: rgba(0, 0, 0, 0.12);
+  --menu-ctrl-hover: rgba(0, 0, 0, 0.08);
+  --menu-dd-bg: #ffffff;
+  --menu-dd-border: rgba(0, 0, 0, 0.1);
+  --menu-dd-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.28);
+  --menu-item-hover: rgba(0, 0, 0, 0.06);
+  --menu-divider: rgba(0, 0, 0, 0.1);
+  --menu-num-bg: rgba(0, 0, 0, 0.08);
+  --menu-edge: rgba(0, 0, 0, 0.1);
+
   flex: none;
   width: 260px;
   height: 100vh;
@@ -19,10 +34,26 @@
   justify-content: space-between;
   gap: 20px;
   padding: 18px 14px;
-  background: #17181c;
-  color: #f2f2f4;
-  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.4);
+  background: var(--menu-bg);
+  color: var(--menu-fg);
+  box-shadow: 1px 0 0 var(--menu-edge);
   z-index: 10;
+}
+
+[data-theme='dark'] .chrome-bar {
+  --menu-bg: #17181c;
+  --menu-fg: #f2f2f4;
+  --menu-muted: #9698a0;
+  --menu-ctrl-bg: rgba(255, 255, 255, 0.08);
+  --menu-ctrl-border: rgba(255, 255, 255, 0.14);
+  --menu-ctrl-hover: rgba(255, 255, 255, 0.14);
+  --menu-dd-bg: #1f2024;
+  --menu-dd-border: rgba(255, 255, 255, 0.12);
+  --menu-dd-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+  --menu-item-hover: rgba(255, 255, 255, 0.08);
+  --menu-divider: rgba(255, 255, 255, 0.1);
+  --menu-num-bg: rgba(255, 255, 255, 0.12);
+  --menu-edge: rgba(0, 0, 0, 0.4);
 }
 
 .chrome-left,
@@ -37,7 +68,7 @@
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.3px;
-  color: #f2f2f4;
+  color: var(--menu-fg);
   text-decoration: none;
   padding: 2px 4px 4px;
 }
@@ -55,7 +86,7 @@
   font-size: 11px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #9698a0;
+  color: var(--menu-muted);
   padding-left: 2px;
 }
 
@@ -64,9 +95,9 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #f2f2f4;
+  background: var(--menu-ctrl-bg);
+  border: 1px solid var(--menu-ctrl-border);
+  color: var(--menu-fg);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 13px;
@@ -80,7 +111,7 @@
 }
 
 .chrome-menu__trigger:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--menu-ctrl-hover);
 }
 
 .chrome-menu__trigger.is-active {
@@ -100,11 +131,11 @@
   top: 0;
   left: calc(100% + 10px);
   min-width: 240px;
-  background: #1f2024;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--menu-dd-bg);
+  border: 1px solid var(--menu-dd-border);
   border-radius: 10px;
   padding: 6px;
-  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--menu-dd-shadow);
   z-index: 20;
 }
 
@@ -116,7 +147,7 @@
   text-align: left;
   background: none;
   border: none;
-  color: #e6e6e9;
+  color: var(--menu-fg);
   border-radius: 6px;
   padding: 9px 10px;
   font-size: 13px;
@@ -124,7 +155,7 @@
 }
 
 .chrome-menu__item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--menu-item-hover);
 }
 
 .chrome-menu__item.is-active {
@@ -133,8 +164,8 @@
 }
 
 .chrome-menu__item--all {
-  color: #a9abb3;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--menu-muted);
+  border-bottom: 1px solid var(--menu-divider);
   border-radius: 6px 6px 0 0;
   margin-bottom: 4px;
 }
@@ -146,7 +177,7 @@
   min-width: 22px;
   height: 22px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--menu-num-bg);
   font-size: 12px;
   font-weight: 700;
 }
@@ -161,9 +192,9 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #cfd0d5;
+  background: var(--menu-ctrl-bg);
+  border: 1px solid var(--menu-ctrl-border);
+  color: var(--menu-fg);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 13px;
@@ -175,8 +206,7 @@
 }
 
 .chrome-tool-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--menu-ctrl-hover);
 }
 
 .chrome-tool-btn.is-active {
@@ -191,7 +221,7 @@
   gap: 10px;
   padding: 8px 10px;
   font-size: 13px;
-  color: #e6e6e9;
+  color: var(--menu-fg);
   cursor: pointer;
 }
 
@@ -203,22 +233,87 @@
 
 .chrome-reader__divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--menu-divider);
   margin: 4px 0;
 }
 
 .chrome-reader__hint {
   padding: 6px 10px;
   font-size: 11px;
-  color: #9698a0;
+  color: var(--menu-muted);
+}
+
+/* Quick connect toggle in the card-reader menu. */
+.chrome-reader__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  color: var(--menu-fg);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.chrome-reader__toggle:hover {
+  background: var(--menu-item-hover);
+}
+
+.chrome-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--menu-ctrl-border);
+  transition: background 0.15s ease;
+  flex: none;
+}
+
+.chrome-switch.is-on {
+  background: var(--color-primary);
+}
+
+.chrome-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+
+.chrome-switch.is-on .chrome-switch__knob {
+  transform: translateX(14px);
 }
 
 /* ---- Segmented control (device / theme) ---- */
+.chrome-segmented-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.chrome-segmented-label {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--menu-muted);
+  padding-left: 2px;
+}
+
 .segmented {
   display: flex;
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--menu-ctrl-bg);
+  border: 1px solid var(--menu-ctrl-border);
   border-radius: 8px;
   padding: 3px;
   gap: 2px;
@@ -226,17 +321,26 @@
 
 .segmented button {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: none;
   border: none;
-  color: #cfd0d5;
+  color: var(--menu-muted);
   font-size: 12px;
   font-weight: 600;
-  padding: 7px 12px;
+  padding: 7px 10px;
   border-radius: 6px;
 }
 
+.segmented__icon {
+  display: inline-flex;
+}
+
 .segmented button:hover {
-  color: #fff;
+  color: var(--menu-fg);
 }
 
 .segmented button.is-active {

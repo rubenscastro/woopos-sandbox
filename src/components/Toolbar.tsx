@@ -1,19 +1,21 @@
 import type { ReactNode } from 'react';
 import { Text } from './Text';
-import { ChevronLeft } from './icons';
+import { ChevronLeft, Close } from './icons';
 
 /**
  * WooPosToolbar — top bar used across POS screens: optional back button, title (+ optional
- * count/subtitle), and an optional trailing slot.
+ * count/subtitle), and an optional trailing slot. The leading button is a back chevron by
+ * default, or a close (X) when `backIcon="close"`.
  */
 interface ToolbarProps {
   title: string;
   count?: string;
   onBack?: () => void;
+  backIcon?: 'chevron' | 'close';
   trailing?: ReactNode;
 }
 
-export function Toolbar({ title, count, onBack, trailing }: ToolbarProps) {
+export function Toolbar({ title, count, onBack, backIcon = 'chevron', trailing }: ToolbarProps) {
   return (
     <div
       style={{
@@ -28,7 +30,7 @@ export function Toolbar({ title, count, onBack, trailing }: ToolbarProps) {
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
+          aria-label={backIcon === 'close' ? 'Close' : 'Back'}
           style={{
             border: 'none',
             background: 'none',
@@ -38,7 +40,7 @@ export function Toolbar({ title, count, onBack, trailing }: ToolbarProps) {
             flex: 'none',
           }}
         >
-          <ChevronLeft size="var(--icon-medium)" />
+          {backIcon === 'close' ? <Close size="var(--icon-medium)" /> : <ChevronLeft size="var(--icon-medium)" />}
         </button>
       )}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', flex: 1, minWidth: 0 }}>

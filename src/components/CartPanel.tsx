@@ -17,9 +17,12 @@ interface CartPanelProps {
   onScanBarcode?: () => void;
   onBack?: () => void;
   hideCheckout?: boolean;
+  hideClear?: boolean;
+  /** Read-only cart (e.g. during checkout): hides the per-item remove buttons. */
+  hideRemove?: boolean;
 }
 
-export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout }: CartPanelProps) {
+export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hideClear, hideRemove }: CartPanelProps) {
   const { lines, itemCount, clear } = useCart();
   const empty = lines.length === 0;
 
@@ -52,7 +55,7 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout }: C
           </Text>
         )}
         <div style={{ flex: 1 }} />
-        {!empty && (
+        {!empty && !hideClear && (
           <button
             type="button"
             onClick={clear}
@@ -79,13 +82,13 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout }: C
           }}
         >
           {lines.map((line) => (
-            <CartLineRow key={line.key} line={line} />
+            <CartLineRow key={line.key} line={line} hideRemove={hideRemove} />
           ))}
         </div>
       )}
 
       {!empty && !hideCheckout && (
-        <div style={{ padding: 'var(--space-md)' }}>
+        <div style={{ padding: 'var(--space-md)', paddingBottom: 'calc(var(--space-md) + var(--device-safe-bottom, 0px))' }}>
           <Button text="Check out" fullWidth onClick={onCheckout} />
         </div>
       )}
@@ -93,7 +96,7 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout }: C
   );
 }
 
-function CartLineRow({ line }: { line: CartLine }) {
+function CartLineRow({ line, hideRemove }: { line: CartLine; hideRemove?: boolean }) {
   const { removeLine } = useCart();
 
   if (line.kind === 'coupon') {
@@ -111,7 +114,7 @@ function CartLineRow({ line }: { line: CartLine }) {
               -{formatUsd(line.discount)}
             </Text>
           </div>
-          <RemoveButton onClick={() => removeLine(line.key)} label={line.code} />
+          {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.code} />}
         </div>
       </Card>
     );
@@ -135,7 +138,7 @@ function CartLineRow({ line }: { line: CartLine }) {
               {line.taxable ? ' · Tax included' : ''}
             </Text>
           </div>
-          <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />
+          {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />}
         </div>
       </Card>
     );
@@ -164,7 +167,7 @@ function CartLineRow({ line }: { line: CartLine }) {
             {line.quantity > 1 ? `${line.quantity} × ${formatUsd(line.price)}` : formatUsd(line.price)}
           </Text>
         </div>
-        <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />
+        {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />}
       </div>
     </Card>
   );
@@ -217,7 +220,7 @@ function EmptyCart({ onScanBarcode }: { onScanBarcode?: () => void }) {
       }}
     >
       <div style={{ opacity: 0.5, color: 'var(--color-on-surface-variant-lowest)' }}>
-        <AddShoppingCart size="var(--icon-xlarge)" />
+        <AddShoppingCart size="var(--size-large)" />
       </div>
       <Text variant="bodyMedium" align="center" color="var(--color-on-surface-variant-highest)">
         Tap on a product to add it to the cart, or Scan barcode{' '}

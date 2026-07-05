@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Text } from './Text';
 import { Card } from './Card';
-import { DotsVertical, Receipt, Gear, ChevronRight } from './icons';
+import { DotsVertical, Description, SettingsFilled, ExitToApp } from './icons';
 import { useCardReader } from '../tools/CardReaderContext';
 
 /**
@@ -39,9 +39,9 @@ export function FloatingToolbar() {
               padding: 'var(--space-xs)',
             }}
           >
-            <MenuRow icon={<Receipt size="var(--icon-small)" />} label="Orders" onClick={() => { setMenuOpen(false); navigate('/order-history'); }} />
-            <MenuRow icon={<Gear size="var(--icon-small)" />} label="Settings" onClick={() => { setMenuOpen(false); navigate('/settings'); }} />
-            <MenuRow icon={<ChevronRight size="var(--icon-small)" />} label="Exit POS" onClick={() => { setMenuOpen(false); navigate('/flows'); }} />
+            <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setMenuOpen(false); navigate('/order-history'); }} />
+            <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setMenuOpen(false); navigate('/settings'); }} />
+            <MenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setMenuOpen(false); navigate('/flows'); }} />
           </div>
         </>
       )}

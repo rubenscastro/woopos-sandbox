@@ -20,7 +20,16 @@ import { usePageBackground } from '../device/PageBackground';
  */
 type PayState = 'idle' | 'processing' | 'failed';
 
-export function CheckoutPane({ onBack, active = true }: { onBack?: () => void; active?: boolean }) {
+export function CheckoutPane({
+  onBack,
+  active = true,
+  showBackButton = true,
+}: {
+  onBack?: () => void;
+  active?: boolean;
+  /** On tablet the back affordance lives on the cart pane, so the totals pane hides it. */
+  showBackButton?: boolean;
+}) {
   const navigate = useNavigate();
   const { connected, startConnecting } = useCardReader();
   const [state, setState] = useState<PayState>('idle');
@@ -58,7 +67,9 @@ export function CheckoutPane({ onBack, active = true }: { onBack?: () => void; a
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      {onBack && <Toolbar title="Checkout" onBack={onBack} />}
+      {/* WooPosTotalsScreen shows only a back button (no title), and only on phone; on tablet
+          the back affordance is on the cart pane instead. */}
+      {onBack && showBackButton && <Toolbar title="" onBack={onBack} />}
 
       <div
         style={{
@@ -82,7 +93,7 @@ export function CheckoutPane({ onBack, active = true }: { onBack?: () => void; a
             <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
               Please try again.
             </Text>
-            <div className="woopos-fullscreen-action" style={btnStack}>
+            <div style={{ ...btnStack, width: '100%' }}>
               <Button text="Try again" fullWidth onClick={() => setState('idle')} />
               <OutlinedButton text="Cash payment" fullWidth onClick={() => navigate('/cash-payment')} />
             </div>
@@ -109,7 +120,7 @@ export function CheckoutPane({ onBack, active = true }: { onBack?: () => void; a
             <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
               To process this payment, please connect your reader.
             </Text>
-            <div className="woopos-fullscreen-action">
+            <div style={{ width: '100%' }}>
               <Button text="Connect to reader" fullWidth onClick={startConnecting} />
             </div>
             <div style={{ width: '100%', maxWidth: 460 }}>
@@ -128,10 +139,10 @@ export function CheckoutPane({ onBack, active = true }: { onBack?: () => void; a
           alignItems: 'center',
         }}
       >
-        <div className="woopos-fullscreen-action">
+        <div style={{ width: '100%' }}>
           <OutlinedButton text="Cash payment" fullWidth onClick={() => navigate('/cash-payment')} />
         </div>
-        <div className="woopos-fullscreen-action">
+        <div style={{ width: '100%' }}>
           <OutlinedButton text="Other payment methods" fullWidth onClick={() => setSheetOpen(true)} />
         </div>
       </div>

@@ -14,10 +14,11 @@ import { DragScroll } from '../components/DragScroll';
 import { FloatingToolbar } from '../components/FloatingToolbar';
 import { Toolbar } from '../components/Toolbar';
 import { Button } from '../components/Button';
-import { Search, Plus, Inventory, Tag, DotsVertical, Receipt, Gear, ChevronRight } from '../components/icons';
+import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp } from '../components/icons';
 import { useIsPhone } from '../hooks/useBreakpoint';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { useBarcodeSetup } from '../tools/BarcodeSetup';
+import { useCartSheet } from '../device/CartSheet';
 import { useCart } from '../state/CartContext';
 import { formatUsd } from '../lib/currency';
 import { products, variations, popularProducts, recentProductSearches, type MockProduct } from '../mocks/products';
@@ -32,10 +33,10 @@ type Tab = 'products' | 'coupons';
  * Handles the Products/Coupons tabs, search, the variations drill-in, and custom amounts.
  */
 export function ItemSelection() {
-  const navigate = useNavigate();
   const isPhone = useIsPhone();
   const cart = useCart();
   const { openSetup } = useBarcodeSetup();
+  const { openCartSheet } = useCartSheet();
 
   const [tab, setTab] = useState<Tab>('products');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -43,7 +44,6 @@ export function ItemSelection() {
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
-  const [cartSheetOpen, setCartSheetOpen] = useState(false);
 
   const goScan = () => openSetup();
 
@@ -67,7 +67,15 @@ export function ItemSelection() {
               setQuery('');
             }}
           />
-          <DragScroll style={{ flex: 1, padding: 'var(--space-sm) var(--space-md) var(--space-xxl)' }}>
+          <DragScroll
+            style={{
+              flex: 1,
+              // Tablet clears the bottom-left floating toolbar; phone has none, so just a small pad.
+              padding: isPhone
+                ? 'var(--space-sm) var(--space-md) var(--space-md)'
+                : 'var(--space-sm) var(--space-md) calc(var(--size-small) + var(--space-xxl))',
+            }}
+          >
             {tab === 'products' ? (
               <ProductsList
                 query={query}
@@ -92,17 +100,14 @@ export function ItemSelection() {
       )}
 
       {isPhone && (
-        <div style={{ padding: 'var(--space-md)', borderTop: '1px solid var(--color-outline-variant)' }}>
+        <div style={{ padding: 'var(--space-md)' }}>
           <Button
-            text={cart.itemCount > 0 ? `View cart · ${formatUsd(cart.total)}` : 'Cart is empty'}
+            text={`Cart (${cart.itemCount})`}
             fullWidth
-            state={cart.itemCount > 0 ? 'enabled' : 'disabled'}
-            onClick={() => setCartSheetOpen(true)}
+            onClick={openCartSheet}
           />
         </div>
       )}
-
-      {!isPhone && <FloatingToolbar />}
 
       {customOpen && (
         <CustomAmountDialog
@@ -117,38 +122,7 @@ export function ItemSelection() {
   );
 
   if (isPhone) {
-    return (
-      <div style={{ height: '100%', position: 'relative' }}>
-        {itemsPane}
-        {cartSheetOpen && (
-          <div
-            className="woopos-scrim"
-            style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
-            onClick={() => setCartSheetOpen(false)}
-            role="presentation"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                height: '88%',
-                background: 'var(--color-surface-bright)',
-                borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-normal-large)',
-                animation: 'woopos-sheet-in 0.28s cubic-bezier(0.2, 0, 0, 1)',
-              }}
-            >
-              <CartPanel
-                onBack={() => setCartSheetOpen(false)}
-                onCheckout={() => { setCartSheetOpen(false); navigate('/totals'); }}
-                onScanBarcode={() => { setCartSheetOpen(false); openSetup(); }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    );
+    return <div style={{ height: '100%', position: 'relative' }}>{itemsPane}</div>;
   }
 
   // Tablet: a 3-pane horizontal row (items | cart | checkout). Starting "checkout" slides
@@ -156,7 +130,7 @@ export function ItemSelection() {
   // the right — mirroring WooPosHomeScreen's animated pane transition.
   const ROW = 165; // items 65 + cart 35 + checkout 65 (percent of the container)
   return (
-    <div className="woopos-fills-safe-top" style={{ overflow: 'hidden' }}>
+    <div className="woopos-fills-safe-top" style={{ overflow: 'hidden', position: 'relative' }}>
       <div
         style={{
           display: 'flex',
@@ -175,12 +149,23 @@ export function ItemSelection() {
             background: 'var(--color-surface-bright)',
           }}
         >
-          <CartPanel onCheckout={() => setCheckout(true)} onScanBarcode={goScan} hideCheckout={checkout} />
+          <CartPanel
+            onCheckout={() => setCheckout(true)}
+            onScanBarcode={goScan}
+            hideCheckout={checkout}
+            onBack={checkout ? () => setCheckout(false) : undefined}
+            hideClear={checkout}
+            hideRemove={checkout}
+          />
         </div>
         <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>
-          <CheckoutPane active={checkout} onBack={() => setCheckout(false)} />
+          <CheckoutPane active={checkout} onBack={() => setCheckout(false)} showBackButton={false} />
         </div>
       </div>
+
+      {/* Rendered outside the sliding row so the menu + card-reader stay pinned bottom-left
+          across both the items and checkout panes. */}
+      <FloatingToolbar />
     </div>
   );
 }
@@ -283,9 +268,9 @@ function PhoneMenu() {
             padding: 'var(--space-xs)',
           }}
         >
-          <PhoneMenuRow icon={<Receipt size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); navigate('/order-history'); }} />
-          <PhoneMenuRow icon={<Gear size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); navigate('/settings'); }} />
-          <PhoneMenuRow icon={<ChevronRight size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); navigate('/flows'); }} />
+          <PhoneMenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); navigate('/order-history'); }} />
+          <PhoneMenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); navigate('/settings'); }} />
+          <PhoneMenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); navigate('/flows'); }} />
         </div>
       )}
     </div>
@@ -394,7 +379,7 @@ function ProductsList({
                 flex: 'none',
               }}
             >
-              <Plus size="var(--icon-large)" style={{ color: 'var(--color-primary)' }} />
+              <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
             </div>
             <div style={{ padding: '0 var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
               <Text variant="bodyLarge" bold>
