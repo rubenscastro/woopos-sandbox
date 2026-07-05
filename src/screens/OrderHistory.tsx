@@ -53,9 +53,9 @@ export function OrderHistory() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
-      <div style={{ flex: '1 1 38%', minWidth: 0, borderRight: '1px solid var(--color-outline-variant)' }}>{list}</div>
-      <div style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{detail}</div>
+    <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
+      <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0, borderRight: '1px solid var(--color-outline-variant)' }}>{list}</div>
+      <div className="woopos-safe-pane" style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{detail}</div>
     </div>
   );
 }

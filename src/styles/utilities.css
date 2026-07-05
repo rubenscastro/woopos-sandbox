@@ -22,3 +22,36 @@
 [data-device='phone'] .woopos-fullscreen-action {
   width: 100%;
 }
+
+/*
+ * Two-pane screens (Settings, Orders) whose panes have their own backgrounds fill the top
+ * safe-area with those backgrounds instead of leaving a strip above them: pull the screen up
+ * into the safe-area, then re-inset the content per pane with padding-top.
+ */
+.woopos-fills-safe-top {
+  margin-top: calc(-1 * var(--device-safe-top, 0px));
+  height: calc(100% + var(--device-safe-top, 0px));
+}
+.woopos-safe-pane {
+  padding-top: var(--device-safe-top, 0px);
+  box-sizing: border-box;
+}
+
+/* Modal/dialog scrim: white on light theme, dark on dark theme. */
+.woopos-scrim {
+  background: rgba(255, 255, 255, 0.8);
+}
+[data-theme='dark'] .woopos-scrim {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Nested settings/detail page transition. */
+@keyframes woopos-page-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+.woopos-page-anim {
+  animation: woopos-page-slide-in 0.24s ease;
+}

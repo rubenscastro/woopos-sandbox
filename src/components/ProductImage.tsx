@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { productPhotos } from '../mocks/products';
 
 /**
  * Generated product imagery: a themed colored tile with a simple glyph per product, so the
@@ -108,6 +109,22 @@ function hueFromId(id: number): string {
 
 export function ProductImage({ id, radius = '0' }: { id: number; radius?: string }) {
   const a = ART[id] ?? { bg: hueFromId(id), glyph: 'box' as GlyphKey };
+  const photo = productPhotos[id];
+  const [failed, setFailed] = useState(false);
+
+  // Real product photo, with the themed glyph tile as a graceful fallback if it can't load.
+  if (photo && !failed) {
+    return (
+      <img
+        src={photo}
+        alt=""
+        loading="lazy"
+        onError={() => setFailed(true)}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: radius, display: 'block' }}
+      />
+    );
+  }
+
   return (
     <div
       style={{

@@ -3,7 +3,6 @@ import { Modal } from '../components/Modal';
 import { Text } from '../components/Text';
 import { Button, OutlinedButton } from '../components/Button';
 import { SuccessCheckmark } from '../components/SuccessCheckmark';
-import { ChevronRight } from '../components/icons';
 import { useTools, useBarcodeTarget } from './ToolsContext';
 
 /**
@@ -71,7 +70,7 @@ function BarcodeSetupWizard({ onDone }: { onDone: () => void }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
                   width: '100%',
                   padding: 'var(--space-md)',
                   border: '2px solid var(--color-inverse-surface)',
@@ -81,10 +80,9 @@ function BarcodeSetupWizard({ onDone }: { onDone: () => void }) {
                   cursor: 'pointer',
                 }}
               >
-                <Text variant="bodyLarge" bold>
+                <Text variant="bodyLarge" bold align="center">
                   {d}
                 </Text>
-                <ChevronRight size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
               </button>
             ))}
           </div>

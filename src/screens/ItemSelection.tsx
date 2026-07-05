@@ -123,7 +123,7 @@ export function ItemSelection() {
   // the right — mirroring WooPosHomeScreen's animated pane transition.
   const ROW = 165; // items 65 + cart 35 + checkout 65 (percent of the container)
   return (
-    <div style={{ height: '100%', overflow: 'hidden' }}>
+    <div className="woopos-fills-safe-top" style={{ overflow: 'hidden' }}>
       <div
         style={{
           display: 'flex',
@@ -133,18 +133,18 @@ export function ItemSelection() {
           transition: 'transform 0.45s cubic-bezier(0.2, 0, 0, 1)',
         }}
       >
-        <div style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>{itemsPane}</div>
+        <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>{itemsPane}</div>
         <div
+          className="woopos-safe-pane"
           style={{
             width: `${(35 / ROW) * 100}%`,
             minWidth: 0,
-            borderLeft: '1px solid var(--color-outline-variant)',
-            borderRight: '1px solid var(--color-outline-variant)',
+            background: 'var(--color-surface-bright)',
           }}
         >
           <CartPanel onCheckout={() => setCheckout(true)} onScanBarcode={goScan} hideCheckout={checkout} />
         </div>
-        <div style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>
+        <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>
           <CheckoutPane active={checkout} onBack={() => setCheckout(false)} />
         </div>
       </div>

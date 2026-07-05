@@ -15,6 +15,22 @@ export interface MockProduct {
   numOfVariations?: number;
 }
 
+/** Real product photos (CC-licensed, Flickr CDN via Openverse) keyed by product id. */
+export const productPhotos: Record<number, string> = {
+  1: 'https://live.staticflickr.com/2768/4198676685_a9cd656950_b.jpg',
+  2: 'https://live.staticflickr.com/2062/5791957122_73cfae8053_b.jpg',
+  3: 'https://live.staticflickr.com/5211/5493919823_a15449ec3e_b.jpg',
+  4: 'https://live.staticflickr.com/8786/28668439201_ed6286ed6d_b.jpg',
+  5: 'https://live.staticflickr.com/7395/9158937344_0b8ab95ba1_b.jpg',
+  6: 'https://live.staticflickr.com/8005/7658912802_e2cbb21cd6.jpg',
+  7: 'https://live.staticflickr.com/4193/33647188804_bb9efce46a.jpg',
+  8: 'https://live.staticflickr.com/4023/4302164182_7a935a0e75_b.jpg',
+  9: 'https://live.staticflickr.com/3165/2885468787_6ab2d83a56_b.jpg',
+  10: 'https://live.staticflickr.com/4074/4860486736_c4c3459f1d_b.jpg',
+  11: 'https://live.staticflickr.com/3428/3375886335_b195b829e1.jpg',
+  12: 'https://live.staticflickr.com/158/355818762_40ae060480.jpg',
+};
+
 export interface MockVariation {
   id: number;
   productId: number;

@@ -59,9 +59,13 @@ export function Settings({ initialCategory = 'store' }: { initialCategory?: Cate
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
-      <div style={{ flex: '0 0 34%', minWidth: 0, borderRight: '1px solid var(--color-outline-variant)' }}>{categoryList}</div>
-      <div style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-bright)' }}>{detail}</div>
+    <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
+      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0, borderRight: '1px solid var(--color-outline-variant)' }}>
+        {categoryList}
+      </div>
+      <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-bright)' }}>
+        {detail}
+      </div>
     </div>
   );
 }
@@ -92,7 +96,11 @@ function SettingsDetail({ category, onBack }: { category: Category; onBack?: () 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar title={title} onBack={toolbarBack} />
-      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+      <div
+        key={`${category}-${hw}`}
+        className="woopos-page-anim"
+        style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
+      >
         {category === 'store' && <StorePane />}
         {category === 'hardware' && <HardwarePane sub={hw} onNavigate={setHw} />}
         {category === 'catalog' && <CatalogPane />}
@@ -219,7 +227,8 @@ function HelpPane() {
 function ProductInfoDialog({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
-      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}
+      className="woopos-scrim"
+      style={{ position: 'absolute', inset: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}
       onClick={onDismiss}
       role="presentation"
     >
