@@ -12,13 +12,9 @@
   position: absolute;
   inset: 0;
   border: none;
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
   animation: woopos-modal-scrim-in 0.3s ease;
   cursor: default;
-}
-
-[data-theme='dark'] .woopos-modal-scrim {
-  background: rgba(0, 0, 0, 0.5);
 }
 
 .woopos-modal-card {

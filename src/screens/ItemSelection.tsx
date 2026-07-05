@@ -14,8 +14,9 @@ import { DragScroll } from '../components/DragScroll';
 import { FloatingToolbar } from '../components/FloatingToolbar';
 import { Toolbar } from '../components/Toolbar';
 import { Button } from '../components/Button';
-import { Search, Plus, Inventory, Tag } from '../components/icons';
+import { Search, Plus, Inventory, Tag, DotsVertical, Receipt, Gear, ChevronRight } from '../components/icons';
 import { useIsPhone } from '../hooks/useBreakpoint';
+import { useClickOutside } from '../hooks/useClickOutside';
 import { useBarcodeSetup } from '../tools/BarcodeSetup';
 import { useCart } from '../state/CartContext';
 import { formatUsd } from '../lib/currency';
@@ -42,6 +43,7 @@ export function ItemSelection() {
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
+  const [cartSheetOpen, setCartSheetOpen] = useState(false);
 
   const goScan = () => openSetup();
 
@@ -95,7 +97,7 @@ export function ItemSelection() {
             text={cart.itemCount > 0 ? `View cart · ${formatUsd(cart.total)}` : 'Cart is empty'}
             fullWidth
             state={cart.itemCount > 0 ? 'enabled' : 'disabled'}
-            onClick={() => navigate('/cart')}
+            onClick={() => setCartSheetOpen(true)}
           />
         </div>
       )}
@@ -115,7 +117,38 @@ export function ItemSelection() {
   );
 
   if (isPhone) {
-    return <div style={{ height: '100%', position: 'relative' }}>{itemsPane}</div>;
+    return (
+      <div style={{ height: '100%', position: 'relative' }}>
+        {itemsPane}
+        {cartSheetOpen && (
+          <div
+            className="woopos-scrim"
+            style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
+            onClick={() => setCartSheetOpen(false)}
+            role="presentation"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                height: '88%',
+                background: 'var(--color-surface-bright)',
+                borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-normal-large)',
+                animation: 'woopos-sheet-in 0.28s cubic-bezier(0.2, 0, 0, 1)',
+              }}
+            >
+              <CartPanel
+                onBack={() => setCartSheetOpen(false)}
+                onCheckout={() => { setCartSheetOpen(false); navigate('/totals'); }}
+                onScanBarcode={() => { setCartSheetOpen(false); openSetup(); }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   // Tablet: a 3-pane horizontal row (items | cart | checkout). Starting "checkout" slides
@@ -167,8 +200,9 @@ function ItemsToolbar({
   onQuery: (q: string) => void;
   onToggleSearch: () => void;
 }) {
+  const isPhone = useIsPhone();
   return (
-    <div style={{ padding: 'var(--space-md) var(--space-md) 0' }}>
+    <div style={{ padding: 'var(--space-md)' }}>
       {searchOpen ? (
         <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>
@@ -186,32 +220,99 @@ function ItemsToolbar({
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
           <TabButton label="Products" active={tab === 'products'} onClick={() => onTab('products')} />
           <TabButton label="Coupons" active={tab === 'coupons'} onClick={() => onTab('coupons')} />
           <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={onToggleSearch}
-            aria-label="Search products"
-            style={{
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 'var(--size-xsmall)',
-              height: 'var(--size-xsmall)',
-              borderRadius: '50%',
-              background: 'var(--color-surface-container-low)',
-              color: 'var(--color-on-surface)',
-              boxShadow: 'var(--shadow-soft-medium)',
-            }}
-          >
+          <RoundIconButton ariaLabel="Search products" onClick={onToggleSearch}>
             <Search size="var(--icon-small)" />
-          </button>
+          </RoundIconButton>
+          {isPhone && <PhoneMenu />}
         </div>
       )}
     </div>
+  );
+}
+
+function RoundIconButton({ children, ariaLabel, onClick }: { children: React.ReactNode; ariaLabel: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      style={{
+        border: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 'var(--size-xsmall)',
+        height: 'var(--size-xsmall)',
+        borderRadius: '50%',
+        background: 'var(--color-surface-container-low)',
+        color: 'var(--color-on-surface)',
+        boxShadow: 'var(--shadow-soft-medium)',
+        flex: 'none',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Phone-only overflow menu (Orders / Settings / Exit POS), matching the tablet floating menu. */
+function PhoneMenu() {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} style={{ position: 'relative', flex: 'none' }}>
+      <RoundIconButton ariaLabel="Menu" onClick={() => setOpen((o) => !o)}>
+        <DotsVertical size="var(--icon-small)" />
+      </RoundIconButton>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + var(--space-sm))',
+            right: 0,
+            zIndex: 30,
+            minWidth: 200,
+            background: 'var(--color-surface-container-low)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-normal-large)',
+            padding: 'var(--space-xs)',
+          }}
+        >
+          <PhoneMenuRow icon={<Receipt size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); navigate('/order-history'); }} />
+          <PhoneMenuRow icon={<Gear size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); navigate('/settings'); }} />
+          <PhoneMenuRow icon={<ChevronRight size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); navigate('/flows'); }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhoneMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-md)',
+        width: '100%',
+        padding: 'var(--space-sm) var(--space-md)',
+        border: 'none',
+        background: 'transparent',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--color-on-surface)',
+        cursor: 'pointer',
+      }}
+    >
+      <span style={{ display: 'flex', color: 'var(--color-on-surface-variant-highest)' }}>{icon}</span>
+      <Text variant="bodyMedium">{label}</Text>
+    </button>
   );
 }
 

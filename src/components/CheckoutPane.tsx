@@ -122,7 +122,6 @@ export function CheckoutPane({ onBack, active = true }: { onBack?: () => void; a
       <div
         style={{
           padding: 'var(--space-md)',
-          borderTop: '1px solid var(--color-outline-variant)',
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--space-md)',

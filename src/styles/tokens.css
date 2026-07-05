@@ -124,7 +124,7 @@
 /* ---- Dark mode ---- */
 [data-theme='dark'] {
   --color-surface: #101517;
-  --color-surface-dim: #101517;
+  --color-surface-dim: #373a3e;
   --color-surface-bright: #1d2327;
   --color-surface-container-lowest: #3c434a;
   --color-surface-container-low: #3c434a;
@@ -141,6 +141,11 @@
   --color-outline: #8c8f94;
   --color-disabled-container: #50575e;
   --color-tertiary-icon: #720eec;
+
+  /* Dark theme flips the on-surface-variant grays lighter so secondary text (e.g. the
+     product price line) stays legible on dark cards. */
+  --color-on-surface-variant-lowest: #646970;
+  --color-on-surface-variant-highest: #a7aaad;
 }
 
 /* ---- Small tablet (short side < 800dp): ~0.75x spacing, 0.9x component/font ---- */

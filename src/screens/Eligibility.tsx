@@ -117,7 +117,7 @@ export function Eligibility() {
           <OutlinedButton
             text={eligibilityButtons.exit}
             fullWidth
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/flows')}
           />
         </div>
       </div>

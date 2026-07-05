@@ -1,6 +1,6 @@
 .chrome {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   background: #dfe1e4;
 }
@@ -9,40 +9,46 @@
   background: #202327;
 }
 
+/* Left side menu (kept class name .chrome-bar so the cursor-tool logic still targets it). */
 .chrome-bar {
   flex: none;
+  width: 260px;
+  height: 100vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 16px;
-  padding: 10px 16px;
+  gap: 20px;
+  padding: 18px 14px;
   background: #17181c;
   color: #f2f2f4;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.4);
   z-index: 10;
 }
 
 .chrome-left,
 .chrome-right {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
 }
 
 .chrome-brand {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 18px;
   letter-spacing: 0.3px;
   color: #f2f2f4;
   text-decoration: none;
+  padding: 2px 4px 4px;
 }
 
-/* ---- Dropdown menus (Flows + Preview state) ---- */
+/* ---- Dropdown menus (Flows / Tools / Card reader / Preview state) ---- */
 .chrome-menu {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
 }
 
 .chrome-menu__label {
@@ -50,22 +56,27 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: #9698a0;
+  padding-left: 2px;
 }
 
 .chrome-menu__trigger {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #f2f2f4;
   border-radius: 8px;
-  padding: 7px 12px;
+  padding: 9px 12px;
   font-size: 13px;
-  max-width: 320px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.chrome-menu__trigger .chrome-menu__caret {
+  margin-left: auto;
 }
 
 .chrome-menu__trigger:hover {
@@ -83,10 +94,11 @@
   font-size: 10px;
 }
 
+/* Dropdowns open to the right of the side menu, floating over the device stage. */
 .chrome-menu__dropdown {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
+  top: 0;
+  left: calc(100% + 10px);
   min-width: 240px;
   background: #1f2024;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -94,10 +106,6 @@
   padding: 6px;
   box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
   z-index: 20;
-}
-
-.chrome-menu--state .chrome-menu__dropdown {
-  left: auto;
 }
 
 .chrome-menu__item {
@@ -149,16 +157,21 @@
 
 /* ---- Tool toggle button (selected / unselected) ---- */
 .chrome-tool-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #cfd0d5;
   border-radius: 8px;
-  padding: 7px 12px;
+  padding: 9px 12px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.chrome-tool-btn .chrome-menu__caret {
+  margin-left: auto;
 }
 
 .chrome-tool-btn:hover {
@@ -202,7 +215,8 @@
 
 /* ---- Segmented control (device / theme) ---- */
 .segmented {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
@@ -211,12 +225,13 @@
 }
 
 .segmented button {
+  flex: 1;
   background: none;
   border: none;
   color: #cfd0d5;
   font-size: 12px;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 7px 12px;
   border-radius: 6px;
 }
 

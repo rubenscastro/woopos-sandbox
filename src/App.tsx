@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DeviceProvider } from './device/DeviceContext';
 import { DeviceLayout } from './device/DeviceLayout';
 import { CartProvider } from './state/CartContext';
@@ -39,8 +39,10 @@ export default function App() {
         <CartProvider>
           <BrowserRouter>
             <Routes>
-              {/* Home / flow index lives outside the device frame. */}
-              <Route path="/" element={<Home />} />
+              {/* The app boots into the splash/eligibility flow (tablet by default). */}
+              <Route path="/" element={<Navigate to="/splash" replace />} />
+              {/* Flow index (launcher) lives outside the device frame. */}
+              <Route path="/flows" element={<Home />} />
               {/* Every flow screen renders inside the simulated device shell. */}
               <Route element={<DeviceLayout />}>
                 <Route path="/splash" element={<Splash />} />

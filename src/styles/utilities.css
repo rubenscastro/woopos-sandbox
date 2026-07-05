@@ -37,12 +37,10 @@
   box-sizing: border-box;
 }
 
-/* Modal/dialog scrim: white on light theme, dark on dark theme. */
+/* Modal/dialog scrim: surfaceDim at 80% (matches WooPosBackgroundOverlay) — near-white on
+   light, dark gray on dark. */
 .woopos-scrim {
-  background: rgba(255, 255, 255, 0.8);
-}
-[data-theme='dark'] .woopos-scrim {
-  background: rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
 }
 
 /* Nested settings/detail page transition. */

@@ -76,7 +76,7 @@ export function Splash() {
           }}
           secondaryButton={{
             text: syncFailedCopy.exitButton,
-            onClick: () => navigate('/'),
+            onClick: () => navigate('/flows'),
           }}
         />
       )}
@@ -90,7 +90,7 @@ export function Splash() {
           }}
           secondaryButton={{
             text: syncFailedCopy.exitButton,
-            onClick: () => navigate('/'),
+            onClick: () => navigate('/flows'),
           }}
         />
       )}

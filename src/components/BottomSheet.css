@@ -1,15 +1,11 @@
 .woopos-sheet-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
   z-index: 40;
   display: flex;
   align-items: flex-end;
   animation: woopos-scrim-in 0.2s ease;
-}
-
-[data-theme='dark'] .woopos-sheet-scrim {
-  background: rgba(0, 0, 0, 0.5);
 }
 
 .woopos-sheet {

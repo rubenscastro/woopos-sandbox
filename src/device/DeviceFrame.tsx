@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useDevice, type DeviceId } from './DeviceContext';
 import { useCurrentPageBackground } from './PageBackground';
+import { StatusBar } from './StatusBar';
 import './DeviceFrame.css';
 
 /**
@@ -179,6 +180,8 @@ function DeviceScreen({
       >
         <div className="device-canvas">{children}</div>
       </div>
+      {/* OS status bar in the top safe-area. */}
+      <StatusBar device={device} />
       {/* Overlays (modals, keyboard) fixed to the device screen, above the scroll area. */}
       {overlay}
     </div>

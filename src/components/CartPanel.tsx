@@ -85,7 +85,7 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout }: C
       )}
 
       {!empty && !hideCheckout && (
-        <div style={{ padding: 'var(--space-md)', borderTop: '1px solid var(--color-outline-variant)' }}>
+        <div style={{ padding: 'var(--space-md)' }}>
           <Button text="Check out" fullWidth onClick={onCheckout} />
         </div>
       )}

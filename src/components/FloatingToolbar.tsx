@@ -41,7 +41,7 @@ export function FloatingToolbar() {
           >
             <MenuRow icon={<Receipt size="var(--icon-small)" />} label="Orders" onClick={() => { setMenuOpen(false); navigate('/order-history'); }} />
             <MenuRow icon={<Gear size="var(--icon-small)" />} label="Settings" onClick={() => { setMenuOpen(false); navigate('/settings'); }} />
-            <MenuRow icon={<ChevronRight size="var(--icon-small)" />} label="Exit POS" onClick={() => { setMenuOpen(false); navigate('/'); }} />
+            <MenuRow icon={<ChevronRight size="var(--icon-small)" />} label="Exit POS" onClick={() => { setMenuOpen(false); navigate('/flows'); }} />
           </div>
         </>
       )}

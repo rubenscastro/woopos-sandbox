@@ -34,9 +34,9 @@ export function DeviceLayout() {
       <PageBackgroundProvider>
       <BarcodeSetupProvider>
       <div className="chrome">
-        <header className="chrome-bar">
+        <aside className="chrome-bar">
           <div className="chrome-left">
-            <Link to="/" className="chrome-brand">
+            <Link to="/flows" className="chrome-brand">
               WooPOS
             </Link>
             <FlowsMenu />
@@ -64,7 +64,7 @@ export function DeviceLayout() {
               ]}
             />
           </div>
-        </header>
+        </aside>
 
         <DeviceFrame
           overlay={
@@ -284,7 +284,7 @@ function FlowsMenu() {
             className="chrome-menu__item chrome-menu__item--all"
             onClick={() => {
               setOpen(false);
-              navigate('/');
+              navigate('/flows');
             }}
           >
             All flows

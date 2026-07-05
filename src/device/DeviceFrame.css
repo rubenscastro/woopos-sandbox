@@ -80,10 +80,17 @@
    want their own background to fill the safe area can opt in with .woopos-fills-safe-top. */
 .device-scroll {
   --device-safe-top: 44px;
+  --device-safe-bottom: 0px;
+}
+
+/* Phone reserves a bottom home-indicator area so pinned buttons clear the rounded edge. */
+.device-scroll[data-device='phone'] {
+  --device-safe-bottom: 28px;
 }
 
 .device-canvas {
   height: 100%;
   box-sizing: border-box;
   padding-top: var(--device-safe-top);
+  padding-bottom: var(--device-safe-bottom);
 }
