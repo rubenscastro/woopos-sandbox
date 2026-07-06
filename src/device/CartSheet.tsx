@@ -8,8 +8,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CartPanel } from '../components/CartPanel';
+import { useNav } from './platformNav';
+import { CartPanel } from '../components/android/CartPanel';
 import { useBarcodeSetup } from '../tools/BarcodeSetup';
 import './CartSheet.css';
 
@@ -47,7 +47,7 @@ type Snap = keyof typeof SNAP;
 
 export function CartSheetHost() {
   const { open, closeCartSheet } = useCartSheet();
-  const navigate = useNavigate();
+  const navigate = useNav();
   const { openSetup } = useBarcodeSetup();
   const [snap, setSnap] = useState<Snap>('off');
   const snapRef = useRef<Snap>('off');

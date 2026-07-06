@@ -1,0 +1,31 @@
+.woopos-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  animation: woopos-scrim-in 0.2s ease;
+}
+
+.woopos-sheet {
+  width: calc(100% - 24px);
+  margin: 0 12px;
+  background: var(--color-surface-bright);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-normal-large);
+  animation: woopos-sheet-in 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes woopos-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes woopos-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}

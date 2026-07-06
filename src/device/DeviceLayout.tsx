@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DeviceFrame } from './DeviceFrame';
 import { useDevice, type DeviceId, type ThemeId } from './DeviceContext';
+import { usePlatform } from './PlatformContext';
+import { platformPath } from './platformNav';
+import { PlatformSwitcher } from './PlatformSwitcher';
 import {
   PreviewStateProvider,
   usePreviewStateConfig,
@@ -13,11 +16,11 @@ import { useCardReader } from '../tools/CardReaderContext';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
 import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { CardReaderConnectionHost } from '../tools/CardReaderConnectionDialog';
-import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } from '../components/icons';
+import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } from '../components/android/icons';
 import { useCart } from '../state/CartContext';
 import { useClickOutside } from '../hooks/useClickOutside';
-import { products } from '../mocks/products';
-import { flowGroups } from '../flows';
+import { products } from '../mocks/android/products';
+import { flowGroups } from '../flows.android';
 import './DeviceChrome.css';
 
 const builtFlows = flowGroups.flatMap((g) => g.flows).filter((f) => f.built && f.path);
@@ -29,6 +32,7 @@ const builtFlows = flowGroups.flatMap((g) => g.flows).filter((f) => f.built && f
  */
 export function DeviceLayout() {
   const { device, setDevice, theme, setTheme } = useDevice();
+  const { platform } = usePlatform();
 
   return (
     <PreviewStateProvider>
@@ -38,15 +42,22 @@ export function DeviceLayout() {
       <div className="chrome">
         <aside className="chrome-bar">
           <div className="chrome-left">
-            <Link to="/flows" className="chrome-brand">
+            <Link to={`/${platform}`} className="chrome-brand">
               WooPOS
             </Link>
-            <FlowsMenu />
+            {/* The Barcode + Card reader tools drive shared state (cart scans, reader connection
+                and transactions), so both platforms get them — iOS flows respond to the same tool
+                input as Android. The Flows list and preview-state menu are Android-only for now. */}
+            {platform === 'android' && <FlowsMenu />}
             <ToolsMenu />
             <CardReaderMenu />
-            <PreviewStateMenu />
+            {platform === 'android' && <PreviewStateMenu />}
           </div>
           <div className="chrome-right">
+            <div className="chrome-segmented-group">
+              <span className="chrome-segmented-label">Platform</span>
+              <PlatformSwitcher />
+            </div>
             <div className="chrome-segmented-group">
               <span className="chrome-segmented-label">Device</span>
               <Segmented<DeviceId>
@@ -107,7 +118,8 @@ function ToolsMenu() {
 
   const addScanned = () => {
     const p = products[Math.floor((Date.now() / 1000) % products.length)];
-    cart.addProduct({ id: p.id, name: p.name, price: p.price });
+    // Scanning shows a brief loading row in the cart before the product resolves.
+    cart.scanProduct({ id: p.id, name: p.name, price: p.price });
     // Adding a scanned product exits the barcode cursor tool.
     setActiveTool('none');
   };
@@ -296,9 +308,10 @@ function FlowsMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { platform } = usePlatform();
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
-  const current = builtFlows.find((f) => f.path === location.pathname);
+  const current = builtFlows.find((f) => platformPath(platform, f.path!) === location.pathname);
 
   return (
     <div className="chrome-menu" ref={menuRef}>
@@ -313,7 +326,7 @@ function FlowsMenu() {
             className="chrome-menu__item chrome-menu__item--all"
             onClick={() => {
               setOpen(false);
-              navigate('/flows');
+              navigate(platformPath(platform, '/flows'));
             }}
           >
             All flows
@@ -322,10 +335,10 @@ function FlowsMenu() {
             <button
               key={f.num}
               type="button"
-              className={`chrome-menu__item ${f.path === location.pathname ? 'is-active' : ''}`}
+              className={`chrome-menu__item ${platformPath(platform, f.path!) === location.pathname ? 'is-active' : ''}`}
               onClick={() => {
                 setOpen(false);
-                navigate(f.path!);
+                navigate(platformPath(platform, f.path!));
               }}
             >
               <span className="chrome-menu__num">{f.num}</span>

@@ -1,7 +1,7 @@
-import { Modal } from '../components/Modal';
-import { Text } from '../components/Text';
-import { Button, OutlinedButton } from '../components/Button';
-import { CardReaderIllustration } from '../components/CardReaderIllustration';
+import { Modal } from '../components/android/Modal';
+import { Text } from '../components/android/Text';
+import { Button, OutlinedButton } from '../components/android/Button';
+import { CardReaderIllustration } from '../components/android/CardReaderIllustration';
 import { useCardReader } from './CardReaderContext';
 
 /**
@@ -23,6 +23,7 @@ export function CardReaderConnectionHost() {
       onDismiss={dismissable ? cr.cancelConnecting : () => {}}
       onClose={dismissable ? cr.cancelConnecting : undefined}
       backgroundLabel="Card reader connection dialog"
+      maxWidth={520}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', textAlign: 'center' }}>
         {s === 'scanning' && (

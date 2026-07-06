@@ -58,7 +58,11 @@ interface CartContextValue {
   discountTotal: number;
   taxTotal: number;
   total: number;
+  /** Number of barcode-scanned products still "loading" into the cart (renders skeleton rows). */
+  pendingScans: number;
   addProduct: (p: AddableProduct) => void;
+  /** Add a product as if scanned: shows a loading row briefly, then resolves to the item. */
+  scanProduct: (p: AddableProduct) => void;
   addCustomAmount: (name: string, amount: number, taxable: boolean) => void;
   addCoupon: (code: string, summary: string, discount: number) => void;
   removeLine: (key: string) => void;
@@ -73,6 +77,7 @@ const nextKey = (prefix: string) => `${prefix}-${idSeq++}`;
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [pendingScans, setPendingScans] = useState(0);
 
   const addProduct = useCallback((p: AddableProduct) => {
     setLines((prev) => {
@@ -96,6 +101,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [line, ...prev];
     });
   }, []);
+
+  // Barcode scan: show a loading row for a beat, then resolve into the actual product line.
+  const scanProduct = useCallback((p: AddableProduct) => {
+    setPendingScans((n) => n + 1);
+    window.setTimeout(() => {
+      addProduct(p);
+      setPendingScans((n) => Math.max(0, n - 1));
+    }, 800);
+  }, [addProduct]);
 
   const addCustomAmount = useCallback((name: string, amount: number, taxable: boolean) => {
     setLines((prev) => [
@@ -123,7 +137,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const clear = useCallback(() => setLines([]), []);
+  const clear = useCallback(() => {
+    setLines([]);
+    setPendingScans(0);
+  }, []);
 
   const value = useMemo<CartContextValue>(() => {
     const subtotal = lines.reduce((sum, l) => {
@@ -152,14 +169,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       discountTotal,
       taxTotal,
       total: subtotal - discountTotal + taxTotal,
+      pendingScans,
       addProduct,
+      scanProduct,
       addCustomAmount,
       addCoupon,
       removeLine,
       setQuantity,
       clear,
     };
-  }, [lines, addProduct, addCustomAmount, addCoupon, removeLine, setQuantity, clear]);
+  }, [lines, pendingScans, addProduct, scanProduct, addCustomAmount, addCoupon, removeLine, setQuantity, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

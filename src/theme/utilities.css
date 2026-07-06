@@ -1,0 +1,104 @@
+/*
+ * Adaptive width utilities mirroring the app's Modifier helpers.
+ * Baseline is tablet; [data-device] on an ancestor (the device screen) widens for
+ * smaller breakpoints — same attribute-driven approach as the sizing tokens.
+ */
+
+/* adaptiveContentWidth(): tablet 0.55, smallTablet 2/3, phone full */
+.woopos-adaptive-content-width {
+  width: 55%;
+}
+[data-device='smallTablet'] .woopos-adaptive-content-width {
+  width: 66.6667%;
+}
+[data-device='phone'] .woopos-adaptive-content-width {
+  width: 100%;
+}
+
+/* wooPosFullScreenActionButton(): tablet 0.5, phone full */
+.woopos-fullscreen-action {
+  width: 50%;
+}
+[data-device='phone'] .woopos-fullscreen-action {
+  width: 100%;
+}
+
+/*
+ * Two-pane screens (Settings, Orders) whose panes have their own backgrounds fill the top
+ * safe-area with those backgrounds instead of leaving a strip above them: pull the screen up
+ * into the safe-area, then re-inset the content per pane with padding-top.
+ */
+.woopos-fills-safe-top {
+  margin-top: calc(-1 * var(--device-safe-top, 0px));
+  height: calc(100% + var(--device-safe-top, 0px));
+}
+.woopos-safe-pane {
+  padding-top: var(--device-safe-top, 0px);
+  box-sizing: border-box;
+}
+
+/* Modal/dialog scrim: surfaceDim at 80% (matches WooPosBackgroundOverlay) — near-white on
+   light, dark gray on dark. */
+.woopos-scrim {
+  background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
+}
+
+/* Hide the native scrollbar on scrollable content (keeps scrolling, drops the track). */
+.woopos-no-scrollbar {
+  scrollbar-width: none;
+}
+.woopos-no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* iOS "liquid glass" — the frosted, translucent material used by native floating menus and
+   controls (UIKit/SwiftUI .regularMaterial / glass effect). Only applied under
+   [data-platform='ios']; a solid fallback covers browsers without backdrop-filter. */
+[data-platform='ios'] .woopos-liquid-glass {
+  background: color-mix(in srgb, var(--color-surface-container-low) 62%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-platform='ios'] .woopos-liquid-glass {
+    background: var(--color-surface-container-low);
+  }
+}
+
+/* Skeleton loading placeholder — a dim block with a sweeping highlight. */
+.woopos-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface-dim);
+}
+.woopos-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-on-surface) 10%, transparent),
+    transparent
+  );
+  animation: woopos-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes woopos-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Nested settings/detail page transition. */
+@keyframes woopos-page-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+.woopos-page-anim {
+  animation: woopos-page-slide-in 0.24s ease;
+}

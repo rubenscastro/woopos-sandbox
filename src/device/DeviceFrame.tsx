@@ -63,7 +63,10 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
             borderRadius: spec.radius,
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
-          }}
+            // Exposed so device-scoped fixed overlays (e.g. the floating-menu scrim, which is
+            // positioned against this transformed box) can inset themselves to the screen.
+            ['--device-bezel' as string]: `${spec.bezel}px`,
+          } as React.CSSProperties}
         >
           {spec.notch && <div className="device-notch" />}
           <DeviceScreen
@@ -168,7 +171,7 @@ function DeviceScreen({
   return (
     <div
       className="device-screen"
-      style={{ borderRadius: radius, background: pageBg }}
+      style={{ borderRadius: radius, background: pageBg, ['--device-screen-radius' as string]: `${radius}px` } as React.CSSProperties}
       data-theme={theme}
       data-device={device}
     >
