@@ -33,7 +33,10 @@ export function StatusBar({ device }: { device: DeviceId }) {
         left: 0,
         right: 0,
         height: 'var(--device-safe-top)',
-        zIndex: 6,
+        // The OS status bar is topmost — it only occupies the top safe-area strip (nothing else
+        // lives there), so a high z-index keeps the clock/battery visible above full-screen
+        // takeovers without affecting other overlays, which don't reach this strip.
+        zIndex: 55,
         pointerEvents: 'none',
         display: 'flex',
         alignItems: 'center',

@@ -8,13 +8,15 @@ import { AddCustomAmountForm } from '../../components/ios/AddCustomAmountForm';
 import { PosPreSearch } from '../../components/ios/PosPreSearch';
 import { PosFloatingControl } from '../../components/ios/PosFloatingControl';
 import { Checkout } from './Checkout';
-import { Search, Plus, ChevronLeft, Close, Tag } from '../../components/android/icons';
+import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useCart } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
 // Catalog sample data is the same store on both platforms; copy differences live in the UI.
-import { products } from '../../mocks/android/products';
+import { products, variations, type MockProduct } from '../../mocks/android/products';
 import { coupons } from '../../mocks/android/coupons';
 
 /**
@@ -37,6 +39,7 @@ export function ItemSelector({
   const isPhone = useIsPhone();
   const cart = useCart();
   const nav = useNav();
+  const { openSetup } = useBarcodeSetup();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -44,6 +47,7 @@ export function ItemSelector({
   const [createCouponOpen, setCreateCouponOpen] = useState(autoCreateCoupon);
   const [customAmountOpen, setCustomAmountOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
+  const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
 
   const couponSheet = (
     <CreateCouponSheet
@@ -73,14 +77,15 @@ export function ItemSelector({
     [q],
   );
 
-  const list = (
+  const catalog = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0 }}>
-      {/* Header: tabs + search / create-coupon (POSPageHeaderView). */}
-      <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+      {/* Header: tabs + search / create-coupon (POSPageHeaderView). Extra top padding keeps the
+          title clear of the OS status bar. */}
+      <div style={{ padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
         {searchOpen ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <button type="button" aria-label="Back" onClick={() => { setSearchOpen(false); setQuery(''); }} style={iconBtn}>
-              <ChevronLeft size="var(--icon-medium)" />
+            <button type="button" aria-label="Back" onClick={() => { setSearchOpen(false); setQuery(''); }} style={plainBack}>
+              <ChevronLeft size="30px" />
             </button>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', background: 'var(--color-surface-bright)', border: '2px solid var(--color-primary)', borderRadius: 'var(--radius-md)', padding: '0 var(--space-md)', minHeight: 'var(--size-xsmall)' }}>
               <Search size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
@@ -100,11 +105,14 @@ export function ItemSelector({
             <button type="button" aria-label="Search" onClick={() => setSearchOpen(true)} style={iconBtn}>
               <Search size="var(--icon-small)" />
             </button>
+            {/* Phone: the main menu lives top-right next to search (tablet uses the floating control). */}
+            {isPhone && <PhoneHeaderMenu />}
           </div>
         )}
       </div>
 
-      <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: `0 var(--space-lg) ${isPhone ? 'var(--space-md)' : 'var(--space-xxl)'}` }}>
+      {/* Extra bottom padding on tablet so the last product clears the floating menu / reader pill. */}
+      <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: `0 var(--space-lg) ${isPhone ? 'var(--space-md)' : 'calc(var(--size-small) + var(--space-xl))'}` }}>
         {searchOpen && !q ? (
           <PosPreSearch
             tab={tab}
@@ -119,7 +127,7 @@ export function ItemSelector({
               <PosItemCard
                 key={p.id}
                 item={{ id: p.id, name: p.name, detail: p.variable ? 'Options available' : formatUsd(p.price), variable: p.variable }}
-                onClick={() => cart.addProduct({ id: p.id, name: p.name, price: p.price })}
+                onClick={() => (p.variable ? setVariationOf(p) : cart.addProduct({ id: p.id, name: p.name, price: p.price }))}
               />
             ))
           : shownCoupons.map((c) => (
@@ -141,17 +149,26 @@ export function ItemSelector({
     </div>
   );
 
+  // Variable products drill into a variations list (Item Selector → variations); simple products
+  // add straight to the cart.
+  const list = variationOf ? (
+    <IosVariations product={variationOf} onBack={() => setVariationOf(null)} onAdd={(v) => { cart.addProduct(v); setVariationOf(null); }} />
+  ) : catalog;
+
   if (isPhone) {
     return (
       <div style={{ height: '100%', background: 'var(--color-surface)', position: 'relative' }}>
         {list}
         {cartOpen && (
           <div className="woopos-scrim" role="presentation" onClick={() => setCartOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
-            <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', height: '88%', background: 'var(--color-surface-bright)', borderRadius: 'var(--radius-xl) var(--radius-xl) 0 0', overflow: 'hidden', boxShadow: 'var(--shadow-normal-large)', position: 'relative' }}>
-              <button type="button" aria-label="Close" onClick={() => setCartOpen(false)} style={{ ...iconBtn, position: 'absolute', top: 'var(--space-sm)', right: 'var(--space-sm)', zIndex: 1 }}>
-                <Close size="var(--icon-medium)" />
-              </button>
-              <PosCartPane onCheckout={() => nav('/checkout')} />
+            {/* Cart drawer: opens at 50% height with a drag handle, no close button or item count. */}
+            <div className="woopos-slide-up" onClick={(e) => e.stopPropagation()} style={{ width: '100%', height: '50%', background: 'var(--color-surface-bright)', borderRadius: 'var(--radius-xl) var(--radius-xl) 0 0', overflow: 'hidden', boxShadow: 'var(--shadow-normal-large)', display: 'flex', flexDirection: 'column', paddingTop: 'var(--space-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-sm) 0', flex: 'none' }}>
+                <div style={{ width: 40, height: 5, borderRadius: 3, background: 'var(--color-outline-variant)' }} />
+              </div>
+              <div style={{ flex: 1, minHeight: 0, padding: '0 var(--space-md)' }}>
+                <PosCartPane onCheckout={() => nav('/checkout')} onScanBarcode={() => { setCartOpen(false); openSetup(); }} showItemCount={false} />
+              </div>
             </div>
           </div>
         )}
@@ -180,6 +197,7 @@ export function ItemSelector({
         <div className="woopos-safe-pane" style={{ width: `${(35 / ROW) * 100}%`, minWidth: 0, background: 'var(--color-surface-bright)' }}>
           <PosCartPane
             onCheckout={() => setCheckout(true)}
+            onScanBarcode={openSetup}
             hideCheckout={checkout}
             onBack={checkout ? () => setCheckout(false) : undefined}
           />
@@ -227,6 +245,31 @@ function CustomAmountEntryRow({ onTap }: { onTap: () => void }) {
   );
 }
 
+/** iOS variations drill-in (Item Selector → variations): back + product name, then a list of
+ *  the product's variations as item cards; tapping one adds it to the cart. */
+function IosVariations({ product, onBack, onAdd }: { product: MockProduct; onBack: () => void; onAdd: (v: { id: number; name: string; price: number }) => void }) {
+  const vars = variations[product.id] ?? [];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
+        <button type="button" aria-label="Back" onClick={onBack} style={plainBack}>
+          <ChevronLeft size="30px" />
+        </button>
+        <PosText variant="heading" bold>{product.name}</PosText>
+      </div>
+      <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: '0 var(--space-lg) var(--space-xxl)' }}>
+        {vars.map((v) => (
+          <PosItemCard
+            key={v.id}
+            item={{ id: v.id, name: `${product.name} · ${v.name}`, detail: formatUsd(v.price) }}
+            onClick={() => onAdd({ id: v.id, name: `${product.name} (${v.name})`, price: v.price })}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TabTitle({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}>
@@ -251,3 +294,47 @@ const iconBtn: React.CSSProperties = {
   cursor: 'pointer',
   flex: 'none',
 };
+
+/** Nav back button — plain chevron, no circle container (POSPageHeaderBackButton). */
+const plainBack: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  border: 'none',
+  background: 'none',
+  color: 'var(--color-on-surface)',
+  padding: '4px 8px 4px 0',
+  cursor: 'pointer',
+  flex: 'none',
+};
+
+/** Phone-only header menu (top-right): the "…" main menu — Orders / Settings / Exit POS — in a
+ *  liquid-glass popover, matching the tablet floating control's menu. */
+function PhoneHeaderMenu() {
+  const nav = useNav();
+  const [open, setOpen] = useState(false);
+  const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} style={{ position: 'relative', flex: 'none' }}>
+      <button type="button" aria-label="Menu" onClick={() => setOpen((o) => !o)} style={iconBtn}>
+        <DotsHorizontal size="var(--icon-small)" />
+      </button>
+      {open && (
+        <div className="woopos-liquid-glass" style={{ position: 'absolute', top: 'calc(var(--size-xsmall) + var(--space-sm))', right: 0, minWidth: 200, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden', zIndex: 30 }}>
+          <HeaderMenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
+          <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+          <HeaderMenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />
+          <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+          <HeaderMenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); nav('/flows'); }} />
+        </div>
+      )}
+    </div>
+  );
+}
+function HeaderMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', width: '100%', padding: 'var(--space-sm) var(--space-lg)', border: 'none', background: 'transparent', color: 'var(--color-on-surface)', cursor: 'pointer' }}>
+      <PosText variant="bodyMedium" style={{ flex: 1, textAlign: 'left' }}>{label}</PosText>
+      <span style={{ display: 'flex', color: 'var(--color-on-surface)' }}>{icon}</span>
+    </button>
+  );
+}

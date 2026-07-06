@@ -67,6 +67,16 @@
   }
 }
 
+/* Bottom sheets & the on-screen keyboard slide up from the bottom edge. */
+@keyframes woopos-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+.woopos-slide-up {
+  animation: woopos-slide-up 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
 /* Skeleton loading placeholder — a dim block with a sweeping highlight. */
 .woopos-skeleton {
   position: relative;

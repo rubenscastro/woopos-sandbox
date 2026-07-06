@@ -10,7 +10,11 @@ import type { PlatformId } from './PlatformContext';
  * on the iOS home. Populate as iOS flows land.
  */
 const EQUIV: Partial<Record<PlatformId, string>>[] = [
-  // { android: 'products', ios: 'products' },   // add as confirmed
+  { android: 'products', ios: 'products' },
+  { android: 'order-history', ios: 'orders' },
+  { android: 'settings', ios: 'settings' },
+  { android: 'settings-hardware', ios: 'settings' },
+  { android: 'totals', ios: 'checkout' },
 ];
 
 /** Parse `/android/products` → { platform: 'android', slug: 'products' } (slug '' = home). */
@@ -27,12 +31,13 @@ export interface RouteMapResult {
   available: boolean;
 }
 
-/** Map the current pathname to the equivalent route on `to`, or that platform's home. */
+/** Map the current pathname to the equivalent route on `to`. When the current flow has no
+ *  confirmed equivalent, fall back to the product catalog (the app's effective home). */
 export function mapRoute(to: PlatformId, pathname: string): RouteMapResult {
   const { platform: from, slug } = parse(pathname);
-  const home = `/${to}`;
-  if (!from || slug === '') return { path: home, available: true }; // home ↔ home
+  const catalog = `/${to}/products`;
+  if (!from || slug === '') return { path: `/${to}`, available: true }; // launcher ↔ launcher
   const row = EQUIV.find((r) => r[from] === slug);
   const targetSlug = row?.[to];
-  return targetSlug ? { path: `/${to}/${targetSlug}`, available: true } : { path: home, available: false };
+  return targetSlug ? { path: `/${to}/${targetSlug}`, available: true } : { path: catalog, available: false };
 }

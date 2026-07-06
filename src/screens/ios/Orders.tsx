@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
-import { Close } from '../../components/android/icons';
+import { Close, ChevronLeft } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { formatUsd } from '../../lib/currency';
@@ -20,7 +20,7 @@ export function Orders() {
 
   const list = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) var(--space-lg)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
         <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
           <Close size="var(--icon-medium)" />
         </button>
@@ -63,8 +63,12 @@ function OrderDetail({ order, onBack }: { order: MockOrder; onBack?: () => void 
   const productsSubtotal = order.items.reduce((s, i) => s + i.lineTotal, 0);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) var(--space-lg)' }}>
-        {onBack && <button type="button" aria-label="Back" onClick={onBack} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>‹</button>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
+        {onBack && (
+          <button type="button" aria-label="Back" onClick={onBack} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
+            <ChevronLeft size="30px" />
+          </button>
+        )}
         <PosText variant="heading" bold>Order {order.number}</PosText>
       </div>
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: '0 var(--space-lg) var(--space-xxl)' }}>

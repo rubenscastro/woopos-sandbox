@@ -29,11 +29,11 @@ export function AddCustomAmountForm({
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 45, background: 'var(--color-surface-bright)', display: 'flex', flexDirection: 'column' }}>
-      {/* Header (POSPageHeaderView + back chevron). */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) var(--space-lg)', minHeight: 'var(--size-xsmall)' }}>
-        <button type="button" aria-label="Back" onClick={onDismiss} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-          <ChevronLeft size="var(--icon-medium)" />
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 'var(--device-keyboard-height, 0px)', zIndex: 45, background: 'var(--color-surface-bright)', display: 'flex', flexDirection: 'column' }}>
+      {/* Header (POSPageHeaderView + back chevron). Top padding clears the OS status bar. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'calc(var(--device-safe-top, 0px) + var(--space-lg)) var(--space-lg) var(--space-md)', minHeight: 'var(--size-xsmall)' }}>
+        <button type="button" aria-label="Back" onClick={onDismiss} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
+          <ChevronLeft size="30px" />
         </button>
         <PosText variant="heading" bold>
           Custom amount

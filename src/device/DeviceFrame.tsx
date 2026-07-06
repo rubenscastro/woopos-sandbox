@@ -23,6 +23,19 @@ const SPECS: Record<DeviceId, DeviceSpec> = {
 
 const DRAG_THRESHOLD = 5;
 
+/** Nearest scrollable ancestor of `node` (up to and excluding `stop`) — the element a drag
+ *  should pan. Used so dragging a screen's inner scroll area (catalog, cart) works, not just
+ *  the outer device-scroll. */
+function scrollableUnder(node: HTMLElement | null, stop: HTMLElement | null): HTMLElement | null {
+  let el: HTMLElement | null = node;
+  while (el && el !== stop) {
+    const oy = getComputedStyle(el).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
 export function DeviceFrame({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
   const { device, theme } = useDevice();
   const spec = SPECS[device];
@@ -110,12 +123,15 @@ function DeviceScreen({
     startY: 0,
     scrollLeft: 0,
     scrollTop: 0,
+    el: null as HTMLElement | null,
   });
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     // Let form controls handle their own pointer interactions.
     if ((e.target as HTMLElement).closest('input, textarea, select')) return;
-    const el = scrollRef.current;
+    // Drag-scroll the actual scrollable element under the pointer (e.g. the catalog's inner
+    // list), falling back to the whole screen when nothing inner scrolls.
+    const el = scrollableUnder(e.target as HTMLElement, scrollRef.current) ?? scrollRef.current;
     if (!el) return;
     drag.current = {
       active: true,
@@ -124,6 +140,7 @@ function DeviceScreen({
       startY: e.clientY,
       scrollLeft: el.scrollLeft,
       scrollTop: el.scrollTop,
+      el,
     };
   }, []);
 
@@ -135,7 +152,7 @@ function DeviceScreen({
       const dy = e.clientY - d.startY;
       if (!d.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       d.moved = true;
-      const el = scrollRef.current;
+      const el = d.el;
       if (!el) return;
       // Pointer moves in screen px; content is scaled, so divide the delta by scale.
       el.scrollLeft = d.scrollLeft - dx / scale;
@@ -143,8 +160,7 @@ function DeviceScreen({
       el.classList.add('is-grabbing');
     };
     const onUp = () => {
-      const el = scrollRef.current;
-      el?.classList.remove('is-grabbing');
+      drag.current.el?.classList.remove('is-grabbing');
       drag.current.active = false;
     };
     window.addEventListener('pointermove', onMove);

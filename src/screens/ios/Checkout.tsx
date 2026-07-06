@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PosText } from '../../components/ios/PosText';
 import { PosButton } from '../../components/ios/PosButton';
-import { PosTextField } from '../../components/ios/PosTextField';
 import { Spinner } from '../../components/android/Spinner';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
 import { CardReaderNotConnected, ReadyForPaymentCard } from '../../components/android/illustrations';
@@ -74,18 +73,28 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
     );
   }
   if (state === 'email') {
+    // POSSingleFieldInputView: header + centered plain TextField (no border/background, heading
+    // font, primary caret) + full-width button, on a surfaceBright background.
     return (
-      <FullScreen bg="var(--color-surface)" align="stretch">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) var(--space-lg)' }}>
-          <button type="button" aria-label="Back" onClick={() => setState('success')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-            <ChevronLeft size="var(--icon-medium)" />
-          </button>
+      <FullScreen bg="var(--color-surface-bright)" align="stretch">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
+          <BackButton onClick={() => setState('success')} />
           <PosText variant="heading" bold>Email receipt</PosText>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
-          <div style={{ width: '100%', maxWidth: 460 }}>
-            <PosTextField value={email} onChange={setEmail} placeholder="Type email" autoFocus />
-          </div>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Type email"
+            type="email"
+            autoFocus
+            inputMode="email"
+            style={{
+              border: 'none', outline: 'none', background: 'transparent', textAlign: 'center', width: '100%',
+              color: 'var(--color-on-surface)', caretColor: 'var(--color-primary)',
+              fontFamily: 'var(--font-family)', fontSize: 'var(--font-heading-size)', fontWeight: 400,
+            }}
+          />
         </div>
         <BottomStrip>
           <PosButton label={sending ? 'Sending…' : 'Send'} fullWidth disabled={!emailValid || sending} onClick={sendReceipt} />
@@ -96,10 +105,8 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
   if (state === 'cash') {
     return (
       <FullScreen bg="var(--color-surface)" align="stretch">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) var(--space-lg)' }}>
-          <button type="button" aria-label="Back" onClick={() => { setCash(''); setState('idle'); }} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-            <ChevronLeft size="var(--icon-medium)" />
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
+          <BackButton onClick={() => { setCash(''); setState('idle'); }} />
           <div>
             <PosText variant="heading" bold>Cash payment</PosText>
             <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>Total: {formatUsd(total)}</PosText>
@@ -107,7 +114,7 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }}>
           <input value={cash} onChange={(e) => setCash(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="$0.00" autoFocus inputMode="decimal"
-            style={{ border: 'none', outline: 'none', background: 'transparent', textAlign: 'center', minWidth: 200, color: 'var(--color-on-surface)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-heading-size)', fontWeight: 700 }} />
+            style={{ border: 'none', outline: 'none', background: 'transparent', textAlign: 'center', minWidth: 200, color: 'var(--color-on-surface)', caretColor: 'var(--color-primary)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-heading-size)', fontWeight: 700 }} />
           {changeDue > 0 && <PosText variant="bodySmall" color="var(--color-on-surface-variant-lowest)">Change due {formatUsd(changeDue)}</PosText>}
         </div>
         <BottomStrip>
@@ -120,12 +127,8 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
   // --- In-pane totals + payment buttons (idle / failed) ---
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', minHeight: 'var(--size-xsmall)', padding: 'var(--space-md) var(--space-lg)' }}>
-        {showBack && (
-          <button type="button" aria-label="Back" onClick={back} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-            <ChevronLeft size="var(--icon-medium)" />
-          </button>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', minHeight: 'var(--size-xsmall)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
+        {showBack && <BackButton onClick={back} />}
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }}>
@@ -175,22 +178,31 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
  * status bar (safe-top) so the clock/battery stay visible.
  */
 function FullScreen({ bg, align = 'center', children }: { bg: string; align?: 'center' | 'stretch'; children: React.ReactNode }) {
+  // Note: use paddingLeft/Right/Bottom (not the `padding` shorthand) so the safe-area paddingTop
+  // is never clobbered.
   const centered: React.CSSProperties = align === 'center'
-    ? { alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }
+    ? { alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', paddingLeft: 'var(--space-xl)', paddingRight: 'var(--space-xl)', paddingBottom: 'var(--space-xl)', textAlign: 'center' }
     : {};
   const node = (
     <div style={{
       // Cover the whole screen (incl. behind the status bar) so no seam shows, but sit BELOW
-      // the status bar (z-index 6) so the clock/battery stay visible; content is padded down
-      // past the safe-area. The screen box clips the rounded corners.
+      // the status bar (z 55) so the clock/battery stay visible; content is padded down past the
+      // safe-area. The screen box clips the rounded corners.
       position: 'absolute',
-      inset: 0,
-      paddingTop: 'var(--device-safe-top, 0px)',
+      top: 0,
+      left: 0,
+      right: 0,
+      // Shrink above the on-screen keyboard so the CTA stays visible; 0 when no keyboard.
+      bottom: 'var(--device-keyboard-height, 0px)',
       background: bg,
-      zIndex: 5,
+      // Above the floating control (z 20) so it's covered during the takeover; below the OS
+      // status bar (z 55) and the keyboard (z 45) so those stay on top.
+      zIndex: 30,
       display: 'flex',
       flexDirection: 'column',
       ...centered,
+      // paddingTop last so nothing overrides the safe-area inset.
+      paddingTop: 'var(--device-safe-top, 0px)',
     }}>
       {children}
     </div>
@@ -222,6 +234,16 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+/** iOS nav back button (POSPageHeaderBackButton): chevron.backward at posButtonSymbolLarge
+ *  (~30px), no circle container. */
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" aria-label="Back" onClick={onClick} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
+      <ChevronLeft size="30px" />
+    </button>
+  );
+}
+
 /** Full-width bottom button strip (POSCheckoutPaymentButtonsRow padding). */
 function BottomStrip({ children }: { children: React.ReactNode }) {
   return (

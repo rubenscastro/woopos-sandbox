@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DeviceFrame } from './DeviceFrame';
 import { useDevice, type DeviceId, type ThemeId } from './DeviceContext';
-import { usePlatform } from './PlatformContext';
+import { usePlatform, type PlatformId } from './PlatformContext';
 import { platformPath } from './platformNav';
 import { PlatformSwitcher } from './PlatformSwitcher';
 import {
@@ -20,10 +20,14 @@ import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } fr
 import { useCart } from '../state/CartContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { products } from '../mocks/android/products';
-import { flowGroups } from '../flows.android';
+import { flowGroups as androidFlowGroups } from '../flows.android';
+import { flowGroups as iosFlowGroups } from '../flows.ios';
 import './DeviceChrome.css';
 
-const builtFlows = flowGroups.flatMap((g) => g.flows).filter((f) => f.built && f.path);
+const builtFlowsByPlatform: Record<PlatformId, { num: number; title: string; path?: string }[]> = {
+  android: androidFlowGroups.flatMap((g) => g.flows).filter((f) => f.built && f.path),
+  ios: iosFlowGroups.flatMap((g) => g.flows).filter((f) => f.built && f.path),
+};
 
 /**
  * Chrome around the simulated device. The flow-navigation menu, the per-screen preview-state
@@ -48,7 +52,7 @@ export function DeviceLayout() {
             {/* The Barcode + Card reader tools drive shared state (cart scans, reader connection
                 and transactions), so both platforms get them — iOS flows respond to the same tool
                 input as Android. The Flows list and preview-state menu are Android-only for now. */}
-            {platform === 'android' && <FlowsMenu />}
+            <FlowsMenu />
             <ToolsMenu />
             <CardReaderMenu />
             {platform === 'android' && <PreviewStateMenu />}
@@ -311,6 +315,7 @@ function FlowsMenu() {
   const { platform } = usePlatform();
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
+  const builtFlows = builtFlowsByPlatform[platform];
   const current = builtFlows.find((f) => platformPath(platform, f.path!) === location.pathname);
 
   return (

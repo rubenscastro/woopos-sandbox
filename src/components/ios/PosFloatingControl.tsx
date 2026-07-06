@@ -36,9 +36,9 @@ export function PosFloatingControl() {
           type="button"
           aria-label="Menu"
           onClick={() => setOpen((o) => !o)}
-          style={{ width: 'var(--size-small)', height: 'var(--size-small)', borderRadius: 'var(--radius-md)', border: 'none', background: 'var(--color-surface-container-low)', color: 'var(--color-on-surface)', boxShadow: 'var(--shadow-normal-medium)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, fontWeight: 700, lineHeight: 1 }}
+          style={{ width: 'var(--size-small)', height: 'var(--size-small)', borderRadius: 'var(--radius-md)', border: 'none', background: 'var(--color-surface-container-low)', color: 'var(--color-on-surface)', boxShadow: 'var(--shadow-normal-medium)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
         >
-          …
+          <Ellipsis />
         </button>
       </div>
 
@@ -56,6 +56,18 @@ export function PosFloatingControl() {
         </span>
       </button>
     </div>
+  );
+}
+
+/** SF Symbol "ellipsis" at .posBodyLargeBold (24pt bold) in the 80pt floating button — bold,
+ *  chunky dots, ~24px wide. */
+function Ellipsis() {
+  return (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <circle cx="4" cy="12" r="2.4" />
+      <circle cx="12" cy="12" r="2.4" />
+      <circle cx="20" cy="12" r="2.4" />
+    </svg>
   );
 }
 

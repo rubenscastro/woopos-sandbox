@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useDevice } from './DeviceContext';
 import './DeviceKeyboard.css';
 
@@ -41,13 +41,18 @@ export function DeviceKeyboard() {
       (t instanceof HTMLInputElement &&
         !['checkbox', 'radio', 'button', 'submit', 'range'].includes(t.type)) ||
       t instanceof HTMLTextAreaElement
-        ? Boolean((t as HTMLElement).closest('.device-scroll'))
+        ? // Use .device-screen (not .device-scroll) so full-screen takeovers portaled to the
+          // screen layer (cash amount, email receipt) also raise the keyboard.
+          Boolean((t as HTMLElement).closest('.device-screen'))
         : false;
 
     const onFocusIn = (e: FocusEvent) => {
       if (isDeviceField(e.target)) {
-        fieldRef.current = e.target as Field;
-        setMode('letters');
+        const el = e.target as Field;
+        fieldRef.current = el;
+        // Numeric fields (e.g. cash amount) open straight to the number/symbols layout.
+        const numeric = el instanceof HTMLInputElement && (el.inputMode === 'decimal' || el.inputMode === 'numeric' || el.type === 'number' || el.type === 'tel');
+        setMode(numeric ? 'symbols' : 'letters');
         setVisible(true);
       }
     };
@@ -87,6 +92,20 @@ export function DeviceKeyboard() {
   const backspace = () =>
     edit((v, s, e) => (s === e ? [v.slice(0, Math.max(0, s - 1)) + v.slice(e), Math.max(0, s - 1)] : [v.slice(0, s) + v.slice(e), s]));
 
+  // Publish the keyboard height on the device screen so full-screen content can shift up and
+  // keep its CTA visible above the keyboard.
+  useLayoutEffect(() => {
+    const screen = document.querySelector('.device-screen') as HTMLElement | null;
+    if (!screen) return;
+    if (visible) {
+      const kb = document.querySelector('.device-keyboard') as HTMLElement | null;
+      screen.style.setProperty('--device-keyboard-height', kb ? `${kb.offsetHeight}px` : '40%');
+    } else {
+      screen.style.removeProperty('--device-keyboard-height');
+    }
+    return () => { screen.style.removeProperty('--device-keyboard-height'); };
+  }, [visible, mode, device]);
+
   if (!visible) return null;
 
   const rows = mode === 'letters' ? LETTERS : SYMBOLS;
@@ -100,7 +119,7 @@ export function DeviceKeyboard() {
 
   return (
     <div
-      className="device-keyboard"
+      className="device-keyboard woopos-slide-up"
       // On tablet the soft keyboard occupies at least 40% of the screen height.
       style={device === 'tablet' ? { minHeight: '40%' } : undefined}
       // Keep focus on the text field — mousedown preventDefault stops the key buttons

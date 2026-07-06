@@ -45,7 +45,7 @@ export function PlatformSwitcher() {
       </div>
       {!otherMap.available && (
         <span style={{ fontSize: 11, color: 'var(--menu-muted, var(--color-on-surface-variant-lowest))', textAlign: 'center' }}>
-          Not on {other === 'ios' ? 'iOS' : 'Android'} — opens home
+          Not on {other === 'ios' ? 'iOS' : 'Android'} — opens catalog
         </span>
       )}
     </div>

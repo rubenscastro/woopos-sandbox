@@ -16,19 +16,22 @@ export function PosCartPane({
   onScanBarcode,
   onBack,
   hideCheckout = false,
+  showItemCount = true,
 }: {
   onCheckout?: () => void;
   onScanBarcode?: () => void;
   /** When checking out, the cart becomes a sidebar with a back chevron (slide animation). */
   onBack?: () => void;
   hideCheckout?: boolean;
+  /** Phone drawer hides the "N items" count next to the title. */
+  showItemCount?: boolean;
 }) {
   const { lines, itemCount, clear, removeLine, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-surface-bright)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) var(--space-md) var(--space-sm)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-md) var(--space-sm)' }}>
         {onBack && (
           <button type="button" aria-label="Back" onClick={onBack} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
             <ChevronLeft size="var(--icon-medium)" />
@@ -37,12 +40,13 @@ export function PosCartPane({
         <PosText variant="heading" bold>
           Cart
         </PosText>
-        {itemCount > 0 && (
+        <div style={{ flex: 1 }} />
+        {/* Item count sits next to the clear (delete) button. */}
+        {showItemCount && itemCount > 0 && (
           <PosText variant="bodySmall" color="var(--color-on-surface-variant-lowest)">
             {itemCount === 1 ? '1 item' : `${itemCount} items`}
           </PosText>
         )}
-        <div style={{ flex: 1 }} />
         {!empty && !hideCheckout && (
           <button
             type="button"
@@ -56,18 +60,25 @@ export function PosCartPane({
       </div>
 
       {empty ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl)', gap: 'var(--space-lg)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl) var(--space-xxl)', gap: 'var(--space-sm)' }}>
           <ShoppingBags />
-          <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-highest)">
-            Tap on a product to add it to the cart, or{' '}
+          {/* CartView.swift empty state: hint text (wraps across lines), then "Scan barcode" + the
+              barcode.viewfinder icon AFTER it. The icon is the tappable affordance — tinted primary
+              (SwiftUI button default tint) — and opens the barcode scanner setup; the words are muted. */}
+          <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ whiteSpace: 'pre-line' }}>
+            {'Tap on a product\nto add it to the cart,\nor'}
+          </PosText>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)">Scan barcode</PosText>
             <button
               type="button"
+              aria-label="Scan barcode"
               onClick={onScanBarcode}
-              style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', color: 'var(--color-primary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'middle' }}
+              style={{ border: 'none', background: 'none', padding: 0, display: 'inline-flex', color: 'var(--color-primary)', cursor: 'pointer' }}
             >
-              <Barcode size="1.1em" style={{ color: 'var(--color-primary)' }} /> Scan barcode
+              <Barcode size="1.2em" />
             </button>
-          </PosText>
+          </span>
         </div>
       ) : (
         <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: 'var(--space-xs) var(--space-md) var(--space-md)' }}>

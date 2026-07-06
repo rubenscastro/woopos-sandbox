@@ -31,7 +31,8 @@ export function PosItemCard({ item, onClick }: { item: PosItemCardData; onClick:
         minHeight: 112,
         background: 'var(--color-surface-container-lowest)',
         border: 'none',
-        borderRadius: 'var(--radius-lg)',
+        // iOS item cards use POSCornerRadiusStyle.medium (8px) — radius-md, not radius-lg.
+        borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
         padding: 0,
         cursor: 'pointer',
