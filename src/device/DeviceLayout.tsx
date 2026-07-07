@@ -13,9 +13,11 @@ import { PageBackgroundProvider } from './PageBackground';
 import { DeviceKeyboard } from './DeviceKeyboard';
 import { useTools } from '../tools/ToolsContext';
 import { useCardReader } from '../tools/CardReaderContext';
+import { usePrinter } from '../state/PrinterContext';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
 import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { CardReaderConnectionHost } from '../tools/CardReaderConnectionDialog';
+import { PrinterSetupHost } from '../components/ios/PosPrinterSetupModal';
 import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } from '../components/android/icons';
 import { useCart } from '../state/CartContext';
 import { useClickOutside } from '../hooks/useClickOutside';
@@ -55,6 +57,8 @@ export function DeviceLayout() {
             <FlowsMenu />
             <ToolsMenu />
             <CardReaderMenu />
+            {/* Receipt printers are iOS-only in the prototype. */}
+            {platform === 'ios' && <PrinterMenu />}
             {platform === 'android' && <PreviewStateMenu />}
           </div>
           <div className="chrome-right">
@@ -94,6 +98,7 @@ export function DeviceLayout() {
             <>
               <BarcodeSetupHost />
               <CardReaderConnectionHost />
+              <PrinterSetupHost />
               <CartSheetHost />
               <DeviceKeyboard />
             </>
@@ -274,6 +279,73 @@ function ReaderItem({ label, onClick, disabled }: { label: string; onClick: () =
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * Receipt printer tool (iOS) — drives the whole POSPrinterSetupModal flow: open setup, stand in for
+ * the Bluetooth discovery events (printer found / connect completes or fails), and connect/disconnect
+ * directly. Mirrors the Card reader tool; no simulate buttons appear in the modal itself.
+ */
+function PrinterMenu() {
+  const p = usePrinter();
+  const [open, setOpen] = useState(false);
+  const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  const s = p.setupState;
+
+  return (
+    <div className="chrome-menu chrome-menu--state" ref={menuRef}>
+      <span className="chrome-menu__label">Receipt printer</span>
+      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
+        <PrinterChromeIcon />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.connected ? 'var(--color-success)' : 'var(--color-alert)' }} />
+          {p.connected ? 'Connected' : 'Not connected'}
+        </span>
+        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div className="chrome-menu__dropdown" style={{ minWidth: 280 }}>
+          {/* ---- Quick toggle — set connected directly, skipping the setup flow ---- */}
+          <button type="button" className="chrome-reader__toggle" role="switch" aria-checked={p.connected} onClick={() => p.setConnected(!p.connected)}>
+            <span>Connected</span>
+            <span className={`chrome-switch${p.connected ? ' is-on' : ''}`} aria-hidden>
+              <span className="chrome-switch__knob" />
+            </span>
+          </button>
+
+          <div className="chrome-reader__divider" />
+
+          {/* ---- Setup / discovery flow ---- */}
+          {!p.connected && (s === 'idle' || s === 'error') && (
+            <ReaderItem label="Open printer setup" onClick={() => { setOpen(false); p.openSetup(); }} />
+          )}
+          {s === 'searching' && <ReaderItem label="Printer found" onClick={p.printerFound} />}
+          {s === 'connecting' && (
+            <>
+              <ReaderItem label="Complete connection" onClick={p.completeConnection} />
+              <ReaderItem label="Fail connection" onClick={p.failConnection} />
+            </>
+          )}
+          {(s === 'found' || s === 'connected') && (
+            <div className="chrome-reader__hint">Follow the on-screen setup…</div>
+          )}
+          {p.connected && s !== 'connecting' && (
+            <ReaderItem label="Disconnect printer" onClick={() => { setOpen(false); p.disconnect(); }} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PrinterChromeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M6 9V4h12v5" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <rect x="3" y="9" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="6" y="14" width="12" height="6" rx="1" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
   );
 }
 

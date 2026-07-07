@@ -4,11 +4,10 @@ import { PlatformProvider, usePlatform } from './device/PlatformContext';
 import { DeviceProvider } from './device/DeviceContext';
 import { DeviceLayout } from './device/DeviceLayout';
 import { CartProvider } from './state/CartContext';
+import { PrinterProvider } from './state/PrinterContext';
 import { ToolsProvider } from './tools/ToolsContext';
 import { CardReaderProvider } from './tools/CardReaderContext';
 import { useBarcodeSetup } from './tools/BarcodeSetup';
-import { Home } from './screens/android/Home';
-import { IosHome } from './screens/ios/Home';
 import { ItemSelector as IosItemSelector } from './screens/ios/ItemSelector';
 import { Checkout as IosCheckout } from './screens/ios/Checkout';
 import { Orders as IosOrders } from './screens/ios/Orders';
@@ -38,10 +37,10 @@ function BarcodeSetupLaunch() {
   return <ItemSelection />;
 }
 
-/** `/` and unknown paths land on the active platform's home/index. */
+/** `/` and unknown paths land directly on the active platform's product catalog (no launcher). */
 function RootRedirect() {
   const { platform } = usePlatform();
-  return <Navigate to={`/${platform}`} replace />;
+  return <Navigate to={`/${platform}/products`} replace />;
 }
 
 /** Keep platform context in sync with the URL (direct navigation / reload / back-forward),
@@ -62,6 +61,7 @@ export default function App() {
     <DeviceProvider>
       <ToolsProvider>
         <CardReaderProvider>
+        <PrinterProvider>
         <CartProvider>
           <BrowserRouter>
             <PlatformUrlSync />
@@ -71,8 +71,8 @@ export default function App() {
 
               {/* ---- Android platform tree ---- */}
               <Route path="/android">
-                {/* Flow index (launcher) lives outside the device frame. */}
-                <Route index element={<Home />} />
+                {/* No launcher page — open straight into the catalog. */}
+                <Route index element={<Navigate to="/android/products" replace />} />
                 {/* Every flow screen renders inside the simulated device shell. */}
                 <Route element={<DeviceLayout />}>
                   <Route path="splash" element={<Splash />} />
@@ -97,7 +97,7 @@ export default function App() {
 
               {/* ---- iOS platform tree (flows added one at a time in Phase 3) ---- */}
               <Route path="/ios">
-                <Route index element={<IosHome />} />
+                <Route index element={<Navigate to="/ios/products" replace />} />
                 <Route element={<DeviceLayout />}>
                   <Route path="products" element={<IosItemSelector />} />
                   {/* Create coupon is a sheet over the item list (Coupons tab), not its own
@@ -114,6 +114,7 @@ export default function App() {
             </Routes>
           </BrowserRouter>
         </CartProvider>
+        </PrinterProvider>
         </CardReaderProvider>
       </ToolsProvider>
     </DeviceProvider>

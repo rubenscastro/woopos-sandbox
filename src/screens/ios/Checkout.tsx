@@ -7,8 +7,10 @@ import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
 import { CardReaderNotConnected, ReadyForPaymentCard } from '../../components/android/illustrations';
 import { ErrorX, ChevronLeft } from '../../components/android/icons';
 import { useNav } from '../../device/platformNav';
+import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useCart } from '../../state/CartContext';
 import { useCardReader, useCardTransaction } from '../../tools/CardReaderContext';
+import { usePrinter } from '../../state/PrinterContext';
 import { formatUsd } from '../../lib/currency';
 
 /**
@@ -23,9 +25,11 @@ type State = 'idle' | 'processing' | 'success' | 'failed' | 'cash' | 'email';
 
 export function Checkout({ onBack, showBack = true }: { onBack?: () => void; showBack?: boolean }) {
   const nav = useNav();
+  const isPhone = useIsPhone();
   const back = onBack ?? (() => nav('/products'));
   const { subtotal, discountTotal, taxTotal, total, clear } = useCart();
   const { connected, startConnecting } = useCardReader();
+  const printer = usePrinter();
   const [state, setState] = useState<State>('idle');
   const [cash, setCash] = useState('');
   const [email, setEmail] = useState('');
@@ -65,9 +69,13 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
         <PosText variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
           A payment of {formatUsd(total || 0)} was successfully made.
         </PosText>
-        <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
+        <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
           <PosButton label="New order" fullWidth onClick={newOrder} />
-          <PosButton label="Email receipt" variant="outlined" fullWidth onClick={() => setState('email')} />
+          {/* Email + Print sit side by side on tablet, stacked on phone (PaymentsActionButtons). */}
+          <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: 'var(--space-sm)' }}>
+            <PosButton label="Email receipt" variant="outlined" fullWidth onClick={() => setState('email')} />
+            <PosButton label="Print receipt" variant="outlined" fullWidth onClick={() => { if (!printer.connected) printer.openSetup(); }} />
+          </div>
         </div>
       </FullScreen>
     );

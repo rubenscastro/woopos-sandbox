@@ -25,6 +25,9 @@ export function PosFloatingControl() {
       <div ref={ref} style={{ position: 'relative' }}>
         {open && (
           <div className="woopos-liquid-glass" style={{ position: 'absolute', bottom: 'calc(var(--size-small) + var(--space-sm))', left: 0, minWidth: 220, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden' }}>
+            {/* Signed-in operator (POSStaffMenuRow) — "Name — Role". */}
+            <OperatorRow />
+            <MenuDivider />
             <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
             <MenuDivider />
             <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />
@@ -84,4 +87,24 @@ function MenuRow({ icon, label, onClick }: { icon: React.ReactNode; label: strin
 /** Hairline separator between menu items (semi-transparent, like the native menu). */
 function MenuDivider() {
   return <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />;
+}
+
+/** Signed-in operator label (POSStaffMenuRow): "Name — Role" + person.circle, non-interactive. */
+export const POS_OPERATOR = { name: 'Thomas', role: 'Cashier' };
+export function OperatorRow() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', width: '100%', padding: 'var(--space-sm) var(--space-lg)' }}>
+      <PosText variant="bodyMedium" bold style={{ flex: 1, textAlign: 'left' }}>{POS_OPERATOR.name} — {POS_OPERATOR.role}</PosText>
+      <PersonCircle />
+    </div>
+  );
+}
+function PersonCircle() {
+  return (
+    <svg width="var(--icon-small)" height="var(--icon-small)" viewBox="0 0 24 24" fill="none" aria-hidden style={{ color: 'var(--color-on-surface)' }}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="10" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M6.5 18.5a6 6 0 0 1 11 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
 }

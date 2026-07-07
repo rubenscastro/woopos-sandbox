@@ -5,6 +5,7 @@ import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { useCardReader } from '../../tools/CardReaderContext';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
+import { usePrinter } from '../../state/PrinterContext';
 
 /**
  * iOS Settings (Settings/POSSettingsView + POSSettingsCard + detail views). Master/detail:
@@ -61,15 +62,16 @@ export function Settings() {
   const detail = <SettingsDetail cat={cat} onBack={isPhone ? () => setShowDetailOnPhone(false) : undefined} />;
 
   if (isPhone) return <div style={{ height: '100%', background: 'var(--color-surface)' }}>{showDetailOnPhone ? detail : list}</div>;
+  // Sidebar/list = posSurfaceBright (lighter); detail = posSurface (darker) — matches POSSettingsView.
   return (
     <div className="woopos-fills-safe-top" style={{ display: 'flex', background: 'var(--color-surface)' }}>
-      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0 }}>{list}</div>
-      <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-bright)' }}>{detail}</div>
+      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{list}</div>
+      <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface)' }}>{detail}</div>
     </div>
   );
 }
 
-type HardwareSub = 'overview' | 'cardReaders' | 'barcodeScanners';
+type HardwareSub = 'overview' | 'cardReaders' | 'barcodeScanners' | 'printers';
 
 function SettingsDetail({ cat, onBack }: { cat: Category; onBack?: () => void }) {
   // Hardware has nested pages (Card readers / Barcode scanners) shown on their own page.
@@ -78,7 +80,7 @@ function SettingsDetail({ cat, onBack }: { cat: Category; onBack?: () => void })
   let title = TITLES[cat];
   let back = onBack;
   if (cat === 'hardware' && hw !== 'overview') {
-    title = hw === 'cardReaders' ? 'Card readers' : 'Barcode scanners';
+    title = hw === 'cardReaders' ? 'Card readers' : hw === 'printers' ? 'Receipt printers' : 'Barcode scanners';
     back = () => setHw('overview');
   }
 
@@ -95,7 +97,7 @@ function SettingsDetail({ cat, onBack }: { cat: Category; onBack?: () => void })
       <div key={`${cat}-${hw}`} className="woopos-page-anim woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '0 var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: cat === 'hardware' ? 'var(--space-sm)' : 'var(--space-md)' }}>
         {cat === 'hardware' ? <HardwarePane sub={hw} onNavigate={setHw} /> : (
           BLOCKS[cat].map((block, bi) => (
-            <div key={bi} style={{ background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-md)' }}>
+            <div key={bi} style={{ background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--pos-shadow-medium)', padding: 'var(--space-md)' }}>
               {block.title && <div style={{ padding: 'var(--space-xs) 0' }}><PosText variant="bodyLarge" bold>{block.title}</PosText></div>}
               {block.rows.map(([label, value]) => (
                 <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 'var(--space-sm) 0' }}>
@@ -116,6 +118,7 @@ function SettingsDetail({ cat, onBack }: { cat: Category; onBack?: () => void })
 function HardwarePane({ sub, onNavigate }: { sub: HardwareSub; onNavigate: (s: HardwareSub) => void }) {
   const { openSetup } = useBarcodeSetup();
   const { connected, startConnecting, setConnected } = useCardReader();
+  const printer = usePrinter();
 
   if (sub === 'cardReaders') {
     return (
@@ -137,10 +140,34 @@ function HardwarePane({ sub, onNavigate }: { sub: HardwareSub; onNavigate: (s: H
       </>
     );
   }
+  if (sub === 'printers') {
+    return (
+      <>
+        {printer.connected ? (
+          <div style={{ background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--pos-shadow-medium)', padding: 'var(--space-md)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-md)' }}>
+              <div style={{ minWidth: 0 }}>
+                <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)">Device name</PosText>
+                <PosText variant="bodyMedium" style={{ display: 'block' }}>{printer.name}</PosText>
+              </div>
+              <button type="button" onClick={printer.disconnect} style={{ border: '2px solid var(--color-inverse-surface)', background: 'transparent', color: 'var(--color-on-surface)', borderRadius: 'var(--radius-md)', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', flex: 'none' }}>
+                <PosText variant="bodySmall" bold>Disconnect</PosText>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <SettingRow title="Connect printer" subtitle="Connect your receipt printer and start printing receipts" selected={false} onClick={printer.openSetup} />
+        )}
+        <SettingRow title="Documentation" subtitle="Learn more about receipt printing in POS" selected={false} onClick={() => {}} />
+      </>
+    );
+  }
   return (
     <>
       <SettingRow title="Card readers" subtitle="Manage card reader connections" selected={false} onClick={() => onNavigate('cardReaders')} />
       <SettingRow title="Barcode scanners" subtitle="Configure barcode scanner settings" selected={false} onClick={() => onNavigate('barcodeScanners')} />
+      {/* Receipt printers is feature-gated in the app (printerConnectionController); shown here. */}
+      <SettingRow title="Receipt printers" subtitle="Manage receipt printer connections" selected={false} onClick={() => onNavigate('printers')} />
     </>
   );
 }
@@ -149,7 +176,7 @@ const SAMPLE_READER = 'STRM261380012691';
 
 function SettingRow({ title, subtitle, selected, onClick }: { title: string; subtitle: string; selected: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', width: '100%', textAlign: 'left', padding: 'var(--space-md)', borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-container-lowest)', border: `2px solid ${selected ? 'var(--color-on-surface)' : 'transparent'}`, color: 'var(--color-on-surface)', cursor: 'pointer' }}>
+    <button type="button" onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', width: '100%', textAlign: 'left', padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-container-lowest)', border: `2px solid ${selected ? 'var(--color-on-surface)' : 'transparent'}`, boxShadow: 'var(--pos-shadow-medium)', color: 'var(--color-on-surface)', cursor: 'pointer' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <PosText variant="bodyLarge" bold>{title}</PosText>
         <PosText variant="bodyMedium" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 2 }}>{subtitle}</PosText>

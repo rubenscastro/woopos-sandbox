@@ -48,7 +48,7 @@ export function Orders() {
 
 function OrderRow({ order, selected, onClick }: { order: MockOrder; selected: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-sm)', width: '100%', textAlign: 'left', padding: 'var(--space-md)', borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-container-lowest)', border: `2px solid ${selected ? 'var(--color-on-surface)' : 'transparent'}`, color: 'var(--color-on-surface)', cursor: 'pointer' }}>
+    <button type="button" onClick={onClick} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-sm)', width: '100%', textAlign: 'left', padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-container-lowest)', border: `2px solid ${selected ? 'var(--color-on-surface)' : 'transparent'}`, boxShadow: 'var(--pos-shadow-medium)', color: 'var(--color-on-surface)', cursor: 'pointer' }}>
       <div style={{ minWidth: 0 }}>
         <PosText variant="bodyLarge" bold>Order {order.number}</PosText>
         <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 2 }}>{order.date}</PosText>
@@ -102,7 +102,7 @@ function OrderDetail({ order, onBack }: { order: MockOrder; onBack?: () => void 
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+    <div style={{ background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--pos-shadow-medium)', padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
       <PosText variant="bodyLarge" bold style={{ display: 'block', marginBottom: 'var(--space-xs)' }}>{title}</PosText>
       {children}
     </div>

@@ -114,6 +114,19 @@
   --shadow-soft-large: 0 4px 24px rgba(0, 0, 0, 0.1);
   --shadow-normal-medium: 0 2px 8px rgba(0, 0, 0, 0.24);
   --shadow-normal-large: 0 4px 24px rgba(0, 0, 0, 0.24);
+
+  /* POS card elevation (POSShadowStyle): a 4-layer stack applied by posItemCardBorderStyles()
+     to product / navigation / information cards. Medium is the card default; large for modals. */
+  --pos-shadow-medium:
+    0 16px 16px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.03),
+    0 4px 5px rgba(0, 0, 0, 0.04),
+    0 2px 3px rgba(0, 0, 0, 0.05);
+  --pos-shadow-large:
+    0 50px 43px rgba(0, 0, 0, 0.02),
+    0 30px 36px rgba(0, 0, 0, 0.04),
+    0 15px 27px rgba(0, 0, 0, 0.07),
+    0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
 /* ---- iOS platform deltas (see DESIGN-ios-deltas.md) ----

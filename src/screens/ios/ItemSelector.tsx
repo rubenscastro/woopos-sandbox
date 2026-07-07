@@ -6,7 +6,7 @@ import { PosCartPane } from '../../components/ios/PosCartPane';
 import { CreateCouponSheet } from '../../components/ios/CreateCouponSheet';
 import { AddCustomAmountForm } from '../../components/ios/AddCustomAmountForm';
 import { PosPreSearch } from '../../components/ios/PosPreSearch';
-import { PosFloatingControl } from '../../components/ios/PosFloatingControl';
+import { PosFloatingControl, OperatorRow } from '../../components/ios/PosFloatingControl';
 import { Checkout } from './Checkout';
 import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
@@ -223,7 +223,7 @@ function CustomAmountEntryRow({ onTap }: { onTap: () => void }) {
       style={{
         display: 'flex', alignItems: 'stretch', width: '100%', minHeight: 112,
         background: 'var(--color-surface-container-lowest)', border: 'none',
-        borderRadius: 'var(--radius-lg)', overflow: 'hidden', padding: 0, cursor: 'pointer',
+        borderRadius: 'var(--radius-md)', boxShadow: 'var(--pos-shadow-medium)', overflow: 'hidden', padding: 0, cursor: 'pointer',
         textAlign: 'left', color: 'var(--color-on-surface)', font: 'inherit',
       }}
     >
@@ -320,6 +320,8 @@ function PhoneHeaderMenu() {
       </button>
       {open && (
         <div className="woopos-liquid-glass" style={{ position: 'absolute', top: 'calc(var(--size-xsmall) + var(--space-sm))', right: 0, minWidth: 200, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden', zIndex: 30 }}>
+          <OperatorRow />
+          <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
           <HeaderMenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
           <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
           <HeaderMenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />
