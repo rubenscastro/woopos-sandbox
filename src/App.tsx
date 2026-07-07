@@ -5,7 +5,9 @@ import { DeviceProvider } from './device/DeviceContext';
 import { DeviceLayout } from './device/DeviceLayout';
 import { CartProvider } from './state/CartContext';
 import { PrinterProvider } from './state/PrinterContext';
+import { FlagsProvider } from './state/FlagsContext';
 import { ToolsProvider } from './tools/ToolsContext';
+import { ConnectivityProvider } from './tools/ConnectivityContext';
 import { CardReaderProvider } from './tools/CardReaderContext';
 import { useBarcodeSetup } from './tools/BarcodeSetup';
 import { ItemSelector as IosItemSelector } from './screens/ios/ItemSelector';
@@ -58,8 +60,10 @@ function PlatformUrlSync() {
 export default function App() {
   return (
     <PlatformProvider>
+    <FlagsProvider>
     <DeviceProvider>
       <ToolsProvider>
+        <ConnectivityProvider>
         <CardReaderProvider>
         <PrinterProvider>
         <CartProvider>
@@ -116,8 +120,10 @@ export default function App() {
         </CartProvider>
         </PrinterProvider>
         </CardReaderProvider>
+        </ConnectivityProvider>
       </ToolsProvider>
     </DeviceProvider>
+    </FlagsProvider>
     </PlatformProvider>
   );
 }

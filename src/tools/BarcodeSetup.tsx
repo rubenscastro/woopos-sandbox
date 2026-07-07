@@ -4,6 +4,7 @@ import { Text } from '../components/android/Text';
 import { Button, OutlinedButton } from '../components/android/Button';
 import { SuccessCheckmark } from '../components/android/SuccessCheckmark';
 import { useTools, useBarcodeTarget } from './ToolsContext';
+import { useConnectivity } from './ConnectivityContext';
 
 /**
  * Barcode-scanner setup, presented as a modal over the current screen (like the app's
@@ -177,28 +178,7 @@ function BarcodeSetupWizard({ onDone }: { onDone: () => void }) {
         </Center>
       )}
 
-      {phase === 'flow' && current?.kind === 'pair' && (
-        <Center>
-          <GearsIllustration />
-          <Text variant="heading" bold align="center">
-            Pair your scanner
-          </Text>
-          <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
-            Enable Bluetooth and select your {device} scanner in the OS settings. The scanner will beep
-            and show a solid LED when paired.
-          </Text>
-          <button
-            type="button"
-            onClick={() => {}}
-            style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
-          >
-            <Text variant="bodyLarge" bold color="var(--color-primary)" style={{ textDecoration: 'underline' }}>
-              Go to your device settings
-            </Text>
-          </button>
-          <Buttons onBack={back} onNext={next} />
-        </Center>
-      )}
+      {phase === 'flow' && current?.kind === 'pair' && <PairStep device={device} onBack={back} onNext={next} />}
 
       {phase === 'flow' && current?.kind === 'test' && (
         <TestStep onDone={() => setPhase('success')} onBack={back} />
@@ -236,6 +216,36 @@ function BarcodeSetupWizard({ onDone }: { onDone: () => void }) {
         </Center>
       )}
     </div>
+  );
+}
+
+/** Pair step (PointOfSaleBarcodeScannerPairingView / ScanningSetupStep.PairYourScanner). The
+ *  "Go to your device settings" link is unconditional on both platforms (unlike the card reader
+ *  or printer, this isn't gated on Bluetooth already being off) and always leaves the app to the
+ *  OS Bluetooth settings. */
+function PairStep({ device, onBack, onNext }: { device: string | null; onBack: () => void; onNext: () => void }) {
+  const connectivity = useConnectivity();
+  return (
+    <Center>
+      <GearsIllustration />
+      <Text variant="heading" bold align="center">
+        Pair your scanner
+      </Text>
+      <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
+        Enable Bluetooth and select your {device} scanner in the OS settings. The scanner will beep
+        and show a solid LED when paired.
+      </Text>
+      <button
+        type="button"
+        onClick={connectivity.openSettings}
+        style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+      >
+        <Text variant="bodyLarge" bold color="var(--color-primary)" style={{ textDecoration: 'underline' }}>
+          Go to your device settings
+        </Text>
+      </button>
+      <Buttons onBack={onBack} onNext={onNext} />
+    </Center>
   );
 }
 

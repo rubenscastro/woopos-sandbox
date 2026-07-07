@@ -13,6 +13,7 @@ import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
+import { useFlags } from '../../state/FlagsContext';
 import { useCart } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
 // Catalog sample data is the same store on both platforms; copy differences live in the UI.
@@ -311,6 +312,7 @@ const plainBack: React.CSSProperties = {
  *  liquid-glass popover, matching the tablet floating control's menu. */
 function PhoneHeaderMenu() {
   const nav = useNav();
+  const { flags } = useFlags();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
   return (
@@ -320,8 +322,12 @@ function PhoneHeaderMenu() {
       </button>
       {open && (
         <div className="woopos-liquid-glass" style={{ position: 'absolute', top: 'calc(var(--size-xsmall) + var(--space-sm))', right: 0, minWidth: 200, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden', zIndex: 30 }}>
-          <OperatorRow />
-          <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+          {flags.roles && (
+            <>
+              <OperatorRow />
+              <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+            </>
+          )}
           <HeaderMenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
           <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
           <HeaderMenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />

@@ -3,19 +3,28 @@ import { Text } from '../components/android/Text';
 import { Button, OutlinedButton } from '../components/android/Button';
 import { CardReaderIllustration } from '../components/android/CardReaderIllustration';
 import { useCardReader } from './CardReaderContext';
+import { useConnectivity } from './ConnectivityContext';
+import { usePlatform } from '../device/PlatformContext';
 
 /**
  * The card-reader connection dialog (WooPosCardReaderConnectionDialog). Renders the
- * scanning → found → connecting → connected / failed states in a modal. Hardware events
- * (reader found, connection completes/fails) are driven from the Card reader tool, so this
- * dialog only shows real user actions (Connect / Keep searching / Retry / Cancel).
+ * bluetoothOff → scanning → found → connecting → connected / failed states in a modal.
+ * Hardware events (reader found, connection completes/fails) are driven from the Card reader
+ * tool, so this dialog only shows real user actions (Connect / Keep searching / Retry / Cancel).
+ *
+ * bluetoothOff copy/actions match each real app: Android's BluetoothDisabledContent ("Bluetooth
+ * is off" / "Enable Bluetooth" → the quick in-app system dialog) vs. iOS's
+ * PointOfSaleCardPresentPaymentBluetoothRequiredAlertView ("Bluetooth permission required" /
+ * "Open Device Settings" → leaves the app).
  */
 export function CardReaderConnectionHost() {
   const cr = useCardReader();
+  const connectivity = useConnectivity();
+  const { platform } = usePlatform();
   const s = cr.connectionState;
   if (s === 'idle') return null;
 
-  const dismissable = s === 'scanning' || s === 'found' || s === 'failed';
+  const dismissable = s === 'bluetoothOff' || s === 'scanning' || s === 'found' || s === 'failed';
 
   return (
     <Modal
@@ -26,6 +35,38 @@ export function CardReaderConnectionHost() {
       maxWidth={520}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', textAlign: 'center' }}>
+        {s === 'bluetoothOff' && platform === 'android' && (
+          <>
+            <Text variant="heading" bold align="center">
+              Bluetooth is off
+            </Text>
+            <CardReaderIllustration variant="error" size="var(--size-xlarge)" />
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              Enable Bluetooth to connect to a card reader.
+            </Text>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <Button text="Enable Bluetooth" fullWidth onClick={connectivity.openQuickEnable} />
+              <OutlinedButton text="Cancel" fullWidth onClick={cr.cancelConnecting} />
+            </div>
+          </>
+        )}
+
+        {s === 'bluetoothOff' && platform === 'ios' && (
+          <>
+            <Text variant="heading" bold align="center">
+              Bluetooth permission required
+            </Text>
+            <CardReaderIllustration variant="error" size="var(--size-xlarge)" />
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              Please enable Bluetooth in Settings to connect to a card reader.
+            </Text>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <Button text="Open Device Settings" fullWidth onClick={connectivity.openSettings} />
+              <OutlinedButton text="Dismiss" fullWidth onClick={cr.cancelConnecting} />
+            </div>
+          </>
+        )}
+
         {s === 'scanning' && (
           <>
             <Text variant="heading" bold align="center">

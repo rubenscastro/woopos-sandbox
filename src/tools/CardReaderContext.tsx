@@ -8,15 +8,22 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
+import { useConnectivity } from './ConnectivityContext';
 
 /**
  * Card-reader connection state + transaction processing, driven by the Card reader tool in
  * the top bar. The connect flow (scanning → found → connecting → connected) is progressed by
  * tool options that stand in for the hardware events, so no "simulate" buttons appear on the
  * dialog itself. Payment screens register a handler for authorized/declined transactions.
+ *
+ * Starting a connection with Bluetooth off lands on 'bluetoothOff' instead of 'scanning' —
+ * mirrors both real apps (Android's BluetoothDisabled dialog state; iOS's "Bluetooth permission
+ * required" alert). Turning Bluetooth on while there (by any means — the quick Android dialog,
+ * the mocked Settings screen, or the chrome's Connectivity tool) auto-resumes scanning, matching
+ * both apps re-checking requirements when the app becomes active again.
  */
 export type TransactionResult = 'authorized' | 'declined';
-export type ConnectionState = 'idle' | 'scanning' | 'found' | 'connecting' | 'connected' | 'failed';
+export type ConnectionState = 'idle' | 'bluetoothOff' | 'scanning' | 'found' | 'connecting' | 'connected' | 'failed';
 
 export const SAMPLE_READER_NAME = 'STRM261380012691';
 
@@ -43,6 +50,7 @@ interface CardReaderValue {
 const CardReaderContext = createContext<CardReaderValue | null>(null);
 
 export function CardReaderProvider({ children }: { children: ReactNode }) {
+  const connectivity = useConnectivity();
   const [connected, setConnected] = useState(false);
   const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
   const [canProcess, setCanProcess] = useState(false);
@@ -54,7 +62,9 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
   }, []);
   const process = useCallback((result: TransactionResult) => handlerRef.current?.(result), []);
 
-  const startConnecting = useCallback(() => setConnectionState('scanning'), []);
+  const startConnecting = useCallback(() => {
+    setConnectionState(connectivity.bluetooth ? 'scanning' : 'bluetoothOff');
+  }, [connectivity.bluetooth]);
   const readerFound = useCallback(() => setConnectionState('found'), []);
   const connectReader = useCallback(() => setConnectionState('connecting'), []);
   const keepSearching = useCallback(() => setConnectionState('scanning'), []);
@@ -72,6 +82,14 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
     const t = window.setTimeout(() => setConnectionState('idle'), 1500);
     return () => window.clearTimeout(t);
   }, [connectionState]);
+
+  // Turning Bluetooth back on while parked on 'bluetoothOff' resumes scanning automatically —
+  // both real apps re-check requirements as soon as the app is active again.
+  useEffect(() => {
+    if (connectivity.bluetooth && connectionState === 'bluetoothOff') {
+      setConnectionState('scanning');
+    }
+  }, [connectivity.bluetooth, connectionState]);
 
   const value = useMemo<CardReaderValue>(
     () => ({

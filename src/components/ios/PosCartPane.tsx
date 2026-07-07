@@ -60,25 +60,30 @@ export function PosCartPane({
       </div>
 
       {empty ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl) var(--space-xxl)', gap: 'var(--space-sm)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl) var(--space-xxl)', gap: 'var(--space-lg)' }}>
           <ShoppingBags />
-          {/* CartView.swift empty state: hint text (wraps across lines), then "Scan barcode" + the
-              barcode.viewfinder icon AFTER it. The icon is the tappable affordance — tinted primary
-              (SwiftUI button default tint) — and opens the barcode scanner setup; the words are muted. */}
-          <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ whiteSpace: 'pre-line' }}>
-            {'Tap on a product\nto add it to the cart,\nor'}
-          </PosText>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)">Scan barcode</PosText>
-            <button
-              type="button"
-              aria-label="Scan barcode"
-              onClick={onScanBarcode}
-              style={{ border: 'none', background: 'none', padding: 0, display: 'inline-flex', color: 'var(--color-primary)', cursor: 'pointer' }}
-            >
-              <Barcode size="1.2em" />
-            </button>
-          </span>
+          {/* CartView.swift empty state: hint text, then "Scan barcode" + the barcode.viewfinder icon
+              AFTER it. The icon is the tappable affordance — tinted primary (SwiftUI button default
+              tint) — and opens the barcode scanner setup; the words are muted. Each line is its own
+              row so the spacing is uniform. */}
+          {/* bodyMedium's default line-height (32px for a 20px font) is generous enough for a
+              paragraph but reads as uneven gaps once these short lines are stacked — pin all three
+              to the same tight line-height instead of the token's looser default. */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.3 }}>Tap on a product</PosText>
+            <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.3 }}>to add it to the cart, or</PosText>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, lineHeight: 1.3 }}>
+              <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.3 }}>Scan barcode</PosText>
+              <button
+                type="button"
+                aria-label="Scan barcode"
+                onClick={onScanBarcode}
+                style={{ border: 'none', background: 'none', padding: 0, display: 'inline-flex', color: 'var(--color-primary)', cursor: 'pointer' }}
+              >
+                <Barcode size="1.2em" />
+              </button>
+            </span>
+          </div>
         </div>
       ) : (
         <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: 'var(--space-xs) var(--space-md) var(--space-md)' }}>

@@ -4,6 +4,7 @@ import { Description, SettingsFilled, ExitToApp } from '../android/icons';
 import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCardReader } from '../../tools/CardReaderContext';
+import { useFlags } from '../../state/FlagsContext';
 
 /**
  * iOS floating controls (POSFloatingControlView): a bottom-left "…" (ellipsis) menu — Orders /
@@ -17,6 +18,7 @@ import { useCardReader } from '../../tools/CardReaderContext';
 export function PosFloatingControl() {
   const nav = useNav();
   const { connected, startConnecting } = useCardReader();
+  const { flags } = useFlags();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
@@ -25,9 +27,8 @@ export function PosFloatingControl() {
       <div ref={ref} style={{ position: 'relative' }}>
         {open && (
           <div className="woopos-liquid-glass" style={{ position: 'absolute', bottom: 'calc(var(--size-small) + var(--space-sm))', left: 0, minWidth: 220, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden' }}>
-            {/* Signed-in operator (POSStaffMenuRow) — "Name — Role". */}
-            <OperatorRow />
-            <MenuDivider />
+            {/* Signed-in operator (POSStaffMenuRow) — only when POS roles is enabled. */}
+            {flags.roles && (<><OperatorRow /><MenuDivider /></>)}
             <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
             <MenuDivider />
             <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />

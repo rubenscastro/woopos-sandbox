@@ -77,6 +77,18 @@
   animation: woopos-slide-up 0.28s cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* "Leaving the app" — a different app (the OS Settings screen) opening over WooPOS, like an
+   app launch: zoom + fade in from slightly below full size. */
+@keyframes woopos-app-open {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+.woopos-app-open {
+  animation: woopos-app-open 0.32s cubic-bezier(0.2, 0, 0, 1);
+}
+
 /* Skeleton loading placeholder — a dim block with a sweeping highlight. */
 .woopos-skeleton {
   position: relative;

@@ -14,6 +14,9 @@ import { DeviceKeyboard } from './DeviceKeyboard';
 import { useTools } from '../tools/ToolsContext';
 import { useCardReader } from '../tools/CardReaderContext';
 import { usePrinter } from '../state/PrinterContext';
+import { useConnectivity } from '../tools/ConnectivityContext';
+import { ConnectivityOsHost } from '../tools/ConnectivityOsHost';
+import { useFlags, FLAG_DEFS } from '../state/FlagsContext';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
 import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { CardReaderConnectionHost } from '../tools/CardReaderConnectionDialog';
@@ -55,7 +58,9 @@ export function DeviceLayout() {
                 and transactions), so both platforms get them — iOS flows respond to the same tool
                 input as Android. The Flows list and preview-state menu are Android-only for now. */}
             <FlowsMenu />
+            <FlagsMenu />
             <ToolsMenu />
+            <ConnectivityMenu />
             <CardReaderMenu />
             {/* Receipt printers are iOS-only in the prototype. */}
             {platform === 'ios' && <PrinterMenu />}
@@ -99,6 +104,7 @@ export function DeviceLayout() {
               <BarcodeSetupHost />
               <CardReaderConnectionHost />
               <PrinterSetupHost />
+              <ConnectivityOsHost />
               <CartSheetHost />
               <DeviceKeyboard />
             </>
@@ -339,6 +345,59 @@ function PrinterMenu() {
   );
 }
 
+/**
+ * Connectivity tool — Bluetooth / Wifi / Cellular data world-state toggles. Bluetooth gates the
+ * card reader, receipt printer, and barcode scanner connection flows (turning it off here has the
+ * same effect as it being off on the device); Wifi/Cellular are state only for now.
+ */
+function ConnectivityMenu() {
+  const c = useConnectivity();
+  const [open, setOpen] = useState(false);
+  const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  const onCount = [c.bluetooth, c.wifi, c.cellular].filter(Boolean).length;
+
+  return (
+    <div className="chrome-menu chrome-menu--state" ref={menuRef}>
+      <span className="chrome-menu__label">Connectivity</span>
+      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
+        <ConnectivityChromeIcon />
+        <span>{onCount}/3 on</span>
+        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div className="chrome-menu__dropdown" style={{ minWidth: 220 }}>
+          <button type="button" className="chrome-reader__toggle" role="switch" aria-checked={c.bluetooth} onClick={() => c.setBluetooth(!c.bluetooth)}>
+            <span>Bluetooth</span>
+            <span className={`chrome-switch${c.bluetooth ? ' is-on' : ''}`} aria-hidden>
+              <span className="chrome-switch__knob" />
+            </span>
+          </button>
+          <button type="button" className="chrome-reader__toggle" role="switch" aria-checked={c.wifi} onClick={() => c.setWifi(!c.wifi)}>
+            <span>Wifi</span>
+            <span className={`chrome-switch${c.wifi ? ' is-on' : ''}`} aria-hidden>
+              <span className="chrome-switch__knob" />
+            </span>
+          </button>
+          <button type="button" className="chrome-reader__toggle" role="switch" aria-checked={c.cellular} onClick={() => c.setCellular(!c.cellular)}>
+            <span>Cellular data</span>
+            <span className={`chrome-switch${c.cellular ? ' is-on' : ''}`} aria-hidden>
+              <span className="chrome-switch__knob" />
+            </span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConnectivityChromeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M8 7.5 16 15l-4 3.5v-13L16 9 8 16.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function PrinterChromeIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -346,6 +405,46 @@ function PrinterChromeIcon() {
       <rect x="3" y="9" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
       <rect x="6" y="14" width="12" height="6" rx="1" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/** Feature flags tool — toggle prototype flags that mirror the iOS POS FeatureFlag gates. */
+function FlagsMenu() {
+  const { flags, setFlag } = useFlags();
+  const [open, setOpen] = useState(false);
+  const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  const onCount = FLAG_DEFS.filter((f) => flags[f.id]).length;
+
+  return (
+    <div className="chrome-menu" ref={menuRef}>
+      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
+        {onCount > 0 ? `Flags · ${onCount} on` : 'Flags'}
+        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div className="chrome-menu__dropdown" style={{ minWidth: 260 }}>
+          {FLAG_DEFS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className="chrome-reader__toggle"
+              role="switch"
+              aria-checked={flags[f.id]}
+              onClick={() => setFlag(f.id, !flags[f.id])}
+              style={{ alignItems: 'flex-start' }}
+            >
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}>
+                <span>{f.label}</span>
+                <span style={{ fontSize: 11, color: 'var(--menu-muted)' }}>{f.description}</span>
+              </span>
+              <span className={`chrome-switch${flags[f.id] ? ' is-on' : ''}`} aria-hidden>
+                <span className="chrome-switch__knob" />
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

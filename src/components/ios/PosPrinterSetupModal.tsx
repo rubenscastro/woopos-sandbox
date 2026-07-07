@@ -4,6 +4,7 @@ import { Spinner } from '../android/Spinner';
 import { SuccessCheckmark } from '../android/SuccessCheckmark';
 import { ErrorX, Close } from '../android/icons';
 import { usePrinter, SAMPLE_PRINTER_NAME } from '../../state/PrinterContext';
+import { useConnectivity } from '../../tools/ConnectivityContext';
 
 /**
  * iOS receipt-printer setup (POSPrinterSetupModal.swift). A pairing wizard: pair prompt → searching
@@ -11,21 +12,33 @@ import { usePrinter, SAMPLE_PRINTER_NAME } from '../../state/PrinterContext';
  * PrinterContext and is progressed by the modal's buttons + the "Receipt printer" chrome tool
  * (which stands in for the Bluetooth discovery events) — no timers.
  *
+ * The pairing step's message/button match the source exactly based on Bluetooth state: with
+ * Bluetooth off, the message calls that out and the button becomes "Open Settings" (leaves the
+ * app) instead of "Connect printer" — POSPrinterSetupContent.pairMessage / setupButtons.
+ *
  * Mounted once as PrinterSetupHost in the device shell; opened via `printer.openSetup()`.
  */
 export function PrinterSetupHost() {
   const printer = usePrinter();
+  const connectivity = useConnectivity();
   if (!printer.setupOpen) return null;
 
   const body = () => {
     switch (printer.setupState) {
       case 'idle':
-        return (
+        return connectivity.bluetooth ? (
           <Centered
             icon={<PrinterGlyph />}
             title="Pair your printer"
             message="Turn on your Star Micronics receipt printer, then pair it in the Settings app under Bluetooth. Once it's paired, tap Connect printer to find it."
             primary={{ label: 'Connect printer', onClick: printer.startSearch }}
+          />
+        ) : (
+          <Centered
+            icon={<PrinterGlyph />}
+            title="Pair your printer"
+            message="Bluetooth access is turned off. Tap Open Settings to turn it on, then pair your printer under Bluetooth."
+            primary={{ label: 'Open Settings', onClick: connectivity.openSettings }}
           />
         );
       case 'searching':
