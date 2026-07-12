@@ -39,7 +39,7 @@ export function ScanToPay() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar title="Scan to pay" onBack={() => navigate('/totals')} />
+      <Toolbar title="Scan to pay" onBack={() => navigate(-1)} />
       <div
         style={{
           flex: 1,
@@ -78,7 +78,7 @@ export function ScanToPay() {
             </Text>
             <div className="woopos-fullscreen-action" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
               <Button text="Try again" fullWidth onClick={() => setState('loading')} />
-              <OutlinedButton text="Cancel" fullWidth onClick={() => navigate('/totals')} />
+              <OutlinedButton text="Cancel" fullWidth onClick={() => navigate(-1)} />
             </div>
           </>
         )}

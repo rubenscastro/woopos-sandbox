@@ -23,7 +23,7 @@ export function MarkComplete() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar title="Mark order as paid?" onBack={() => navigate('/totals')} />
+      <Toolbar title="Mark order as paid?" onBack={() => navigate(-1)} />
       <div
         style={{
           flex: 1,

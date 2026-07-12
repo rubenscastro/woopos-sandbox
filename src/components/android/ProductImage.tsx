@@ -7,79 +7,76 @@ import { productPhotos } from '../../mocks/android/products';
  * unknown ids fall back to a hue derived from the id + a box glyph.
  */
 type GlyphKey =
-  | 'cup' | 'canister' | 'filter' | 'beans' | 'scissors' | 'mug'
-  | 'bottle' | 'dripper' | 'giftcard' | 'tote' | 'box';
+  | 'shirt' | 'pants' | 'scarf' | 'belt' | 'jacket' | 'cap'
+  | 'socks' | 'shoe' | 'giftcard' | 'tote' | 'dress' | 'hoodie' | 'box';
 
 const ART: Record<number, { bg: string; glyph: GlyphKey }> = {
-  1: { bg: '#C2410C', glyph: 'cup' }, // Cup
-  2: { bg: '#3F3F46', glyph: 'canister' }, // Coffee Container
-  3: { bg: '#0E7490', glyph: 'filter' }, // Paper Filter
-  4: { bg: '#7C2D12', glyph: 'beans' }, // Espresso Beans
-  5: { bg: '#9333EA', glyph: 'scissors' }, // Women's Haircut
-  6: { bg: '#2563EB', glyph: 'mug' }, // Ceramic Mug
-  7: { bg: '#0D9488', glyph: 'bottle' }, // Cold Brew Bottle
-  8: { bg: '#DB2777', glyph: 'dripper' }, // Hario V60
-  9: { bg: '#CA8A04', glyph: 'giftcard' }, // Gift Card
-  10: { bg: '#65A30D', glyph: 'tote' }, // Canvas Tote
-  11: { bg: '#B45309', glyph: 'cup' }, // Drip Coffee
-  12: { bg: '#0891B2', glyph: 'mug' }, // Flat White
+  1: { bg: '#C2410C', glyph: 'shirt' }, // Cotton Crew T-Shirt
+  2: { bg: '#3F3F46', glyph: 'pants' }, // Slim Fit Jeans
+  3: { bg: '#0E7490', glyph: 'scarf' }, // Wool Blend Scarf
+  4: { bg: '#7C2D12', glyph: 'belt' }, // Leather Belt
+  5: { bg: '#1D4ED8', glyph: 'jacket' }, // Denim Jacket
+  6: { bg: '#2563EB', glyph: 'cap' }, // Baseball Cap
+  7: { bg: '#0D9488', glyph: 'socks' }, // Wool Socks
+  8: { bg: '#DB2777', glyph: 'shoe' }, // Running Sneakers
+  9: { bg: '#CA8A04', glyph: 'giftcard' }, // Store Gift Card
+  10: { bg: '#65A30D', glyph: 'tote' }, // Canvas Tote Bag
+  11: { bg: '#B45309', glyph: 'dress' }, // Striped Cotton Dress
+  12: { bg: '#0891B2', glyph: 'hoodie' }, // Zip-Up Hoodie
 };
 
 const S = { stroke: 'rgba(255,255,255,0.95)', strokeWidth: 2.4, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
 const GLYPHS: Record<GlyphKey, ReactNode> = {
-  cup: (
+  shirt: (
     <>
-      <path d="M16 16h16l-2 22a3 3 0 0 1-3 2.6h-6a3 3 0 0 1-3-2.6z" {...S} />
-      <path d="M15 16h18" {...S} />
-      <path d="M22 10c0 2-2 2-2 4M28 10c0 2-2 2-2 4" {...S} />
+      <path d="M17 11l7-3 4 4 4-4 7 3 4 8-6 3v16a2 2 0 0 1-2 2H19a2 2 0 0 1-2-2V22l-6-3z" {...S} />
     </>
   ),
-  canister: (
+  pants: (
     <>
-      <rect x="15" y="17" width="18" height="22" rx="3" {...S} />
-      <rect x="17" y="11" width="14" height="6" rx="2" {...S} />
-      <path d="M19 24h10" {...S} />
+      <path d="M16 9h16l1 8-1 21a2 2 0 0 1-2 2h-2.5l-1.5-17-1.5 17H22a2 2 0 0 1-2-2l-1-21z" {...S} />
+      <path d="M17 17h14" {...S} />
     </>
   ),
-  filter: (
+  scarf: (
     <>
-      <path d="M13 15h22l-9 12v9l-4 2v-11z" {...S} />
-      <path d="M18 20h12" {...S} />
+      <path d="M11 16c6 4 20-6 26 0" {...S} />
+      <path d="M11 24c6 4 20-6 26 0" {...S} />
+      <path d="M11 16v8M12 16l-1 6M14 17l-1 6" {...S} />
+      <path d="M37 16v8M36 16l1 6M34 17l1 6" {...S} />
     </>
   ),
-  beans: (
+  belt: (
     <>
-      <ellipse cx="20" cy="24" rx="6" ry="9" transform="rotate(-25 20 24)" {...S} />
-      <path d="M20 16c-2 4-2 12 0 16" {...S} />
-      <ellipse cx="29" cy="30" rx="6" ry="9" transform="rotate(-25 29 30)" {...S} />
-      <path d="M29 22c-2 4-2 12 0 16" {...S} />
+      <path d="M8 22h13" {...S} />
+      <path d="M27 22h13" {...S} />
+      <rect x="16" y="14" width="16" height="16" rx="3" {...S} />
+      <circle cx="24" cy="22" r="2.4" fill="rgba(255,255,255,0.95)" />
     </>
   ),
-  scissors: (
+  jacket: (
     <>
-      <circle cx="16" cy="32" r="4" {...S} />
-      <circle cx="16" cy="16" r="4" {...S} />
-      <path d="M19 18l15 14M19 30L34 16" {...S} />
+      <path d="M16 10l8-3 8 3 8 7-5 5-3-3v18a2 2 0 0 1-2 2H18a2 2 0 0 1-2-2V19l-3 3-5-5z" {...S} />
+      <path d="M24 9v29" {...S} />
     </>
   ),
-  mug: (
+  cap: (
     <>
-      <path d="M15 16h14v20a3 3 0 0 1-3 3h-8a3 3 0 0 1-3-3z" {...S} />
-      <path d="M29 20h4a4 4 0 0 1 0 10h-4" {...S} />
+      <path d="M10 26a14 8 0 0 1 28 0z" {...S} />
+      <path d="M8 26h9l3-3h8l3 3h5" {...S} />
     </>
   ),
-  bottle: (
+  socks: (
     <>
-      <path d="M21 10h6v5l3 5v18a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V20l3-5z" {...S} />
-      <path d="M18 27h12" {...S} />
+      <path d="M19 8h10v17l8 10a3 3 0 0 1-2 5H21a3 3 0 0 1-3-3V8z" {...S} />
+      <path d="M19 25h10" {...S} />
     </>
   ),
-  dripper: (
+  shoe: (
     <>
-      <path d="M13 14h22l-8 14h-6z" {...S} />
-      <path d="M21 28h6v6h-6z" {...S} />
-      <path d="M17 39h14" {...S} />
+      <path d="M8 33c0-4 3-6 7-8l10-6 3 3 8-1 6 6c1 3-1 6-4 6H10a2 2 0 0 1-2-2z" {...S} />
+      <path d="M25 19l1 6M30 20l0 6" {...S} />
     </>
   ),
   giftcard: (
@@ -93,6 +90,17 @@ const GLYPHS: Record<GlyphKey, ReactNode> = {
     <>
       <path d="M15 18h18l-2 20H17z" {...S} />
       <path d="M21 18v-2a3 3 0 0 1 6 0v2" {...S} />
+    </>
+  ),
+  dress: (
+    <>
+      <path d="M20 9h8l2 8-3 2 3 3-3 17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2l-3-17 3-3-3-2z" {...S} />
+    </>
+  ),
+  hoodie: (
+    <>
+      <path d="M16 20a8 8 0 0 1 16 0l4 3-3 4-2-1v13a2 2 0 0 1-2 2H19a2 2 0 0 1-2-2V26l-2 1-3-4z" {...S} />
+      <path d="M22 21a2 2 0 0 0 4 0" {...S} />
     </>
   ),
   box: (

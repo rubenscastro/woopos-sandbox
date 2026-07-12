@@ -3,7 +3,8 @@ import { Text } from '../../components/android/Text';
 import { ChevronRight } from '../../components/android/icons';
 import { flowGroups } from '../../flows.android';
 import { usePlatform } from '../../device/PlatformContext';
-import { platformPath } from '../../device/platformNav';
+import { useVersion } from '../../versions/VersionContext';
+import { resolvePath } from '../../versions/routing';
 import { PlatformSwitcher } from '../../device/PlatformSwitcher';
 
 /**
@@ -13,6 +14,7 @@ import { PlatformSwitcher } from '../../device/PlatformSwitcher';
  */
 export function Home() {
   const { platform } = usePlatform();
+  const { version } = useVersion();
   return (
     <div
       style={{
@@ -117,7 +119,7 @@ export function Home() {
               };
 
               return flow.built && flow.path ? (
-                <Link key={flow.num} to={platformPath(platform, flow.path)} style={rowStyle}>
+                <Link key={flow.num} to={resolvePath(version, platform, flow.path)} style={rowStyle}>
                   {inner}
                 </Link>
               ) : (

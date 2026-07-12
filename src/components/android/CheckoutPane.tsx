@@ -7,8 +7,10 @@ import { OrderSummary } from './OrderSummary';
 import { BottomSheet } from './BottomSheet';
 import { Spinner } from './Spinner';
 import { ErrorX } from './icons';
-import { CardReaderNotConnected, ReadyForPaymentCard } from './illustrations';
+import { CardReaderNotConnected } from './illustrations';
+import { ReadyForPaymentCard } from './ReadyForPaymentCard';
 import { useCardReader, useCardTransaction } from '../../tools/CardReaderContext';
+import { usePaymentSettings } from '../../state/PaymentSettingsContext';
 import { usePageBackground } from '../../device/PageBackground';
 
 /**
@@ -31,20 +33,26 @@ export function CheckoutPane({
 }) {
   const navigate = useNav();
   const { connected, startConnecting } = useCardReader();
+  const { methods } = usePaymentSettings();
   const [state, setState] = useState<PayState>('idle');
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  // Which methods Settings → Payments has enabled — the checkout only surfaces these.
+  const otherMethods = methods.scanToPay || methods.markAsPaid;
+  const anyMethod = methods.cardReader || methods.cash || otherMethods;
+
   usePageBackground(active && state === 'processing' ? 'var(--color-primary)' : 'var(--color-surface)');
 
-  // The Card reader tool drives the transaction while this checkout is active, connected, idle.
-  // Both outcomes show the processing screen first, then resolve to success or failure.
+  // The Card reader tool drives the transaction while this checkout is active, connected, idle
+  // — and only when card reader is an accepted method. Both outcomes show the processing screen
+  // first, then resolve to success or failure.
   useCardTransaction((result) => {
     setState('processing');
     window.setTimeout(() => {
       if (result === 'authorized') navigate('/payment-success');
       else setState('failed');
     }, 1600);
-  }, active && connected && state === 'idle');
+  }, active && methods.cardReader && connected && state === 'idle');
 
   useEffect(() => {
     if (!connected && state === 'processing') setState('idle');
@@ -94,7 +102,36 @@ export function CheckoutPane({
             </Text>
             <div style={{ ...btnStack, width: '100%' }}>
               <Button text="Try again" fullWidth onClick={() => setState('idle')} />
-              <OutlinedButton text="Cash payment" fullWidth onClick={() => navigate('/cash-payment')} />
+              {methods.cash && (
+                <OutlinedButton text="Cash payment" fullWidth onClick={() => navigate('/cash-payment')} />
+              )}
+            </div>
+          </>
+        ) : !anyMethod ? (
+          // No accepted methods — nothing to charge with until one is re-enabled in Settings.
+          <>
+            <Text variant="heading" bold align="center">
+              No payment methods enabled
+            </Text>
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
+              Enable a payment method in Settings → Payments to take this payment.
+            </Text>
+            <div style={{ width: '100%', maxWidth: 460 }}>
+              <OrderSummary />
+            </div>
+          </>
+        ) : !methods.cardReader ? (
+          // Card reader isn't an accepted method — skip the reader flow and let the customer
+          // pick from the enabled methods in the actions below.
+          <>
+            <Text variant="heading" bold align="center">
+              Choose a payment method
+            </Text>
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
+              Select how the customer would like to pay.
+            </Text>
+            <div style={{ width: '100%', maxWidth: 460 }}>
+              <OrderSummary />
             </div>
           </>
         ) : connected ? (
@@ -129,26 +166,32 @@ export function CheckoutPane({
         )}
       </div>
 
-      <div
-        style={{
-          padding: 'var(--space-md)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-md)',
-          alignItems: 'center',
-        }}
-      >
-        <div style={{ width: '100%' }}>
-          <OutlinedButton text="Cash payment" fullWidth onClick={() => navigate('/cash-payment')} />
+      {(methods.cash || otherMethods) && (
+        <div
+          style={{
+            padding: 'var(--space-md)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-md)',
+            alignItems: 'center',
+          }}
+        >
+          {methods.cash && (
+            <div style={{ width: '100%' }}>
+              <OutlinedButton text="Cash payment" fullWidth onClick={() => navigate('/cash-payment')} />
+            </div>
+          )}
+          {otherMethods && (
+            <div style={{ width: '100%' }}>
+              <OutlinedButton text="Other payment methods" fullWidth onClick={() => setSheetOpen(true)} />
+            </div>
+          )}
         </div>
-        <div style={{ width: '100%' }}>
-          <OutlinedButton text="Other payment methods" fullWidth onClick={() => setSheetOpen(true)} />
-        </div>
-      </div>
+      )}
 
       <BottomSheet title="Choose payment method" open={sheetOpen} onDismiss={() => setSheetOpen(false)}>
-        <Method label="Scan to pay" onClick={() => navigate('/scan-to-pay')} />
-        <Method label="Mark order as paid" onClick={() => navigate('/mark-complete')} />
+        {methods.scanToPay && <Method label="Scan to pay" onClick={() => navigate('/scan-to-pay')} />}
+        {methods.markAsPaid && <Method label="Mark order as paid" onClick={() => navigate('/mark-complete')} />}
       </BottomSheet>
     </div>
   );

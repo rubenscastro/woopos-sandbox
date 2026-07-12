@@ -4,7 +4,8 @@ import { PosText } from '../../components/ios/PosText';
 import { PosButton } from '../../components/ios/PosButton';
 import { Spinner } from '../../components/android/Spinner';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
-import { CardReaderNotConnected, ReadyForPaymentCard } from '../../components/android/illustrations';
+import { CardReaderNotConnected } from '../../components/android/illustrations';
+import { ReadyForPaymentCard } from '../../components/android/ReadyForPaymentCard';
 import { ErrorX, ChevronLeft } from '../../components/android/icons';
 import { useNav } from '../../device/platformNav';
 import { useIsPhone } from '../../hooks/useBreakpoint';
@@ -173,7 +174,7 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
         ) : !connected ? (
           <PosButton label="Card reader" fullWidth onClick={startConnecting} />
         ) : null}
-        <PosButton label="Cash payment" variant="outlined" fullWidth onClick={() => setState('cash')} />
+        <PosButton label="Cash payment" variant="outlined" fullWidth onClick={() => { setCash(total.toFixed(2)); setState('cash'); }} />
       </BottomStrip>
     </div>
   );

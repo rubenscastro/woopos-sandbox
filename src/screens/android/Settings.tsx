@@ -9,6 +9,7 @@ import { HelpCircle } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useCardReader } from '../../tools/CardReaderContext';
+import { usePaymentSettings } from '../../state/PaymentSettingsContext';
 
 /**
  * Flows 16–19 — Settings (WooPosSettingsScreen). Two-pane master/detail: category list on
@@ -16,10 +17,11 @@ import { useCardReader } from '../../tools/CardReaderContext';
  * (→ card reader / barcode scanner), Product catalog, plus a Help entry. The "Where are my
  * products?" product-info dialog is reachable from Help.
  */
-type Category = 'store' | 'hardware' | 'catalog' | 'help';
+type Category = 'store' | 'payments' | 'hardware' | 'catalog' | 'help';
 
 const CATEGORIES: { id: Category; title: string; subtitle: string }[] = [
   { id: 'store', title: 'Store', subtitle: 'Store configuration and settings' },
+  { id: 'payments', title: 'Payments', subtitle: 'Manage payments options' },
   { id: 'hardware', title: 'Hardware', subtitle: 'Manage hardware connections' },
   { id: 'catalog', title: 'Product catalog', subtitle: 'Manage catalog settings' },
 ];
@@ -114,7 +116,13 @@ function SettingsDetail({ category, onBack }: { category: Category; onBack?: () 
     }
   } else {
     title =
-      category === 'store' ? 'Store' : category === 'catalog' ? 'Product catalog' : 'Get help and support';
+      category === 'store'
+        ? 'Store'
+        : category === 'payments'
+          ? 'Payments'
+          : category === 'catalog'
+            ? 'Product catalog'
+            : 'Get help and support';
   }
 
   return (
@@ -126,6 +134,7 @@ function SettingsDetail({ category, onBack }: { category: Category; onBack?: () 
         style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
       >
         {category === 'store' && <StorePane />}
+        {category === 'payments' && <PaymentsPane />}
         {category === 'hardware' && <HardwarePane sub={hw} onNavigate={setHw} />}
         {category === 'catalog' && <CatalogPane />}
         {category === 'help' && <HelpPane />}
@@ -163,6 +172,101 @@ function StorePane() {
         </div>
       </SectionCard>
     </>
+  );
+}
+
+function PaymentsPane() {
+  // Backed by the shared PaymentSettings context so the checkout surface reflects the same
+  // config. "Cha Ching" placeholder renamed to "Payment success sound" — TODO(copy): confirm
+  // final name with design.
+  const { methods, setMethod, successSound, setSuccessSound } = usePaymentSettings();
+
+  return (
+    <>
+      <SectionCard title="Accepted payment methods">
+        <ToggleRow
+          title="Card reader"
+          subtitle="Accept card payments with a connected reader"
+          checked={methods.cardReader}
+          onChange={(v) => setMethod('cardReader', v)}
+        />
+        <ToggleRow
+          title="Cash"
+          subtitle="Accept cash payments and record change"
+          checked={methods.cash}
+          onChange={(v) => setMethod('cash', v)}
+        />
+        <ToggleRow
+          title="Scan to pay"
+          subtitle="Show a QR code for the customer to pay from their phone"
+          checked={methods.scanToPay}
+          onChange={(v) => setMethod('scanToPay', v)}
+        />
+        <ToggleRow
+          title="Mark order as paid"
+          subtitle="Record payment collected outside this device"
+          checked={methods.markAsPaid}
+          onChange={(v) => setMethod('markAsPaid', v)}
+        />
+      </SectionCard>
+      <SectionCard title="Other settings">
+        <ToggleRow
+          title="Payment success sound"
+          subtitle="Play a sound when a payment completes"
+          checked={successSound}
+          onChange={setSuccessSound}
+        />
+      </SectionCard>
+    </>
+  );
+}
+
+/** A settings row with a title (+ optional subtitle) and a trailing on/off switch — used for
+ *  the toggleable options inside a SectionCard. The whole row is the control: tapping anywhere
+ *  on it flips the switch. It's a single `role="switch"` button (with a presentational switch
+ *  visual, not a nested button) so it stays one accessible toggle. */
+function ToggleRow({
+  title,
+  subtitle,
+  checked,
+  onChange,
+}: {
+  title: string;
+  subtitle?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 'var(--space-md)',
+        width: '100%',
+        padding: 0,
+        border: 'none',
+        background: 'none',
+        font: 'inherit',
+        color: 'inherit',
+        textAlign: 'left',
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <Text variant="bodyLarge">{title}</Text>
+        {subtitle && (
+          <Text variant="bodyMedium" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 2 }}>
+            {subtitle}
+          </Text>
+        )}
+      </div>
+      <SwitchVisual checked={checked} />
+    </button>
   );
 }
 
@@ -282,9 +386,30 @@ function MiniSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boo
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      style={{ width: 52, height: 32, borderRadius: 16, border: 'none', background: checked ? 'var(--color-primary)' : 'var(--color-outline-variant)', position: 'relative', flex: 'none' }}
+      style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', flex: 'none' }}
+    >
+      <SwitchVisual checked={checked} />
+    </button>
+  );
+}
+
+/** The switch track + knob, purely presentational (no interactivity of its own) — so it can sit
+ *  inside either MiniSwitch's own button or a whole-row toggle button without nesting buttons. */
+function SwitchVisual({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: 'inline-block',
+        width: 52,
+        height: 32,
+        borderRadius: 16,
+        background: checked ? 'var(--color-primary)' : 'var(--color-outline-variant)',
+        position: 'relative',
+        flex: 'none',
+      }}
     >
       <span style={{ position: 'absolute', top: 4, left: checked ? 24 : 4, width: 24, height: 24, borderRadius: '50%', background: '#fff', transition: 'left 0.15s ease' }} />
-    </button>
+    </span>
   );
 }

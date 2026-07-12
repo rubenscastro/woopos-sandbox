@@ -3,7 +3,8 @@ import { PosText } from '../../components/ios/PosText';
 import { ChevronRight } from '../../components/android/icons';
 import { PlatformSwitcher } from '../../device/PlatformSwitcher';
 import { usePlatform } from '../../device/PlatformContext';
-import { platformPath } from '../../device/platformNav';
+import { useVersion } from '../../versions/VersionContext';
+import { resolvePath } from '../../versions/routing';
 import { flowGroups } from '../../flows.ios';
 
 /**
@@ -12,6 +13,7 @@ import { flowGroups } from '../../flows.ios';
  */
 export function IosHome() {
   const { platform } = usePlatform();
+  const { version } = useVersion();
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', padding: 'var(--space-xl) var(--space-lg) var(--space-xxxl)' }}>
       <div style={{ padding: 'var(--space-lg) 0 var(--space-md)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-lg)' }}>
@@ -59,7 +61,7 @@ export function IosHome() {
                 </>
               );
               return flow.built && flow.path ? (
-                <Link key={flow.num} to={platformPath(platform, flow.path)} style={rowStyle}>{inner}</Link>
+                <Link key={flow.num} to={resolvePath(version, platform, flow.path)} style={rowStyle}>{inner}</Link>
               ) : (
                 <div key={flow.num} style={{ ...rowStyle, cursor: 'default' }}>{inner}</div>
               );

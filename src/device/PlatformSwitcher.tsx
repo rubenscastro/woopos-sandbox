@@ -1,12 +1,14 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePlatform, type PlatformId } from './PlatformContext';
+import { useVersion } from '../versions/VersionContext';
 import { mapRoute } from './flowParity';
 
 /**
  * Segmented Android / iOS switcher. On toggle it flips the platform context and, using
- * FLOW_PARITY.md's mapping, navigates to the equivalent route on the target platform — or
- * that platform's home when the current flow has no confirmed equivalent yet (with a subtle
- * "not on <platform>" hint). Reuses the chrome `.segmented` styles.
+ * FLOW_PARITY.md's mapping, navigates to the equivalent route on the target platform (within
+ * the active version — see VersionSwitcher) — or that platform's home when the current flow
+ * has no confirmed equivalent yet (with a subtle "not on <platform>" hint). Reuses the chrome
+ * `.segmented` styles.
  */
 const OPTIONS: { id: PlatformId; label: string }[] = [
   { id: 'android', label: 'Android' },
@@ -15,15 +17,16 @@ const OPTIONS: { id: PlatformId; label: string }[] = [
 
 export function PlatformSwitcher() {
   const { platform, setPlatform } = usePlatform();
+  const { version } = useVersion();
   const navigate = useNavigate();
   const location = useLocation();
 
   const other: PlatformId = platform === 'android' ? 'ios' : 'android';
-  const otherMap = mapRoute(other, location.pathname);
+  const otherMap = mapRoute(version, other, location.pathname);
 
   const switchTo = (target: PlatformId) => {
     if (target === platform) return;
-    const dest = mapRoute(target, location.pathname);
+    const dest = mapRoute(version, target, location.pathname);
     setPlatform(target);
     navigate(dest.path);
   };

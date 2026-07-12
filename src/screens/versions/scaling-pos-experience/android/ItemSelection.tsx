@@ -1,43 +1,54 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNav } from '../../device/platformNav';
-import { Text } from '../../components/android/Text';
-import { Card } from '../../components/android/Card';
-import { SearchInput } from '../../components/android/SearchInput';
-import { EmptyScreen } from '../../components/android/EmptyScreen';
-import { ProductListItem, ProductListItemSkeleton } from '../../components/android/ProductListItem';
-import { CouponCard } from '../../components/android/CouponCard';
-import { CartPanel } from '../../components/android/CartPanel';
-import { CheckoutPane } from '../../components/android/CheckoutPane';
-import { CustomAmountDialog } from '../../components/android/CustomAmountDialog';
-import { CouponCreationDialog } from '../../components/android/CouponCreationDialog';
-import { DragScroll } from '../../components/android/DragScroll';
-import { FloatingToolbar } from '../../components/android/FloatingToolbar';
-import { Toolbar } from '../../components/android/Toolbar';
-import { Button } from '../../components/android/Button';
-import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ChevronLeft, Plus } from '../../components/android/icons';
-import { useIsPhone } from '../../hooks/useBreakpoint';
-import { useClickOutside } from '../../hooks/useClickOutside';
-import { useBarcodeSetup } from '../../tools/BarcodeSetup';
-import { useCartSheet } from '../../device/CartSheet';
-import { useCart } from '../../state/CartContext';
-import { useCheckoutPane } from '../../state/useCheckoutPane';
-import { formatUsd } from '../../lib/currency';
-import { products, variations, type MockProduct } from '../../mocks/android/products';
-import { coupons, type MockCoupon } from '../../mocks/android/coupons';
+import { useNav } from '../../../../device/platformNav';
+import { Text } from '../../../../components/android/Text';
+import { Card } from '../../../../components/android/Card';
+import { SearchInput } from '../../../../components/android/SearchInput';
+import { EmptyScreen } from '../../../../components/android/EmptyScreen';
+import { ProductListItem, ProductListItemSkeleton } from '../../../../components/android/ProductListItem';
+import { CouponCard } from '../../../../components/android/CouponCard';
+import { CartPanel } from '../../../../components/android/CartPanel';
+import { CheckoutPane } from '../../../../components/android/CheckoutPane';
+import { CustomAmountDialog } from '../../../../components/android/CustomAmountDialog';
+import { CouponCreationDialog } from '../../../../components/android/CouponCreationDialog';
+import { DragScroll } from '../../../../components/android/DragScroll';
+import { FloatingToolbar } from '../../../../components/android/FloatingToolbar';
+import { Toolbar } from '../../../../components/android/Toolbar';
+import { Button } from '../../../../components/android/Button';
+import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ChevronLeft, Plus } from '../../../../components/android/icons';
+import { useIsPhone } from '../../../../hooks/useBreakpoint';
+import { useClickOutside } from '../../../../hooks/useClickOutside';
+import { useBarcodeSetup } from '../../../../tools/BarcodeSetup';
+import { useCartSheet } from '../../../../device/CartSheet';
+import { useCart } from '../../../../state/CartContext';
+import { useCheckoutPane } from '../../../../state/useCheckoutPane';
+import { formatUsd } from '../../../../lib/currency';
+import { products, variations, type MockProduct } from '../../../../mocks/android/products';
+import { coupons, type MockCoupon } from '../../../../mocks/android/coupons';
+import { SystemEventsFloating, SystemEventsBanner } from '../../../../components/versions/scaling-pos-experience/android/systemEvents/SystemEventsStack';
+import { useSystemEvents } from '../../../../components/versions/scaling-pos-experience/android/systemEvents/SystemEventsContext';
 
 type Tab = 'products' | 'coupons';
 
 /**
- * Flow 2–6 — Item selection (WooPosItemsScreen) with the cart alongside it. On tablet the
- * items list and cart sit side by side (WooPosHomePanes: items ~65%, cart ~35%); on phone
- * the items list is full-screen with a persistent "View cart" button to the cart pane.
- * Handles the Products/Coupons tabs, search, the variations drill-in, and custom amounts.
+ * scaling-pos-experience fork of the Android Item selection / POS Home screen — identical to
+ * Main (see `src/screens/android/ItemSelection.tsx`) except it replaces the always-on
+ * card-reader status pill with the System Events surface: `SystemEventsFloating` docks in
+ * FloatingToolbar's bottom-left slot on tablet, `SystemEventsBanner` pins persistent-only
+ * banners to the top on phone (pushing content down — no floating overlay there). See
+ * VERSIONS.md.
  */
 export function ItemSelection() {
   const isPhone = useIsPhone();
   const cart = useCart();
   const { openSetup } = useBarcodeSetup();
   const { openCartSheet } = useCartSheet();
+  const { fireStartup } = useSystemEvents();
+
+  // Startup sequence fires once per session on POS Home load (tablet only — see
+  // SystemEventsContext.fireStartup); phone never shows transient events at all.
+  useEffect(() => {
+    fireStartup();
+  }, [fireStartup]);
 
   const [tab, setTab] = useState<Tab>('products');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -134,7 +145,12 @@ export function ItemSelection() {
   );
 
   if (isPhone) {
-    return <div style={{ height: '100%', position: 'relative' }}>{itemsPane}</div>;
+    return (
+      <div style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+        <SystemEventsBanner />
+        <div style={{ flex: 1, minHeight: 0 }}>{itemsPane}</div>
+      </div>
+    );
   }
 
   // Tablet: a 3-pane horizontal row (items | cart | checkout). Starting "checkout" slides
@@ -175,9 +191,9 @@ export function ItemSelection() {
         </div>
       </div>
 
-      {/* Rendered outside the sliding row so the menu + card-reader stay pinned bottom-left
+      {/* Rendered outside the sliding row so the menu + System Events stay pinned bottom-left
           across both the items and checkout panes. */}
-      <FloatingToolbar />
+      <FloatingToolbar statusSlot={<SystemEventsFloating />} />
     </div>
   );
 }

@@ -1,27 +1,24 @@
 import { useCallback } from 'react';
 import { useNavigate, type NavigateOptions } from 'react-router-dom';
-import { usePlatform, type PlatformId } from './PlatformContext';
+import { usePlatform } from './PlatformContext';
+import { useVersion } from '../versions/VersionContext';
+import { resolvePath } from '../versions/routing';
 
 /**
- * Route helpers for the two platform trees (`/android/*`, `/ios/*`). Screens keep writing
- * app-level paths like `navigate('/totals')`; these map them into the active platform's
- * tree so call sites don't hardcode a platform prefix. `/flows` (and `/`) map to the
- * platform's home/index route.
+ * Drop-in replacement for useNavigate() that routes within the active version + platform
+ * tree. Screens keep writing app-level paths like `navigate('/totals')`; this maps them via
+ * `resolvePath` so call sites don't hardcode a version/platform prefix. `/flows` (and `/`)
+ * map to the current version+platform's home/index route.
  */
-export function platformPath(platform: PlatformId, to: string): string {
-  if (to === '/flows' || to === '/') return `/${platform}`;
-  return `/${platform}${to}`;
-}
-
-/** Drop-in replacement for useNavigate() that routes within the active platform tree. */
 export function useNav() {
   const navigate = useNavigate();
   const { platform } = usePlatform();
+  const { version } = useVersion();
   return useCallback(
     (to: string | number, opts?: NavigateOptions) => {
       if (typeof to === 'number') return navigate(to);
-      return navigate(platformPath(platform, to), opts);
+      return navigate(resolvePath(version, platform, to), opts);
     },
-    [navigate, platform],
+    [navigate, platform, version],
   );
 }

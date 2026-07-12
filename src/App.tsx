@@ -5,125 +5,135 @@ import { DeviceProvider } from './device/DeviceContext';
 import { DeviceLayout } from './device/DeviceLayout';
 import { CartProvider } from './state/CartContext';
 import { PrinterProvider } from './state/PrinterContext';
+import { PaymentSettingsProvider } from './state/PaymentSettingsContext';
 import { FlagsProvider } from './state/FlagsContext';
 import { ToolsProvider } from './tools/ToolsContext';
 import { ConnectivityProvider } from './tools/ConnectivityContext';
 import { CardReaderProvider } from './tools/CardReaderContext';
-import { useBarcodeSetup } from './tools/BarcodeSetup';
-import { ItemSelector as IosItemSelector } from './screens/ios/ItemSelector';
-import { Checkout as IosCheckout } from './screens/ios/Checkout';
-import { Orders as IosOrders } from './screens/ios/Orders';
-import { Settings as IosSettings } from './screens/ios/Settings';
-import { PaymentsOnboarding as IosPaymentsOnboarding } from './screens/ios/PaymentsOnboarding';
-import { Splash } from './screens/android/Splash';
-import { Eligibility } from './screens/android/Eligibility';
-import { ItemSelection } from './screens/android/ItemSelection';
-import { Cart } from './screens/android/Cart';
-import { Totals } from './screens/android/Totals';
-import { CardPayment } from './screens/android/CardPayment';
-import { CashPayment } from './screens/android/CashPayment';
-import { PaymentSuccess } from './screens/android/PaymentSuccess';
-import { MarkComplete } from './screens/android/MarkComplete';
-import { ScanToPay } from './screens/android/ScanToPay';
-import { EmailReceipt } from './screens/android/EmailReceipt';
-import { OrderHistory } from './screens/android/OrderHistory';
-import { Settings } from './screens/android/Settings';
-import { Support } from './screens/android/Support';
+import { BarcodeScannerProvider } from './tools/BarcodeScannerContext';
+import { SystemEventsProvider } from './components/versions/scaling-pos-experience/android/systemEvents/SystemEventsContext';
+import { VersionProvider, useVersion } from './versions/VersionContext';
+import { PROPOSAL_VERSIONS } from './versions/registry';
+import { versionOverrides } from './versions/overrides';
+import { resolvePath, parseRoutedPath } from './versions/routing';
+import { androidRouteDefs } from './routes/androidRouteDefs';
+import { iosRouteDefs } from './routes/iosRouteDefs';
+import { mergeRouteDefs } from './routes/mergeRouteDefs';
 
-/** Opens the barcode-setup modal over the items screen (flow 15 entry point). */
-function BarcodeSetupLaunch() {
-  const { openSetup } = useBarcodeSetup();
-  useEffect(() => {
-    openSetup();
-  }, [openSetup]);
-  return <ItemSelection />;
-}
-
-/** `/` and unknown paths land directly on the active platform's product catalog (no launcher). */
+/** `/` and unknown paths land directly on the active version+platform's product catalog
+ *  (no launcher). */
 function RootRedirect() {
   const { platform } = usePlatform();
-  return <Navigate to={`/${platform}/products`} replace />;
+  const { version } = useVersion();
+  return <Navigate to={resolvePath(version, platform, '/products')} replace />;
 }
 
-/** Keep platform context in sync with the URL (direct navigation / reload / back-forward),
- *  so chrome + tokens match the route the user is actually on. */
-function PlatformUrlSync() {
+/** Keep platform + version context in sync with the URL (direct navigation / reload /
+ *  back-forward), so chrome + tokens match the route the user is actually on. */
+function RouteContextSync() {
   const { platform, setPlatform } = usePlatform();
+  const { version, setVersion } = useVersion();
   const location = useLocation();
   useEffect(() => {
-    const seg = location.pathname.split('/')[1];
-    if ((seg === 'android' || seg === 'ios') && seg !== platform) setPlatform(seg);
-  }, [location.pathname, platform, setPlatform]);
+    const parsed = parseRoutedPath(location.pathname);
+    if (parsed.platform && parsed.platform !== platform) setPlatform(parsed.platform);
+    if (parsed.version !== version) setVersion(parsed.version);
+  }, [location.pathname, platform, setPlatform, version, setVersion]);
   return null;
 }
 
 export default function App() {
   return (
     <PlatformProvider>
+    <VersionProvider>
     <FlagsProvider>
     <DeviceProvider>
       <ToolsProvider>
         <ConnectivityProvider>
         <CardReaderProvider>
+        <BarcodeScannerProvider>
         <PrinterProvider>
+        <PaymentSettingsProvider>
         <CartProvider>
           <BrowserRouter>
-            <PlatformUrlSync />
+            <RouteContextSync />
             <Routes>
-              {/* Root + unknown paths → active platform's home/index. */}
+              {/* Root + unknown paths → active version+platform's home/index. */}
               <Route path="/" element={<RootRedirect />} />
 
-              {/* ---- Android platform tree ---- */}
+              {/* ---- Main version — Android platform tree ---- */}
               <Route path="/android">
                 {/* No launcher page — open straight into the catalog. */}
                 <Route index element={<Navigate to="/android/products" replace />} />
                 {/* Every flow screen renders inside the simulated device shell. */}
                 <Route element={<DeviceLayout />}>
-                  <Route path="splash" element={<Splash />} />
-                  <Route path="eligibility" element={<Eligibility />} />
-                  <Route path="products" element={<ItemSelection />} />
-                  <Route path="cart" element={<Cart />} />
-                  <Route path="totals" element={<Totals />} />
-                  <Route path="card-payment" element={<CardPayment />} />
-                  <Route path="cash-payment" element={<CashPayment />} />
-                  <Route path="payment-success" element={<PaymentSuccess />} />
-                  <Route path="mark-complete" element={<MarkComplete />} />
-                  <Route path="scan-to-pay" element={<ScanToPay />} />
-                  <Route path="email-receipt" element={<EmailReceipt />} />
-                  <Route path="order-history" element={<OrderHistory />} />
-                  <Route path="barcode-setup" element={<BarcodeSetupLaunch />} />
-                  <Route path="settings" element={<Settings initialCategory="store" />} />
-                  <Route path="settings-hardware" element={<Settings initialCategory="hardware" />} />
-                  <Route path="settings-catalog" element={<Settings initialCategory="catalog" />} />
-                  <Route path="support" element={<Support />} />
+                  {androidRouteDefs.map((r) => (
+                    <Route key={r.path} path={r.path} element={r.element} />
+                  ))}
                 </Route>
               </Route>
 
-              {/* ---- iOS platform tree (flows added one at a time in Phase 3) ---- */}
+              {/* ---- Main version — iOS platform tree (flows added one at a time in Phase 3) ---- */}
               <Route path="/ios">
                 <Route index element={<Navigate to="/ios/products" replace />} />
                 <Route element={<DeviceLayout />}>
-                  <Route path="products" element={<IosItemSelector />} />
-                  {/* Create coupon is a sheet over the item list (Coupons tab), not its own
-                      screen — this entry just opens the catalog with the sheet auto-presented. */}
-                  <Route path="add-coupon" element={<IosItemSelector initialTab="coupons" autoCreateCoupon />} />
-                  <Route path="checkout" element={<IosCheckout />} />
-                  <Route path="orders" element={<IosOrders />} />
-                  <Route path="settings" element={<IosSettings />} />
-                  <Route path="payments-onboarding" element={<IosPaymentsOnboarding />} />
+                  {iosRouteDefs.map((r) => (
+                    <Route key={r.path} path={r.path} element={r.element} />
+                  ))}
                 </Route>
               </Route>
+
+              {/* ---- Proposal versions (see src/versions/) — each gets the same android/ios
+                  tree as Main, with its own overrides layered on top. Add a new proposal by
+                  registering it in versions/registry.ts + versions/overrides.tsx; no route
+                  changes needed here. ---- */}
+              {PROPOSAL_VERSIONS.map((v) => (
+                <Route key={v.id} path={`/versions/${v.id}`}>
+                  <Route path="android">
+                    <Route index element={<Navigate to={`/versions/${v.id}/android/products`} replace />} />
+                    <Route
+                      element={
+                        // System Events is a scaling-pos-experience-only subsystem — its
+                        // provider only wraps this proposal's Android tree, not Main or
+                        // future proposals, so nothing elsewhere can accidentally depend on it.
+                        v.id === 'scaling-pos-experience' ? (
+                          <SystemEventsProvider>
+                            <DeviceLayout />
+                          </SystemEventsProvider>
+                        ) : (
+                          <DeviceLayout />
+                        )
+                      }
+                    >
+                      {mergeRouteDefs(androidRouteDefs, versionOverrides[v.id]?.android).map((r) => (
+                        <Route key={r.path} path={r.path} element={r.element} />
+                      ))}
+                    </Route>
+                  </Route>
+                  <Route path="ios">
+                    <Route index element={<Navigate to={`/versions/${v.id}/ios/products`} replace />} />
+                    <Route element={<DeviceLayout />}>
+                      {mergeRouteDefs(iosRouteDefs, versionOverrides[v.id]?.ios).map((r) => (
+                        <Route key={r.path} path={r.path} element={r.element} />
+                      ))}
+                    </Route>
+                  </Route>
+                </Route>
+              ))}
 
               <Route path="*" element={<RootRedirect />} />
             </Routes>
           </BrowserRouter>
         </CartProvider>
+        </PaymentSettingsProvider>
         </PrinterProvider>
+        </BarcodeScannerProvider>
         </CardReaderProvider>
         </ConnectivityProvider>
       </ToolsProvider>
     </DeviceProvider>
     </FlagsProvider>
+    </VersionProvider>
     </PlatformProvider>
   );
 }

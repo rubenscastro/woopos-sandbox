@@ -8,12 +8,13 @@ import { formatUsd } from '../../lib/currency';
 
 /**
  * Flow 9 — Cash payment (WooPosCashPaymentScreen). Enter cash tendered, see change due,
- * then "Mark order as complete". Enabled only when tendered >= total.
+ * then "Mark order as complete". Enabled only when tendered >= total. Prefilled with the
+ * cart total so the merchant can accept exact change with no typing.
  */
 export function CashPayment() {
   const navigate = useNav();
   const { total } = useCart();
-  const [text, setText] = useState('');
+  const [text, setText] = useState(total.toFixed(2));
 
   const tendered = parseFloat(text) || 0;
   const changeDue = tendered - total;
@@ -22,7 +23,7 @@ export function CashPayment() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar title="Cash payment" subtitle={`Total ${formatUsd(total)}`} onBack={() => navigate('/totals')} />
+      <Toolbar title="Cash payment" subtitle={`Total ${formatUsd(total)}`} onBack={() => navigate(-1)} />
       <div
         style={{
           flex: 1,

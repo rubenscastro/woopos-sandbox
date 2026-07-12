@@ -46,15 +46,3 @@ export function CardReaderNotConnected({ size = '140px' }: Props) {
     </svg>
   );
 }
-
-/** "Ready for payment" card illustration — a card sitting in a rounded reader plate. */
-export function ReadyForPaymentCard({ size = '140px' }: Props) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 169 169" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <rect x="20" y="34" width="129" height="101" rx="18" fill="var(--color-secondary)" />
-      <rect x="36" y="58" width="97" height="60" rx="10" fill="var(--color-primary)" />
-      <rect x="36" y="70" width="97" height="12" fill="var(--color-tertiary-icon)" opacity="0.55" />
-      <rect x="46" y="98" width="34" height="9" rx="4.5" fill="var(--color-secondary)" />
-    </svg>
-  );
-}

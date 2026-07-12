@@ -9,7 +9,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
  */
 export const SAMPLE_PRINTER_NAME = 'Star Micronics TSP654';
 
-export type PrinterSetupState = 'idle' | 'searching' | 'found' | 'connecting' | 'connected' | 'error';
+export type PrinterSetupState = 'idle' | 'searching' | 'noPrintersFound' | 'found' | 'connecting' | 'connected' | 'error';
 
 interface PrinterValue {
   connected: boolean;
@@ -23,6 +23,9 @@ interface PrinterValue {
   // Flow transitions (modal buttons + the chrome tool's discovery events)
   startSearch: () => void;
   printerFound: () => void;
+  // A scan that completes with zero devices (POSPrinterConnectionController.finishDiscovery when
+  // discoveredDevices is empty) — the printer hasn't been paired at the OS level yet.
+  noPrintersFound: () => void;
   connectPrinter: () => void;
   completeConnection: () => void;
   failConnection: () => void;
@@ -40,6 +43,7 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
   const closeSetup = useCallback(() => setSetupOpen(false), []);
   const startSearch = useCallback(() => { setSetupOpen(true); setSetupState('searching'); }, []);
   const printerFound = useCallback(() => setSetupState((s) => (s === 'searching' ? 'found' : s)), []);
+  const noPrintersFound = useCallback(() => setSetupState((s) => (s === 'searching' ? 'noPrintersFound' : s)), []);
   const connectPrinter = useCallback(() => setSetupState('connecting'), []);
   const completeConnection = useCallback(() => { setName(SAMPLE_PRINTER_NAME); setSetupState('connected'); }, []);
   const failConnection = useCallback(() => setSetupState('error'), []);
@@ -57,12 +61,13 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
       closeSetup,
       startSearch,
       printerFound,
+      noPrintersFound,
       connectPrinter,
       completeConnection,
       failConnection,
       disconnect,
     }),
-    [name, setupOpen, setupState, setConnected, openSetup, closeSetup, startSearch, printerFound, connectPrinter, completeConnection, failConnection, disconnect],
+    [name, setupOpen, setupState, setConnected, openSetup, closeSetup, startSearch, printerFound, noPrintersFound, connectPrinter, completeConnection, failConnection, disconnect],
   );
   return <PrinterContext.Provider value={value}>{children}</PrinterContext.Provider>;
 }

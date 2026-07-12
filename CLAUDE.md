@@ -96,6 +96,17 @@ Scroll" may belong in `src/components/ios/` rather than `src/screens/ios/`). Con
 reading the actual source, and update `FLOWS.ios.md`/`FLOW_PARITY.md` once confirmed
 rather than leaving stale guesses in place.
 
+## Versioning
+
+`VERSIONS.md` is the ground truth for the versioning system — `main` (current shipped
+flows) plus any number of proposals (new-feature explorations), switchable via a Version
+control in the chrome sidebar alongside Platform/Device/Theme. Proposals are routed under
+`/versions/<id>/android|ios/*` and fork only the screens they're actually redesigning —
+anything not forked falls back to `main`'s screen automatically. Register a new proposal in
+`src/versions/registry.ts` + `src/versions/overrides.tsx`; no other routing changes are
+needed. Forked screens live in `src/screens/versions/<id>/android|ios/`, mirroring the
+platform split.
+
 ## Working style
 
 - Build one flow at a time. After each one, stop and let the designer review before moving

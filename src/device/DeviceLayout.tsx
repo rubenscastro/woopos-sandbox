@@ -3,8 +3,10 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DeviceFrame } from './DeviceFrame';
 import { useDevice, type DeviceId, type ThemeId } from './DeviceContext';
 import { usePlatform, type PlatformId } from './PlatformContext';
-import { platformPath } from './platformNav';
 import { PlatformSwitcher } from './PlatformSwitcher';
+import { VersionSwitcher } from './VersionSwitcher';
+import { useVersion } from '../versions/VersionContext';
+import { resolvePath } from '../versions/routing';
 import {
   PreviewStateProvider,
   usePreviewStateConfig,
@@ -14,7 +16,9 @@ import { DeviceKeyboard } from './DeviceKeyboard';
 import { useTools } from '../tools/ToolsContext';
 import { useCardReader } from '../tools/CardReaderContext';
 import { usePrinter } from '../state/PrinterContext';
+import { useBarcodeScanner } from '../tools/BarcodeScannerContext';
 import { useConnectivity } from '../tools/ConnectivityContext';
+import { useOptionalSystemEvents } from '../components/versions/scaling-pos-experience/android/systemEvents/SystemEventsContext';
 import { ConnectivityOsHost } from '../tools/ConnectivityOsHost';
 import { useFlags, FLAG_DEFS } from '../state/FlagsContext';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
@@ -42,6 +46,7 @@ const builtFlowsByPlatform: Record<PlatformId, { num: number; title: string; pat
 export function DeviceLayout() {
   const { device, setDevice, theme, setTheme } = useDevice();
   const { platform } = usePlatform();
+  const { version } = useVersion();
 
   return (
     <PreviewStateProvider>
@@ -51,9 +56,11 @@ export function DeviceLayout() {
       <div className="chrome">
         <aside className="chrome-bar">
           <div className="chrome-left">
-            <Link to={`/${platform}`} className="chrome-brand">
+            <Link to={resolvePath(version, platform, '/')} className="chrome-brand">
               WooPOS
             </Link>
+            {/* Which version is active — main, or a proposal (see src/versions/). */}
+            <VersionSwitcher />
             {/* The Barcode + Card reader tools drive shared state (cart scans, reader connection
                 and transactions), so both platforms get them — iOS flows respond to the same tool
                 input as Android. The Flows list and preview-state menu are Android-only for now. */}
@@ -64,6 +71,9 @@ export function DeviceLayout() {
             <CardReaderMenu />
             {/* Receipt printers are iOS-only in the prototype. */}
             {platform === 'ios' && <PrinterMenu />}
+            {/* Catalog sync only exists for the scaling-pos-experience proposal's System
+                Events surface — hidden everywhere else since there's nothing to trigger. */}
+            <CatalogSyncMenu />
             {platform === 'android' && <PreviewStateMenu />}
           </div>
           <div className="chrome-right">
@@ -126,6 +136,8 @@ export function DeviceLayout() {
  */
 function ToolsMenu() {
   const { activeTool, toggleTool, setActiveTool } = useTools();
+  const scanner = useBarcodeScanner();
+  const systemEvents = useOptionalSystemEvents();
   const cart = useCart();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -166,6 +178,25 @@ function ToolsMenu() {
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 240 }}>
+          {/* Scanner "Connected" only matters for the scaling-pos-experience proposal's
+              System Events surface — hidden elsewhere since nothing reacts to it. */}
+          {systemEvents && (
+            <>
+              <button
+                type="button"
+                className="chrome-reader__toggle"
+                role="switch"
+                aria-checked={scanner.connected}
+                onClick={() => scanner.setConnected(!scanner.connected)}
+              >
+                <span>Connected</span>
+                <span className={`chrome-switch${scanner.connected ? ' is-on' : ''}`} aria-hidden>
+                  <span className="chrome-switch__knob" />
+                </span>
+              </button>
+              <div className="chrome-reader__divider" />
+            </>
+          )}
           <button
             type="button"
             className={`chrome-menu__item${active ? ' is-active' : ''}`}
@@ -326,7 +357,12 @@ function PrinterMenu() {
           {!p.connected && (s === 'idle' || s === 'error') && (
             <ReaderItem label="Open printer setup" onClick={() => { setOpen(false); p.openSetup(); }} />
           )}
-          {s === 'searching' && <ReaderItem label="Printer found" onClick={p.printerFound} />}
+          {s === 'searching' && (
+            <>
+              <ReaderItem label="Printer found" onClick={p.printerFound} />
+              <ReaderItem label="No printers found" onClick={p.noPrintersFound} />
+            </>
+          )}
           {s === 'connecting' && (
             <>
               <ReaderItem label="Complete connection" onClick={p.completeConnection} />
@@ -448,6 +484,57 @@ function FlagsMenu() {
   );
 }
 
+/**
+ * Manual trigger for the "Catalog sync failed" / "Catalog synced" System Events — decoupled
+ * from the Connectivity tool by design (kept independently toggleable rather than tied to
+ * wifi/cellular). Only rendered inside the scaling-pos-experience proposal's route tree,
+ * where SystemEventsProvider actually exists.
+ */
+function CatalogSyncMenu() {
+  const systemEvents = useOptionalSystemEvents();
+  const [open, setOpen] = useState(false);
+  const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+
+  if (!systemEvents) return null;
+  const { syncFailed, markSyncFailed, markSyncResolved } = systemEvents;
+
+  return (
+    <div className="chrome-menu chrome-menu--state" ref={menuRef}>
+      <span className="chrome-menu__label">Catalog sync</span>
+      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: syncFailed ? 'var(--color-alert)' : 'var(--color-success)',
+            }}
+          />
+          {syncFailed ? 'Sync failed' : 'Synced'}
+        </span>
+        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div className="chrome-menu__dropdown" style={{ minWidth: 240 }}>
+          <button
+            type="button"
+            className="chrome-reader__toggle"
+            role="switch"
+            aria-checked={syncFailed}
+            onClick={() => (syncFailed ? markSyncResolved() : markSyncFailed())}
+          >
+            <span>Sync failed</span>
+            <span className={`chrome-switch${syncFailed ? ' is-on' : ''}`} aria-hidden>
+              <span className="chrome-switch__knob" />
+            </span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Segmented<T extends string>({
   ariaLabel,
   value,
@@ -484,10 +571,11 @@ function FlowsMenu() {
   const navigate = useNavigate();
   const location = useLocation();
   const { platform } = usePlatform();
+  const { version } = useVersion();
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
   const builtFlows = builtFlowsByPlatform[platform];
-  const current = builtFlows.find((f) => platformPath(platform, f.path!) === location.pathname);
+  const current = builtFlows.find((f) => resolvePath(version, platform, f.path!) === location.pathname);
 
   return (
     <div className="chrome-menu" ref={menuRef}>
@@ -502,7 +590,7 @@ function FlowsMenu() {
             className="chrome-menu__item chrome-menu__item--all"
             onClick={() => {
               setOpen(false);
-              navigate(platformPath(platform, '/flows'));
+              navigate(resolvePath(version, platform, '/flows'));
             }}
           >
             All flows
@@ -511,10 +599,10 @@ function FlowsMenu() {
             <button
               key={f.num}
               type="button"
-              className={`chrome-menu__item ${platformPath(platform, f.path!) === location.pathname ? 'is-active' : ''}`}
+              className={`chrome-menu__item ${resolvePath(version, platform, f.path!) === location.pathname ? 'is-active' : ''}`}
               onClick={() => {
                 setOpen(false);
-                navigate(platformPath(platform, f.path!));
+                navigate(resolvePath(version, platform, f.path!));
               }}
             >
               <span className="chrome-menu__num">{f.num}</span>

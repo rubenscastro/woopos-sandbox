@@ -43,6 +43,17 @@ export function PrinterSetupHost() {
         );
       case 'searching':
         return <Progress message="Searching for printers…" />;
+      case 'noPrintersFound':
+        // finishDiscovery() when the scan completes with zero devices — the printer likely
+        // hasn't been paired at the OS level yet, so the message repeats that instruction.
+        return (
+          <Centered
+            icon={<PrinterGlyph />}
+            title="No printers found"
+            message="Make sure your printer is on and paired in the Settings app under Bluetooth, then search again."
+            primary={{ label: 'Search again', onClick: printer.startSearch }}
+          />
+        );
       case 'found':
         return (
           <Centered

@@ -366,3 +366,61 @@ export function DotsHorizontal({ size, ...props }: IconProps) {
     </svg>
   );
 }
+
+/** Three horizontal lines — the floating toolbar's Menu button. */
+export function Hamburger({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <path d="M4 6.5h16M4 12h16M4 17.5h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Receipt printer glyph — used by the Receipt printer tool and printer system events. */
+export function Printer({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <path d="M6 9V4h12v5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <rect x="3" y="9" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="6" y="14" width="12" height="6" rx="1" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Globe — general connectivity (online/offline) system events. */
+export function Globe({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3 12h18M4.5 7.5h15M4.5 16.5h15" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+/** Circular refresh arrows — update / sync system events. */
+export function Refresh({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <path
+        d="M4.5 12a7.5 7.5 0 0 1 12.6-5.5M19.5 12a7.5 7.5 0 0 1-12.6 5.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path d="M17.5 3.5v3.5H14M6.5 20.5V17H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** 2x2 grid — catalog/store system events. */
+export function Grid({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="13" y="3.5" width="7.5" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="3.5" y="13" width="7.5" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="13" y="13" width="7.5" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}

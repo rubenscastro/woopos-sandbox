@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { useNav } from '../../device/platformNav';
 import { Text } from './Text';
 import { Card } from './Card';
-import { DotsVertical, Description, SettingsFilled, ExitToApp } from './icons';
+import { Hamburger, Description, SettingsFilled, ExitToApp } from './icons';
 import { useCardReader } from '../../tools/CardReaderContext';
 
 /**
  * WooPosFloatingToolbar — the bottom-left floating controls on the POS home: a Menu button
- * (Orders / Settings / Exit POS) and a card-reader status pill. Reader status reflects the
- * Card reader tool: green "Reader connected" or an alert "Connect your reader" with a
- * primary border.
+ * (Orders / Settings / Exit POS) and a status slot. By default that slot is the card-reader
+ * status pill (green "Reader connected" or an alert "Connect your reader" with a primary
+ * border); pass `statusSlot` to replace it (e.g. the scaling-pos-experience proposal's
+ * System Events surface) without touching this shared component's default behavior.
  */
-export function FloatingToolbar() {
+export function FloatingToolbar({ statusSlot }: { statusSlot?: React.ReactNode }) {
   const navigate = useNav();
   const { connected, startConnecting } = useCardReader();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -58,7 +59,7 @@ export function FloatingToolbar() {
         </>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'stretch', position: 'relative', zIndex: 2 }}>
+      <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-end', position: 'relative', zIndex: 2 }}>
         <Card padding="0" shadow="normal">
           <button
             type="button"
@@ -76,43 +77,45 @@ export function FloatingToolbar() {
               cursor: 'pointer',
             }}
           >
-            <DotsVertical size="var(--icon-medium)" />
+            <Hamburger size="var(--icon-medium)" />
           </button>
         </Card>
 
-        <Card padding="0" shadow="normal">
-          <button
-            type="button"
-            onClick={() => (connected ? navigate('/settings-hardware') : startConnecting())}
-            style={{
-              height: 'var(--size-small)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--space-sm)',
-              padding: '0 var(--space-xl)',
-              minWidth: 240,
-              border: connected ? '2px solid transparent' : '2px solid var(--color-primary)',
-              borderRadius: 'var(--radius-md)',
-              background: 'transparent',
-              color: 'var(--color-on-surface)',
-              cursor: 'pointer',
-            }}
-          >
-            <span
+        {statusSlot ?? (
+          <Card padding="0" shadow="normal">
+            <button
+              type="button"
+              onClick={() => (connected ? navigate('/settings-hardware') : startConnecting())}
               style={{
-                width: 14,
-                height: 14,
-                borderRadius: '50%',
-                background: connected ? 'var(--color-success)' : 'var(--color-alert)',
-                flex: 'none',
+                height: 'var(--size-small)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 'var(--space-sm)',
+                padding: '0 var(--space-xl)',
+                minWidth: 240,
+                border: connected ? '2px solid transparent' : '2px solid var(--color-primary)',
+                borderRadius: 'var(--radius-md)',
+                background: 'transparent',
+                color: 'var(--color-on-surface)',
+                cursor: 'pointer',
               }}
-            />
-            <Text variant="bodySmall">
-              {connected ? 'Reader connected' : 'Connect your reader'}
-            </Text>
-          </button>
-        </Card>
+            >
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: connected ? 'var(--color-success)' : 'var(--color-alert)',
+                  flex: 'none',
+                }}
+              />
+              <Text variant="bodySmall">
+                {connected ? 'Reader connected' : 'Connect your reader'}
+              </Text>
+            </button>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -51,7 +51,10 @@ const CardReaderContext = createContext<CardReaderValue | null>(null);
 
 export function CardReaderProvider({ children }: { children: ReactNode }) {
   const connectivity = useConnectivity();
-  const [connected, setConnected] = useState(false);
+  // Defaults to connected — mirrors launching with a previously-paired reader, so the startup
+  // sequence shows a successful reader ping rather than the connection-failed banner. Toggle it
+  // off from the chrome's Card reader tool to demo the failure path.
+  const [connected, setConnected] = useState(true);
   const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
   const [canProcess, setCanProcess] = useState(false);
   const handlerRef = useRef<((r: TransactionResult) => void) | null>(null);
