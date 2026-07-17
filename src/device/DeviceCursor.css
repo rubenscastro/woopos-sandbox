@@ -1,0 +1,11 @@
+.device-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  background: url('/cursor-fingertip.svg') no-repeat center / 32px 32px;
+  pointer-events: none;
+  z-index: 9998;
+  will-change: transform;
+}

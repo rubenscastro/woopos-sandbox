@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useTools } from './ToolsContext';
 import './ScannerCursor.css';
 
-// Read-head anchor within the scanner image (fractions of its width/height).
+// Read-head anchor within the scanner image (fractions of its width/height) —
+// the lens sits near the top-center of the gun, roughly a ninth of the way down.
 const HEAD_X = 0.5;
-const HEAD_Y = 0.09;
-const IMG_W = 406;
-const IMG_H = (IMG_W * 300) / 180;
+const HEAD_Y = 0.12;
+// Natural size of /scanner.png (328x864), scaled down to a comparable on-screen size.
+const NATURAL_W = 328;
+const NATURAL_H = 864;
+const IMG_H = 677;
+const IMG_W = (IMG_H * NATURAL_W) / NATURAL_H;
 // Laser line projects out a bit past both sides of the reader.
 const BEAM_W = IMG_W * 1.7;
 const DWELL_MS = 420;

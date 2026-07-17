@@ -53,17 +53,14 @@
   color: var(--color-on-surface);
 }
 
-/* Everywhere inside the simulated device — every platform and device size — swap the
-   mouse arrow for a translucent circle-with-border "fingertip" cursor, since this is a
-   touch-device simulator being driven with a mouse. The dual stroke (white outer, dark
-   inner) keeps the ring visible over both light and dark screen content. !important beats
-   the many inline `cursor: pointer/grab` styles set by individual buttons/scroll areas. */
+/* Everywhere inside the simulated device — every platform and device size — hide the
+   system arrow; DeviceCursor renders the translucent "fingertip" circle as a JS-positioned
+   element instead of a native `cursor: url(...)` image, since custom cursor images flicker
+   back to the system arrow on rapid movement in some browsers. !important beats the many
+   inline `cursor: pointer/grab` styles set by individual buttons/scroll areas. */
 .device-screen,
 .device-screen * {
-  cursor:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.9)" stroke-width="3"/><circle cx="16" cy="16" r="12" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/></svg>')
-    16 16,
-    pointer !important;
+  cursor: none !important;
 }
 
 .device-scroll {

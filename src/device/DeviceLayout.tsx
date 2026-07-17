@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DeviceFrame } from './DeviceFrame';
+import { DeviceCursor } from './DeviceCursor';
 import { useDevice, type DeviceId, type ThemeId } from './DeviceContext';
 import { usePlatform, type PlatformId } from './PlatformContext';
 import { PlatformSwitcher } from './PlatformSwitcher';
@@ -120,6 +121,7 @@ export function DeviceLayout() {
         >
           <Outlet />
         </DeviceFrame>
+        <DeviceCursor />
       </div>
       </CartSheetProvider>
       </BarcodeSetupProvider>
