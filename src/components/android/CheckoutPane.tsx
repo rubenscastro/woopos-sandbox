@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNav } from '../../device/platformNav';
 import { Text } from './Text';
 import { Button, OutlinedButton } from './Button';
@@ -72,17 +73,13 @@ export function CheckoutPane({
   }, [connected, state]);
 
   if (state === 'processing') {
-    return (
-      <div style={{ ...fill, background: 'var(--color-primary)', justifyContent: 'center' }}>
-        <Spinner size="var(--size-large)" arcColor="var(--color-on-primary)" trackColor="rgba(255,255,255,0.35)" />
-        <Text variant="bodyLarge" align="center" color="var(--color-on-primary)">
-          Processing payment
-        </Text>
-        <Text variant="bodyXLarge" bold align="center" color="var(--color-on-primary)">
-          Card payment
-        </Text>
-      </div>
-    );
+    // Full screen rather than confined to the checkout pane's 65% column. On tablet,
+    // ItemSelection's sliding row has a `transform` (even translateX(0)), which per spec makes
+    // it the containing block for any position:absolute descendant — so an absolute overlay
+    // here would center itself against that oversized, translated 165%-wide row instead of the
+    // visible device. Portaling into .device-screen escapes that ancestor entirely (mirrors
+    // iOS Checkout.tsx's FullScreen helper).
+    return <ProcessingOverlay />;
   }
 
   return (
@@ -212,13 +209,36 @@ export function CheckoutPane({
   );
 }
 
-const fill: React.CSSProperties = {
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 'var(--space-lg)',
-};
+/** Full-screen "Processing payment" takeover, portaled into `.device-screen` so it escapes
+ *  the tablet sliding row's transformed containing block and covers the whole device. */
+function ProcessingOverlay() {
+  const node = (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 40,
+        background: 'var(--color-primary)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 'var(--space-lg)',
+        paddingTop: 'var(--device-safe-top, 0px)',
+      }}
+    >
+      <Spinner size="var(--size-large)" arcColor="var(--color-on-primary)" trackColor="rgba(255,255,255,0.35)" />
+      <Text variant="bodyLarge" align="center" color="var(--color-on-primary)">
+        Processing payment
+      </Text>
+      <Text variant="bodyXLarge" bold align="center" color="var(--color-on-primary)">
+        Card payment
+      </Text>
+    </div>
+  );
+  const screen = typeof document !== 'undefined' ? document.querySelector('.device-screen') : null;
+  return screen ? createPortal(node, screen) : node;
+}
 
 const btnStack: React.CSSProperties = {
   display: 'flex',
