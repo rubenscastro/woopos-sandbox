@@ -5,8 +5,8 @@ import { PosButton } from '../../components/ios/PosButton';
 import { Spinner } from '../../components/android/Spinner';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
 import { CardReaderNotConnected } from '../../components/android/illustrations';
-import { ReadyForPaymentCard } from '../../components/android/ReadyForPaymentCard';
-import { ErrorX, ChevronLeft } from '../../components/android/icons';
+import { ErrorX, ChevronLeft } from '../../components/ios/IosIcons';
+import readyForPaymentImg from '../../assets/ios/pos-ready-for-payment.png';
 import { useNav } from '../../device/platformNav';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useCart } from '../../state/CartContext';
@@ -32,9 +32,21 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
   const { connected, startConnecting } = useCardReader();
   const printer = usePrinter();
   const [state, setState] = useState<State>('idle');
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setLoading(false), 650);
+    return () => window.clearTimeout(t);
+  }, []);
   const [cash, setCash] = useState('');
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
+  const [printPending, setPrintPending] = useState(false);
+  const [printing, setPrinting] = useState(false);
+
+  const triggerPrint = () => {
+    setPrinting(true);
+    window.setTimeout(() => setPrinting(false), 1200);
+  };
   const changeDue = (parseFloat(cash) || 0) - total;
   const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 
@@ -48,6 +60,15 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
   useEffect(() => {
     if (!connected && state === 'processing') setState('idle');
   }, [connected, state]);
+
+  // When the printer setup modal closes with a printer now connected, auto-fire the print
+  // (mirrors PointOfSalePaymentSuccessView.swift onChange(of: showPrinterSetupModal)).
+  useEffect(() => {
+    if (printPending && printer.connected) {
+      setPrintPending(false);
+      triggerPrint();
+    }
+  }, [printer.connected, printPending]);
 
   const newOrder = () => { clear(); setState('idle'); back(); };
   const sendReceipt = () => { setSending(true); window.setTimeout(() => { setSending(false); setEmail(''); setState('success'); }, 900); };
@@ -70,12 +91,12 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
         <PosText variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
           A payment of {formatUsd(total || 0)} was successfully made.
         </PosText>
-        <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
+        <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
           <PosButton label="New order" fullWidth onClick={newOrder} />
           {/* Email + Print sit side by side on tablet, stacked on phone (PaymentsActionButtons). */}
           <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: 'var(--space-sm)' }}>
             <PosButton label="Email receipt" variant="outlined" fullWidth onClick={() => setState('email')} />
-            <PosButton label="Print receipt" variant="outlined" fullWidth onClick={() => { if (!printer.connected) printer.openSetup(); }} />
+            <PosButton label={printing ? 'Printing…' : 'Print receipt'} variant="outlined" fullWidth disabled={printing} onClick={() => { if (printer.connected) { triggerPrint(); } else { setPrintPending(true); printer.openSetup(); } }} />
           </div>
         </div>
       </FullScreen>
@@ -141,7 +162,9 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }}>
-        {state === 'failed' ? (
+        {loading ? (
+          <IosCheckoutSkeleton />
+        ) : state === 'failed' ? (
           <>
             <ErrorX size="var(--size-small)" />
             <PosText variant="heading" bold align="center">Payment failed</PosText>
@@ -150,7 +173,7 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
           </>
         ) : connected ? (
           <>
-            <ReadyForPaymentCard size="var(--size-xlarge)" />
+            <img src={readyForPaymentImg} alt="" style={{ width: 'var(--size-xlarge)', height: 'var(--size-xlarge)', objectFit: 'contain' }} />
             <PosText variant="heading" bold align="center">Ready for payment</PosText>
             <PosText variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">Tap, swipe or insert card</PosText>
             <Totals subtotal={subtotal} discountTotal={discountTotal} taxTotal={taxTotal} total={total} />
@@ -167,15 +190,15 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
       </div>
 
       {/* Bottom payment-method row (POSCheckoutPaymentButtonsRow): Card reader (primary, when
-          disconnected) + Cash payment, full width. */}
-      <BottomStrip>
+          disconnected) + Cash payment, full width. Hidden while loading. */}
+      {!loading && <BottomStrip>
         {state === 'failed' ? (
           <PosButton label="Try again" fullWidth onClick={() => setState('idle')} />
         ) : !connected ? (
           <PosButton label="Card reader" fullWidth onClick={startConnecting} />
         ) : null}
         <PosButton label="Cash payment" variant="outlined" fullWidth onClick={() => { setCash(total.toFixed(2)); setState('cash'); }} />
-      </BottomStrip>
+      </BottomStrip>}
     </div>
   );
 }
@@ -250,6 +273,24 @@ function BackButton({ onClick }: { onClick: () => void }) {
     <button type="button" aria-label="Back" onClick={onClick} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
       <ChevronLeft size="30px" />
     </button>
+  );
+}
+
+function IosCheckoutSkeleton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', width: '100%', maxWidth: 420 }}>
+      <div className="woopos-skeleton" style={{ width: 'var(--size-xlarge)', height: 'var(--size-xlarge)', borderRadius: '50%' }} />
+      <div className="woopos-skeleton" style={{ width: '55%', height: 28, borderRadius: 'var(--radius-sm)' }} />
+      <div className="woopos-skeleton" style={{ width: '75%', height: 18, borderRadius: 'var(--radius-sm)' }} />
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-sm)' }}>
+        {(['50%', '40%', '60%'] as const).map((w, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-lg)' }}>
+            <div className="woopos-skeleton" style={{ width: w, height: 18, borderRadius: 'var(--radius-sm)' }} />
+            <div className="woopos-skeleton" style={{ width: '25%', height: 18, borderRadius: 'var(--radius-sm)' }} />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

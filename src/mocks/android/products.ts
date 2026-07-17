@@ -98,4 +98,4 @@ export const variations: Record<number, MockVariation[]> = {
 
 export const popularProducts: MockProduct[] = [products[3], products[7], products[1]];
 
-export const recentProductSearches = ['Jeans', 'Hoodie', 'Sneakers', 'Scarf'];
+export const recentProductSearches: string[] = [];

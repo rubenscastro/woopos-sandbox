@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PosText } from './PosText';
 import { PosButton } from './PosButton';
-import { ChevronLeft } from '../android/icons';
+import { ChevronLeft } from './IosIcons';
 
 /**
  * iOS Add custom amount form (Custom Amount/AddCustomAmountView.swift). A full-screen pushed

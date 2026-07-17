@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
-import { Close, HelpCircle, ChevronLeft } from '../../components/android/icons';
+import { Close, HelpCircle, ChevronLeft } from '../../components/ios/IosIcons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { useCardReader } from '../../tools/CardReaderContext';

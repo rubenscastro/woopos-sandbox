@@ -40,7 +40,6 @@ export function EmailReceipt() {
           autoFocus
           style={{
             border: 'none',
-            borderBottom: '2px solid var(--color-outline-variant)',
             outline: 'none',
             background: 'transparent',
             textAlign: 'center',
@@ -53,7 +52,7 @@ export function EmailReceipt() {
           }}
         />
       </div>
-      <div style={{ padding: 'var(--space-md)' }}>
+      <div style={{ padding: 'var(--space-md)', paddingBottom: 'calc(var(--space-md) + var(--device-keyboard-height, 0px))' }}>
         <Button
           text="Send"
           fullWidth

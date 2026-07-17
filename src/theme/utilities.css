@@ -124,3 +124,25 @@
 .woopos-page-anim {
   animation: woopos-page-slide-in 0.24s ease;
 }
+
+/* New cart item slide-in — plays when a new line enters the cart list on tablet. */
+@keyframes woopos-cart-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+/* Only apply on non-phone devices (tablet / smallTablet) where the cart is a side pane. */
+:not([data-device='phone']) .woopos-cart-item {
+  animation: woopos-cart-item-enter 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Cart button pop — plays when an item is added on phone. */
+@keyframes woopos-cart-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+.woopos-cart-bump {
+  animation: woopos-cart-bump 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

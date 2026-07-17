@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text } from './Text';
 import { Card } from './Card';
 import { Button } from './Button';
-import { Tag, Trash, ChevronLeft, AddShoppingCart } from './icons';
+import { Tag, Trash, ArrowBack, AddShoppingCart } from './icons';
 import { ProductImage } from './ProductImage';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCart, type CartLine } from '../../state/CartContext';
@@ -28,12 +28,30 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
   const { lines, itemCount, clear, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
 
+  // Brief skeleton on mount when items are already in the cart (simulates data fetch).
+  const [loading, setLoading] = useState(() => lines.length > 0);
+  useEffect(() => {
+    if (!loading) return;
+    const t = window.setTimeout(() => setLoading(false), 600);
+    return () => window.clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // `hideCheckout` doubles as "we're in the checkout pane" — coupons only flip to their
+  // applied (green) state once checkout has had a moment to load, not the instant it opens.
+  // Mirrors the iOS PosCartPane checkoutReady delay.
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  useEffect(() => {
+    if (!hideCheckout) { setCheckoutReady(false); return; }
+    const t = window.setTimeout(() => setCheckoutReady(true), 650);
+    return () => window.clearTimeout(t);
+  }, [hideCheckout]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-surface-bright)' }}>
       <div
         style={{
           display: 'flex',
-          alignItems: 'baseline',
+          alignItems: 'center',
           gap: 'var(--space-sm)',
           padding: 'var(--space-md) var(--space-md) var(--space-sm)',
         }}
@@ -45,19 +63,23 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
             aria-label="Back"
             style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 0 }}
           >
-            <ChevronLeft size="var(--icon-medium)" />
+            <ArrowBack size="var(--icon-medium)" />
           </button>
         )}
         <Text variant="heading" bold>
           Cart
         </Text>
-        {itemCount > 0 && (
-          <Text variant="bodySmall" color="var(--color-on-surface-variant-lowest)">
-            {itemCount === 1 ? '1 item' : `${itemCount} items`}
-          </Text>
-        )}
         <div style={{ flex: 1 }} />
-        {!empty && !hideClear && <ClearCartMenu onClear={clear} />}
+        {!empty && !hideClear && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+            {itemCount > 0 && (
+              <Text variant="bodySmall" color="var(--color-on-surface-variant-lowest)">
+                {itemCount === 1 ? '1 item' : `${itemCount} items`}
+              </Text>
+            )}
+            <ClearCartMenu onClear={clear} />
+          </div>
+        )}
       </div>
 
       {empty ? (
@@ -76,9 +98,13 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
           {Array.from({ length: pendingScans }).map((_, i) => (
             <CartLineSkeleton key={`scan-${i}`} />
           ))}
-          {lines.map((line) => (
-            <CartLineRow key={line.key} line={line} hideRemove={hideRemove} />
-          ))}
+          {loading
+            ? Array.from({ length: Math.min(lines.length, 5) }).map((_, i) => (
+                <CartLineSkeleton key={`load-${i}`} />
+              ))
+            : lines.map((line) => (
+                <CartLineRow key={line.key} line={line} hideRemove={hideRemove} isCheckout={checkoutReady} />
+              ))}
         </div>
       )}
 
@@ -164,25 +190,40 @@ function CartLineSkeleton() {
   );
 }
 
-function CartLineRow({ line, hideRemove }: { line: CartLine; hideRemove?: boolean }) {
+function CartLineRow({ line, hideRemove, isCheckout = false }: { line: CartLine; hideRemove?: boolean; isCheckout?: boolean }) {
   const { removeLine } = useCart();
 
   if (line.kind === 'coupon') {
+    // Matches POSCouponImageView.swift: a solid-fill tile, muted gray in the cart, solid
+    // success green once applied at checkout — not just a tinted icon.
+    const tileColor = isCheckout ? 'var(--color-success)' : 'var(--color-surface-dim)';
+    const iconColor = isCheckout ? 'var(--color-on-success)' : 'var(--color-on-surface-variant-lowest)';
+    // Flush to the card's edges like the product row — no padding/radius of its own; the
+    // card's own overflow:hidden clips it into the rounded corners.
     return (
-      <Card padding="0">
-        <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-sm)', gap: 'var(--space-sm)' }}>
-          <IconTile color="var(--color-success)">
-            <Tag size="var(--icon-small)" style={{ color: 'var(--color-on-success)' }} />
-          </IconTile>
-          <div style={{ flex: 1, minWidth: 0 }}>
+      <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
+          <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: tileColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Tag size="var(--icon-small)" style={{ color: iconColor }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
             <Text variant="bodySmall" bold style={ELLIPSIS}>
               {line.code}
             </Text>
-            <Text variant="bodySmall" color="var(--color-success)">
-              -{formatUsd(line.discount)}
+            <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
+              {line.summary}
             </Text>
+            {isCheckout && line.discount > 0 && (
+              <Text variant="bodySmall" color="var(--color-success)" style={{ display: 'block' }}>
+                {`-${formatUsd(line.discount)}`}
+              </Text>
+            )}
           </div>
-          {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.code} />}
+          {!hideRemove && (
+            <div style={{ display: 'flex', alignItems: 'center', paddingRight: 'var(--space-sm)' }}>
+              <RemoveButton onClick={() => removeLine(line.key)} label={line.code} />
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -190,7 +231,7 @@ function CartLineRow({ line, hideRemove }: { line: CartLine; hideRemove?: boolea
 
   if (line.kind === 'custom') {
     return (
-      <Card padding="0">
+      <Card padding="0" className="woopos-cart-item">
         <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-sm)', gap: 'var(--space-sm)' }}>
           <IconTile color="var(--color-secondary)">
             <Text variant="bodySmall" bold color="var(--color-on-secondary)">
@@ -212,22 +253,21 @@ function CartLineRow({ line, hideRemove }: { line: CartLine; hideRemove?: boolea
     );
   }
 
-  // product
+  // product — image flush to the card's edges, no padding/radius of its own; the card's
+  // own overflow:hidden clips it into the rounded corners (matches iOS's ItemRowView).
   return (
-    <Card padding="0">
-      <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-sm)', gap: 'var(--space-sm)' }}>
+    <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
         <div
           style={{
             width: 'var(--size-medium)',
-            height: 'var(--size-medium)',
-            borderRadius: 'var(--radius-md)',
-            overflow: 'hidden',
+            minHeight: 'var(--size-medium)',
             flex: 'none',
           }}
         >
-          <ProductImage id={line.productId} radius="var(--radius-md)" />
+          <ProductImage id={line.productId} />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
           <Text variant="bodySmall" bold style={ELLIPSIS}>
             {line.name}
           </Text>
@@ -235,7 +275,11 @@ function CartLineRow({ line, hideRemove }: { line: CartLine; hideRemove?: boolea
             {line.quantity > 1 ? `${line.quantity} × ${formatUsd(line.price)}` : formatUsd(line.price)}
           </Text>
         </div>
-        {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />}
+        {!hideRemove && (
+          <div style={{ display: 'flex', alignItems: 'center', paddingRight: 'var(--space-sm)' }}>
+            <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />
+          </div>
+        )}
       </div>
     </Card>
   );

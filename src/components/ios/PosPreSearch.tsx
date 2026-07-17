@@ -1,6 +1,6 @@
 import { PosText } from './PosText';
 import { PosItemCard } from './PosItemCard';
-import { Search } from '../android/icons';
+import { Search } from './IosIcons';
 import { formatUsd } from '../../lib/currency';
 import { popularProducts, recentProductSearches } from '../../mocks/android/products';
 import { recentCouponSearches } from '../../mocks/android/coupons';

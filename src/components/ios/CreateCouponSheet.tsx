@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PosText } from './PosText';
 import { PosButton } from './PosButton';
-import { ChevronRight, AddShoppingCart, Inventory } from '../android/icons';
+import { ChevronRight, AddShoppingCart, Inventory } from './IosIcons';
 
 /**
  * iOS "Create coupon" flow (Coupons/POSCouponCreationSheet.swift → the host coupon editor).

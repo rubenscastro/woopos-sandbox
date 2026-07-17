@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PosText } from '../../components/ios/PosText';
-import { ChevronRight } from '../../components/android/icons';
+import { ChevronRight } from '../../components/ios/IosIcons';
 import { PlatformSwitcher } from '../../device/PlatformSwitcher';
 import { usePlatform } from '../../device/PlatformContext';
 import { useVersion } from '../../versions/VersionContext';

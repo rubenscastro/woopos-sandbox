@@ -19,6 +19,7 @@ import { resolvePath, parseRoutedPath } from './versions/routing';
 import { androidRouteDefs } from './routes/androidRouteDefs';
 import { iosRouteDefs } from './routes/iosRouteDefs';
 import { mergeRouteDefs } from './routes/mergeRouteDefs';
+import { Setup } from './screens/Setup';
 
 /** `/` and unknown paths land directly on the active version+platform's product catalog
  *  (no launcher). */
@@ -58,8 +59,9 @@ export default function App() {
           <BrowserRouter>
             <RouteContextSync />
             <Routes>
-              {/* Root + unknown paths → active version+platform's home/index. */}
-              <Route path="/" element={<RootRedirect />} />
+              {/* First screen on load — pick Platform/Device/Theme, then "Load prototype"
+                  drops into that platform's normal startup path (see Setup.tsx). */}
+              <Route path="/" element={<Setup />} />
 
               {/* ---- Main version — Android platform tree ---- */}
               <Route path="/android">

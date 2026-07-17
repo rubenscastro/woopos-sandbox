@@ -115,17 +115,17 @@ function BarcodeSetupWizard({ onDone }: { onDone: () => void }) {
           <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
             Select a model from the list:
           </Text>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', width: '100%' }}>
             {DEVICES.map((d) => (
               <button
                 key={d}
                 type="button"
                 onClick={() => { setDevice(d); setIdx(0); setPhase('flow'); }}
                 style={{
+                  width: '100%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '100%',
                   padding: 'var(--space-md)',
                   border: '2px solid var(--color-inverse-surface)',
                   borderRadius: 'var(--radius-md)',
@@ -410,13 +410,9 @@ function Center({ children }: { children: ReactNode }) {
 
 function Buttons({ onBack, onNext, nextLabel = 'Next' }: { onBack: () => void; onNext: () => void; nextLabel?: string }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-md)', width: '100%', maxWidth: 420 }}>
-      <div style={{ flex: 1 }}>
-        <OutlinedButton text="Back" fullWidth onClick={onBack} />
-      </div>
-      <div style={{ flex: 1 }}>
-        <Button text={nextLabel} fullWidth onClick={onNext} />
-      </div>
+    <div style={{ display: 'flex', gap: 'var(--space-md)', width: '100%' }}>
+      <OutlinedButton text="Back" fullWidth onClick={onBack} style={{ flex: 1 }} />
+      <Button text={nextLabel} fullWidth onClick={onNext} style={{ flex: 1 }} />
     </div>
   );
 }

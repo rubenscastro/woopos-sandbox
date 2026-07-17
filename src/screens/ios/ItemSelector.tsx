@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
 import { PosButton } from '../../components/ios/PosButton';
-import { PosItemCard } from '../../components/ios/PosItemCard';
+import { PosItemCard, CouponThumbnail } from '../../components/ios/PosItemCard';
 import { PosCartPane } from '../../components/ios/PosCartPane';
 import { CreateCouponSheet } from '../../components/ios/CreateCouponSheet';
 import { AddCustomAmountForm } from '../../components/ios/AddCustomAmountForm';
 import { PosPreSearch } from '../../components/ios/PosPreSearch';
 import { PosFloatingControl, OperatorRow } from '../../components/ios/PosFloatingControl';
 import { Checkout } from './Checkout';
-import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp } from '../../components/android/icons';
+import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp } from '../../components/ios/IosIcons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
@@ -49,6 +49,17 @@ export function ItemSelector({
   const [customAmountOpen, setCustomAmountOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
+  const [cartBumping, setCartBumping] = useState(false);
+  const prevItemCount = useRef(cart.itemCount);
+  useEffect(() => {
+    if (cart.itemCount > prevItemCount.current) {
+      setCartBumping(true);
+      const t = window.setTimeout(() => setCartBumping(false), 350);
+      prevItemCount.current = cart.itemCount;
+      return () => window.clearTimeout(t);
+    }
+    prevItemCount.current = cart.itemCount;
+  }, [cart.itemCount]);
 
   const couponSheet = (
     <CreateCouponSheet
@@ -98,7 +109,7 @@ export function ItemSelector({
             <TabTitle label="Products" active={tab === 'products'} onClick={() => setTab('products')} />
             <TabTitle label="Coupons" active={tab === 'coupons'} onClick={() => setTab('coupons')} />
             <div style={{ flex: 1 }} />
-            {tab === 'coupons' && (
+            {tab === 'coupons' && !isPhone && (
               <button type="button" aria-label="Create coupon" onClick={() => setCreateCouponOpen(true)} style={iconBtn}>
                 <Plus size="var(--icon-small)" />
               </button>
@@ -106,8 +117,9 @@ export function ItemSelector({
             <button type="button" aria-label="Search" onClick={() => setSearchOpen(true)} style={iconBtn}>
               <Search size="var(--icon-small)" />
             </button>
-            {/* Phone: the main menu lives top-right next to search (tablet uses the floating control). */}
-            {isPhone && <PhoneHeaderMenu />}
+            {/* Phone: the main menu lives top-right next to search (tablet uses the floating control).
+                When on the Coupons tab, "Create coupon" appears as the first item in this menu. */}
+            {isPhone && <PhoneHeaderMenu tab={tab} onCreateCoupon={() => setCreateCouponOpen(true)} />}
           </div>
         )}
       </div>
@@ -122,7 +134,6 @@ export function ItemSelector({
           />
         ) : (
           <>
-        {tab === 'products' && !searchOpen && <CustomAmountEntryRow onTap={() => setCustomAmountOpen(true)} />}
         {tab === 'products'
           ? shownProducts.map((p) => (
               <PosItemCard
@@ -134,7 +145,13 @@ export function ItemSelector({
           : shownCoupons.map((c) => (
               <PosItemCard
                 key={c.id}
-                item={{ id: 100 + c.id, name: c.code, detail: c.expiredOn ? `Expired ${c.expiredOn}` : c.summary }}
+                item={{
+                  id: 100 + c.id,
+                  name: c.code,
+                  detail: c.expiredOn ? `Expired ${c.expiredOn}` : c.summary,
+                  thumbnail: <CouponThumbnail expired={!!c.expiredOn} />,
+                  expired: !!c.expiredOn,
+                }}
                 onClick={() => !c.expiredOn && cart.addCoupon(c.code, c.summary, c.discount)}
               />
             ))}
@@ -143,7 +160,7 @@ export function ItemSelector({
       </div>
 
       {isPhone && (
-        <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+        <div className={cartBumping ? 'woopos-cart-bump' : undefined} style={{ padding: 'var(--space-md) var(--space-lg)' }}>
           <PosButton label={`Cart (${cart.itemCount})`} fullWidth onClick={() => setCartOpen(true)} />
         </div>
       )}
@@ -291,7 +308,6 @@ const iconBtn: React.CSSProperties = {
   background: 'var(--color-surface-container-low)',
   color: 'var(--color-on-surface)',
   border: 'none',
-  boxShadow: 'var(--shadow-soft-medium)',
   cursor: 'pointer',
   flex: 'none',
 };
@@ -309,12 +325,14 @@ const plainBack: React.CSSProperties = {
 };
 
 /** Phone-only header menu (top-right): the "…" main menu — Orders / Settings / Exit POS — in a
- *  liquid-glass popover, matching the tablet floating control's menu. */
-function PhoneHeaderMenu() {
+ *  liquid-glass popover, matching the tablet floating control's menu. When on the Coupons tab,
+ *  "Create coupon" appears as the first item (iOS POSHeaderMenuView behaviour). */
+function PhoneHeaderMenu({ tab, onCreateCoupon }: { tab: Tab; onCreateCoupon: () => void }) {
   const nav = useNav();
   const { flags } = useFlags();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  const divider = <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />;
   return (
     <div ref={ref} style={{ position: 'relative', flex: 'none' }}>
       <button type="button" aria-label="Menu" onClick={() => setOpen((o) => !o)} style={iconBtn}>
@@ -325,13 +343,19 @@ function PhoneHeaderMenu() {
           {flags.roles && (
             <>
               <OperatorRow />
-              <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+              {divider}
+            </>
+          )}
+          {tab === 'coupons' && (
+            <>
+              <HeaderMenuRow icon={<Plus size="var(--icon-small)" />} label="Create coupon" onClick={() => { setOpen(false); onCreateCoupon(); }} />
+              {divider}
             </>
           )}
           <HeaderMenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
-          <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+          {divider}
           <HeaderMenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />
-          <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />
+          {divider}
           <HeaderMenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); nav('/flows'); }} />
         </div>
       )}

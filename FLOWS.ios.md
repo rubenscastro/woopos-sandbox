@@ -59,6 +59,18 @@ one.
 14. **Reusable Views** — `Presentation/Reusable Views/` — this is the iOS component
     library, not a flow. Read this first, same role as Android's `common/composeui/`:
     check here before assuming a component doesn't exist yet.
+15. **Loading / Catalog Sync** — `Presentation/PointOfSaleLoadingEntryPointView.swift` +
+    `Presentation/CardReaderConnection/UI States/PointOfSaleLoadingView.swift` — ✅ VERIFIED
+    (built): root-level file, missed by the original directory scan (it lives directly under
+    `Presentation/`, not a subfolder). Plain spinner (`POSProgressViewStyle`, a donut ring —
+    same shape as Android's `WooPosCircularLoadingIndicator`) while app dependencies resolve,
+    then — while the local catalog syncs — the same spinner gains a "Syncing catalog" title,
+    "`n` of `total` items" progress text, an "Exit POS" link, and a hint/subtitle. Copy is
+    word-for-word the same English strings as Android's `WooPosSplashScreen` (see
+    `mocks/android/eligibility.ts` / `mocks/ios/loading.ts`). Built at `/ios/loading`, the
+    landing target after Setup's "Load prototype" for iOS (mirrors Android's `/android/splash`).
+    Error states (`initialCatalogSyncError`) render through a separate fullscreen error view,
+    not this component — not built yet.
 
 ## Notes for the agent
 

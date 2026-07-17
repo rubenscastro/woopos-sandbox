@@ -4,7 +4,6 @@ import { DeviceFrame } from './DeviceFrame';
 import { useDevice, type DeviceId, type ThemeId } from './DeviceContext';
 import { usePlatform, type PlatformId } from './PlatformContext';
 import { PlatformSwitcher } from './PlatformSwitcher';
-import { VersionSwitcher } from './VersionSwitcher';
 import { useVersion } from '../versions/VersionContext';
 import { resolvePath } from '../versions/routing';
 import {
@@ -57,15 +56,13 @@ export function DeviceLayout() {
         <aside className="chrome-bar">
           <div className="chrome-left">
             <Link to={resolvePath(version, platform, '/')} className="chrome-brand">
-              WooPOS
+              <img src="/favicon.png" alt="" aria-hidden className="chrome-brand-logo" />
+              POS Sandbox
             </Link>
-            {/* Which version is active — main, or a proposal (see src/versions/). */}
-            <VersionSwitcher />
+            <FlowsMenu />
             {/* The Barcode + Card reader tools drive shared state (cart scans, reader connection
                 and transactions), so both platforms get them — iOS flows respond to the same tool
-                input as Android. The Flows list and preview-state menu are Android-only for now. */}
-            <FlowsMenu />
-            <FlagsMenu />
+                input as Android. The preview-state menu is Android-only for now. */}
             <ToolsMenu />
             <ConnectivityMenu />
             <CardReaderMenu />
@@ -75,6 +72,7 @@ export function DeviceLayout() {
                 Events surface — hidden everywhere else since there's nothing to trigger. */}
             <CatalogSyncMenu />
             {platform === 'android' && <PreviewStateMenu />}
+            <FlagsMenu />
           </div>
           <div className="chrome-right">
             <div className="chrome-segmented-group">

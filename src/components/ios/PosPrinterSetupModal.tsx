@@ -1,8 +1,9 @@
 import { PosText } from './PosText';
 import { PosButton } from './PosButton';
+import { Modal } from '../android/Modal';
 import { Spinner } from '../android/Spinner';
 import { SuccessCheckmark } from '../android/SuccessCheckmark';
-import { ErrorX, Close } from '../android/icons';
+import { ErrorX } from './IosIcons';
 import { usePrinter, SAMPLE_PRINTER_NAME } from '../../state/PrinterContext';
 import { useConnectivity } from '../../tools/ConnectivityContext';
 
@@ -88,14 +89,9 @@ export function PrinterSetupHost() {
   };
 
   return (
-    <div className="woopos-scrim" role="presentation" onClick={printer.closeSetup} style={{ position: 'absolute', inset: 0, zIndex: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
-      <div className="woopos-liquid-glass woopos-slide-up" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 520, borderRadius: 'var(--radius-xl)', padding: 'var(--space-xl)', position: 'relative', boxShadow: 'var(--shadow-normal-large)' }}>
-        <button type="button" aria-label="Close" onClick={printer.closeSetup} style={{ position: 'absolute', top: 'var(--space-md)', right: 'var(--space-md)', border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-          <Close size="var(--icon-medium)" />
-        </button>
-        {body()}
-      </div>
-    </div>
+    <Modal open onDismiss={printer.closeSetup} onClose={printer.closeSetup} backgroundLabel="Printer setup" maxWidth={520}>
+      {body()}
+    </Modal>
   );
 }
 

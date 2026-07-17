@@ -65,12 +65,21 @@
 }
 
 .chrome-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.3px;
   color: var(--menu-fg);
   text-decoration: none;
   padding: 2px 4px 4px;
+}
+
+.chrome-brand-logo {
+  width: 20px;
+  height: 20px;
+  flex: none;
 }
 
 /* ---- Dropdown menus (Flows / Tools / Card reader / Preview state) ---- */

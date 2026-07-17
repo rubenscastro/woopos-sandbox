@@ -16,4 +16,4 @@ export const coupons: MockCoupon[] = [
   { id: 5, code: 'SPRING2024', summary: '20% off', discount: 0, expiredOn: '24 Apr 2025' },
 ];
 
-export const recentCouponSearches = ['SUMMER', 'DISCOUNT', 'SALE', 'WINTER'];
+export const recentCouponSearches: string[] = [];

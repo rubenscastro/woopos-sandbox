@@ -19,13 +19,16 @@ export function PosButton({ label, variant = 'filled', fullWidth, disabled, onCl
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 'var(--size-xsmall)',
+    // Matches Android's WooPosButton (80px tablet) — POSButtonStyle.swift's `.normal` size
+    // uses bodyLargeBold + large padding to reach the same height; --size-xsmall (56px) is
+    // the circular icon-button diameter, not the standard button height.
+    minHeight: 'var(--size-small)',
     padding: '0 var(--space-lg)',
     width: fullWidth ? '100%' : undefined,
     borderRadius: 'var(--radius-md)',
     font: 'inherit',
     fontWeight: 600,
-    fontSize: 'var(--font-body-md-size)',
+    fontSize: 'var(--font-body-lg-size)',
     cursor: disabled ? 'default' : 'pointer',
     opacity: disabled ? 0.4 : 1,
   };

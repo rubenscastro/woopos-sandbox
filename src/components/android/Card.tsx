@@ -29,20 +29,23 @@ export function Card({
   className,
   ariaLabel,
 }: CardProps) {
-  const shadowVar =
+  const dropShadow =
     shadow === 'none'
-      ? 'none'
+      ? null
       : shadow === 'normal'
         ? 'var(--shadow-normal-medium)'
         : 'var(--shadow-soft-medium)';
+  // Selection ring drawn as an inset shadow (not border/outline) so it never takes up
+  // layout space — matches WooPosCard.kt's Modifier.border(), which draws inside the
+  // existing bounds rather than growing the box.
+  const selectionRing = selected ? 'inset 0 0 0 2px var(--color-on-surface)' : null;
 
   const base: CSSProperties = {
     backgroundColor: disabled
       ? 'var(--color-disabled-container)'
       : 'var(--color-surface-container-lowest)',
     borderRadius: 'var(--radius-md)',
-    boxShadow: shadowVar,
-    border: selected ? '2px solid var(--color-on-surface)' : '2px solid transparent',
+    boxShadow: [selectionRing, dropShadow].filter(Boolean).join(', ') || 'none',
     padding,
     boxSizing: 'border-box',
     ...style,
@@ -63,6 +66,7 @@ export function Card({
           textAlign: 'left',
           font: 'inherit',
           color: 'inherit',
+          border: 'none',
           cursor: disabled ? 'default' : 'pointer',
         }}
       >

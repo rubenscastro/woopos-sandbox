@@ -3,29 +3,21 @@ import { useNav } from '../../device/platformNav';
 import { Text } from '../../components/android/Text';
 import { Button, OutlinedButton } from '../../components/android/Button';
 import { ErrorX } from '../../components/android/icons';
-import { usePublishPreviewState } from '../../device/PreviewStateContext';
 import {
-  ciabUpgradePreview,
   eligibilityButtons,
   retryableIneligiblePreview,
-  type EligibilityState,
 } from '../../mocks/android/eligibility';
 
 /**
  * Flow 1 — Eligibility screen (WooPosEligibilityScreen.kt). Shown when the splash check
- * finds the store can't run POS. Centered ErrorX + heading + suggestion; bottom button
- * stack whose primary action depends on the reason (Retry vs Learn More), plus Exit POS.
+ * finds the store can't run POS. Centered ErrorX + heading + suggestion; Retry + Exit POS.
  * Retry -> Loading state; on a real device it rechecks eligibility.
  */
-type Variant = 'retryable' | 'ciab';
-
 export function Eligibility() {
   const navigate = useNav();
-  const [variant, setVariant] = useState<Variant>('retryable');
   const [loading, setLoading] = useState(false);
 
-  const base: EligibilityState =
-    variant === 'ciab' ? ciabUpgradePreview : retryableIneligiblePreview;
+  const base = retryableIneligiblePreview;
 
   const onRetry = () => {
     setLoading(true);
@@ -33,18 +25,6 @@ export function Eligibility() {
     // route into the app as if the check passed.
     setTimeout(() => navigate('/splash'), 1400);
   };
-
-  usePublishPreviewState({
-    options: [
-      { id: 'retryable', label: 'Retryable' },
-      { id: 'ciab', label: 'Pro plan required' },
-    ],
-    active: variant,
-    onSelect: (id) => {
-      setLoading(false);
-      setVariant(id as Variant);
-    },
-  });
 
   return (
     <div
@@ -98,20 +78,12 @@ export function Eligibility() {
         }}
       >
         <div className="woopos-fullscreen-action">
-          {variant === 'ciab' ? (
-            <Button
-              text={eligibilityButtons.learnMore}
-              fullWidth
-              onClick={() => window.open(ciabUpgradePreview.kind === 'ciab' ? ciabUpgradePreview.learnMoreUrl : '#', '_blank')}
-            />
-          ) : (
-            <Button
-              text={eligibilityButtons.retry}
-              fullWidth
-              state={loading ? 'loading' : 'enabled'}
-              onClick={onRetry}
-            />
-          )}
+          <Button
+            text={eligibilityButtons.retry}
+            fullWidth
+            state={loading ? 'loading' : 'enabled'}
+            onClick={onRetry}
+          />
         </div>
         <div className="woopos-fullscreen-action">
           <OutlinedButton

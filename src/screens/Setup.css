@@ -1,0 +1,77 @@
+.setup {
+  /* Mirrors .chrome-bar's --menu-* scope (DeviceChrome.css) so the reused .segmented control
+     renders correctly here too, outside the chrome sidebar. */
+  --menu-fg: #1d2327;
+  --menu-muted: #646970;
+  --menu-ctrl-bg: rgba(0, 0, 0, 0.04);
+  --menu-ctrl-border: rgba(0, 0, 0, 0.12);
+
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dfe1e4;
+}
+
+[data-theme='dark'] .setup {
+  --menu-fg: #f2f2f4;
+  --menu-muted: #9698a0;
+  --menu-ctrl-bg: rgba(255, 255, 255, 0.08);
+  --menu-ctrl-border: rgba(255, 255, 255, 0.14);
+
+  background: #202327;
+}
+
+.setup-card {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  border-radius: 16px;
+  background: var(--color-surface-container-lowest);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.35);
+}
+
+.setup-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--menu-fg);
+}
+
+.setup-subtitle {
+  margin: calc(-1 * var(--space-md)) 0 0;
+  font-size: 13px;
+  color: var(--menu-muted);
+}
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.setup-field__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--menu-muted);
+}
+
+.setup-cta {
+  margin-top: var(--space-sm);
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.setup-cta:hover {
+  opacity: 0.92;
+}

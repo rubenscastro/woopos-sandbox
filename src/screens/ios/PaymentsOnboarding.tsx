@@ -1,7 +1,7 @@
 import { PosText } from '../../components/ios/PosText';
 import { PosButton } from '../../components/ios/PosButton';
 import { CardReaderIllustration } from '../../components/android/CardReaderIllustration';
-import { Check, Close } from '../../components/android/icons';
+import { Check, Close } from '../../components/ios/IosIcons';
 import { useNav } from '../../device/platformNav';
 
 /**

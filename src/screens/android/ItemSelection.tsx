@@ -14,7 +14,7 @@ import { DragScroll } from '../../components/android/DragScroll';
 import { FloatingToolbar } from '../../components/android/FloatingToolbar';
 import { Toolbar } from '../../components/android/Toolbar';
 import { Button } from '../../components/android/Button';
-import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ChevronLeft, Plus } from '../../components/android/icons';
+import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ArrowBack, Plus } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
@@ -94,6 +94,7 @@ export function ItemSelection() {
             ) : (
               <CouponsList
                 query={query}
+                searchOpen={searchOpen}
                 onSelect={(c) => cart.addCoupon(c.code, c.summary, c.discount)}
               />
             )}
@@ -210,7 +211,7 @@ function ItemsToolbar({
             aria-label="Back"
             style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, flex: 'none', cursor: 'pointer' }}
           >
-            <ChevronLeft size="var(--icon-medium)" />
+            <ArrowBack size="var(--icon-medium)" />
           </button>
           <div style={{ flex: 1 }}>
             <SearchInput
@@ -226,7 +227,7 @@ function ItemsToolbar({
           <TabButton label="Products" active={tab === 'products'} onClick={() => onTab('products')} />
           <TabButton label="Coupons" active={tab === 'coupons'} onClick={() => onTab('coupons')} />
           <div style={{ flex: 1 }} />
-          {tab === 'coupons' && (
+          {tab === 'coupons' && !isPhone && (
             <RoundIconButton ariaLabel="Create coupon" onClick={onAddCoupon}>
               <Plus size="var(--icon-small)" />
             </RoundIconButton>
@@ -234,7 +235,7 @@ function ItemsToolbar({
           <RoundIconButton ariaLabel="Search products" onClick={onToggleSearch}>
             <Search size="var(--icon-small)" />
           </RoundIconButton>
-          {isPhone && <PhoneMenu />}
+          {isPhone && <PhoneMenu tab={tab} onAddCoupon={onAddCoupon} />}
         </div>
       )}
     </div>
@@ -257,7 +258,6 @@ function RoundIconButton({ children, ariaLabel, onClick }: { children: React.Rea
         borderRadius: '50%',
         background: 'var(--color-surface-container-low)',
         color: 'var(--color-on-surface)',
-        boxShadow: 'var(--shadow-soft-medium)',
         flex: 'none',
       }}
     >
@@ -267,7 +267,7 @@ function RoundIconButton({ children, ariaLabel, onClick }: { children: React.Rea
 }
 
 /** Phone-only overflow menu (Orders / Settings / Exit POS), matching the tablet floating menu. */
-function PhoneMenu() {
+function PhoneMenu({ tab, onAddCoupon }: { tab: Tab; onAddCoupon: () => void }) {
   const [open, setOpen] = useState(false);
   const navigate = useNav();
   const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
@@ -290,6 +290,9 @@ function PhoneMenu() {
             padding: 'var(--space-xs)',
           }}
         >
+          {tab === 'coupons' && (
+            <PhoneMenuRow icon={<Tag size="var(--icon-small)" />} label="Create coupon" onClick={() => { setOpen(false); onAddCoupon(); }} />
+          )}
           <PhoneMenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); navigate('/order-history'); }} />
           <PhoneMenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); navigate('/settings'); }} />
           <PhoneMenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); navigate('/flows'); }} />
@@ -379,47 +382,56 @@ function ProductsList({
   }
 
   return (
-    <List>
-      {!searchOpen && (
-        <Card onClick={onOpenCustom} padding="0">
-          <div style={{ display: 'flex', alignItems: 'center', minHeight: 'var(--size-large)' }}>
-            <div
-              style={{
-                width: 'var(--size-large)',
-                minHeight: 'var(--size-large)',
-                background: 'var(--color-surface-container-low)',
-                borderRadius: 'var(--radius-md) 0 0 var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flex: 'none',
-              }}
-            >
-              <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
-            </div>
-            <div style={{ padding: '0 var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
-              <Text variant="bodyLarge" bold>
-                Custom amount
-              </Text>
-              <Text variant="bodyLarge" color="var(--color-on-surface-variant-highest)">
-                Add a one-off charge
-              </Text>
-            </div>
-          </div>
-        </Card>
+    <>
+      {searchOpen && !q && (
+        <Text variant="bodyLarge" bold style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
+          Popular products
+        </Text>
       )}
-      {filtered.map((p) => (
-        <ProductListItem key={p.id} product={toRow(p)} onClick={() => onSelect(p)} />
-      ))}
-    </List>
+      <List>
+        {!searchOpen && (
+          <Card onClick={onOpenCustom} padding="0">
+            <div style={{ display: 'flex', alignItems: 'center', minHeight: 'var(--size-large)' }}>
+              <div
+                style={{
+                  width: 'var(--size-large)',
+                  minHeight: 'var(--size-large)',
+                  background: 'var(--color-surface-container-low)',
+                  borderRadius: 'var(--radius-md) 0 0 var(--radius-md)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 'none',
+                }}
+              >
+                <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+              </div>
+              <div style={{ padding: '0 var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Text variant="bodyLarge" bold>
+                  Custom amount
+                </Text>
+                <Text variant="bodyLarge" color="var(--color-on-surface-variant-highest)">
+                  Add a one-off charge
+                </Text>
+              </div>
+            </div>
+          </Card>
+        )}
+        {filtered.map((p) => (
+          <ProductListItem key={p.id} product={toRow(p)} onClick={() => onSelect(p)} />
+        ))}
+      </List>
+    </>
   );
 }
 
 function CouponsList({
   query,
+  searchOpen,
   onSelect,
 }: {
   query: string;
+  searchOpen: boolean;
   onSelect: (c: MockCoupon) => void;
 }) {
   const q = query.trim().toLowerCase();
@@ -443,6 +455,10 @@ function CouponsList({
         ))}
       </List>
     );
+  }
+
+  if (searchOpen && !q) {
+    return <List />;
   }
 
   if (filtered.length === 0) {

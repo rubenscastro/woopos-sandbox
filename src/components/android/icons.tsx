@@ -70,6 +70,22 @@ export function ChevronLeft({ size, ...props }: IconProps) {
   );
 }
 
+/** Matches the real app's R.drawable.ic_back_24dp (WooPosBackButton) — a full horizontal
+ *  back arrow (shaft + arrowhead), not just a chevron corner. */
+export function ArrowBack({ size, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
+      <path
+        d="M19 12H5M11 18l-6-6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Close({ size, ...props }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
@@ -114,25 +130,30 @@ export function Inventory({ size, ...props }: IconProps) {
   );
 }
 
+/** Matches the real app's R.drawable.ic_sell_24dp (Material "Sell") — a price tag pointing
+ *  to the bottom-right with a hole near the blunt top-left corner. */
 export function Tag({ size, ...props }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
       <path
-        d="M3 12l9-9 9 9-9 9-9-9z"
+        d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinejoin="round"
+        strokeLinecap="round"
       />
-      <circle cx="9" cy="9" r="1.4" fill="currentColor" />
+      <circle cx="7" cy="7" r="1.4" fill="currentColor" />
     </svg>
   );
 }
 
+/** Matches the real app's R.drawable.ic_delete_24dp (Material "Delete") — a straight-sided
+ *  bin with only the bottom corners rounded, and two internal vertical lines. */
 export function Trash({ size, ...props }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
       <path
-        d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"
+        d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7v12a2 2 0 002 2h8a2 2 0 002-2V7M10 11v6M14 11v6"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
@@ -174,14 +195,8 @@ export function QrCode({ size, ...props }: IconProps) {
 
 export function Check({ size, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" {...base(size)} {...props}>
-      <path
-        d="M5 13l4 4L19 7"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 72 78" fill="currentColor" {...base(size)} {...props}>
+      <path d="M26.5 77.1 L0.81 38.21 L8.32 33.25 L26.3 60.47 L64.08 0.19 L71.71 4.97 Z" />
     </svg>
   );
 }

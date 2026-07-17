@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { PosText } from './PosText';
-import { Close } from '../android/icons';
+import { Close } from './IosIcons';
 
 /**
  * iOS POS modal sheet (POSSheet / PointOfSaleModalHeader). A centered card over a dimmed

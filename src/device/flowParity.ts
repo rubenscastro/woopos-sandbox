@@ -14,6 +14,7 @@ import { parseRoutedPath, resolvePath, type RouteMapResult } from '../versions/r
 const EQUIV: Partial<Record<PlatformId, string>>[] = [
   { android: 'products', ios: 'products' },
   { android: 'order-history', ios: 'orders' },
+  { android: 'email-receipt', ios: 'email-receipt' },
   { android: 'settings', ios: 'settings' },
   { android: 'settings-hardware', ios: 'settings' },
   { android: 'totals', ios: 'checkout' },

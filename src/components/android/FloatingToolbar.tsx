@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNav } from '../../device/platformNav';
 import { Text } from './Text';
 import { Card } from './Card';
-import { Hamburger, Description, SettingsFilled, ExitToApp } from './icons';
+import { DotsVertical, Description, SettingsFilled, ExitToApp } from './icons';
 import { useCardReader } from '../../tools/CardReaderContext';
 
 /**
@@ -77,42 +77,56 @@ export function FloatingToolbar({ statusSlot }: { statusSlot?: React.ReactNode }
               cursor: 'pointer',
             }}
           >
-            <Hamburger size="var(--icon-medium)" />
+            <DotsVertical size="var(--icon-medium)" />
           </button>
         </Card>
 
         {statusSlot ?? (
           <Card padding="0" shadow="normal">
+            {/* The border lives on an inner span, inset by the outer button's own padding,
+                so it floats inside the pill rather than growing the pill's outer bounds
+                (matches iOS's PosFloatingControl). */}
             <button
               type="button"
               onClick={() => (connected ? navigate('/settings-hardware') : startConnecting())}
               style={{
                 height: 'var(--size-small)',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 'var(--space-sm)',
-                padding: '0 var(--space-xl)',
+                alignItems: 'stretch',
                 minWidth: 240,
-                border: connected ? '2px solid transparent' : '2px solid var(--color-primary)',
+                border: 'none',
                 borderRadius: 'var(--radius-md)',
                 background: 'transparent',
                 color: 'var(--color-on-surface)',
                 cursor: 'pointer',
+                padding: connected ? 0 : 'var(--space-sm)',
               }}
             >
               <span
                 style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: '50%',
-                  background: connected ? 'var(--color-success)' : 'var(--color-alert)',
-                  flex: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1,
+                  gap: 'var(--space-sm)',
+                  padding: '0 var(--space-xl)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: connected ? 'none' : '2px solid var(--color-primary)',
                 }}
-              />
-              <Text variant="bodySmall">
-                {connected ? 'Reader connected' : 'Connect your reader'}
-              </Text>
+              >
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    background: connected ? 'var(--color-success)' : 'var(--color-alert)',
+                    flex: 'none',
+                  }}
+                />
+                <Text variant="bodySmall">
+                  {connected ? 'Reader connected' : 'Connect your reader'}
+                </Text>
+              </span>
             </button>
           </Card>
         )}

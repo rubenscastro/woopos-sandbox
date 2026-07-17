@@ -59,6 +59,7 @@
   --color-on-surface-variant-lowest: #8c8f94;
   --color-on-surface-variant-highest: #50575e;
   --color-tertiary-icon: #3c087e;
+  --color-pos-link: #1e88e5;
 
   /* ---- Typography ----
      Two knobs: --font-scale (base × scale) and --font-floor (the min size the scale can shrink
@@ -158,6 +159,7 @@
   --color-outline: #8c8f94;
   --color-disabled-container: #50575e;
   --color-tertiary-icon: #720eec;
+  --color-pos-link: #64b5f6;
 
   /* Dark theme flips the on-surface-variant grays lighter so secondary text (e.g. the
      product price line) stays legible on dark cards. */

@@ -3,6 +3,9 @@
 export type OrderStatus = 'Completed' | 'Processing' | 'Failed' | 'On hold' | 'Refunded';
 
 export interface OrderLineItem {
+  /** Keys into ProductImage's catalog art (reuses catalog ids where the product matches;
+   *  otherwise a dedicated id so it still renders a distinct colored tile). */
+  productId: number;
   name: string;
   attributes?: string;
   quantity: number;
@@ -40,23 +43,24 @@ export const orders: MockOrder[] = [
     date: 'Aug 28, 2025 at 10:31 AM',
     customerEmail: 'johndoe@mail.com',
     status: 'Completed',
+    // Real catalog products (with real photos via ProductImage) rather than invented items.
     items: [
-      { name: 'Cup', quantity: 1, unitPrice: 8.5, lineTotal: 8.5 },
-      { name: 'Coffee Container', attributes: 'Blue, Large', quantity: 1, unitPrice: 10.0, lineTotal: 10.0 },
-      { name: 'Paper Filter (100 pack)', quantity: 1, unitPrice: 4.5, lineTotal: 4.5 },
+      { productId: 1, name: 'Cotton Crew T-Shirt', quantity: 1, unitPrice: 18.0, lineTotal: 18.0 },
+      { productId: 3, name: 'Wool Blend Scarf', quantity: 1, unitPrice: 16.0, lineTotal: 16.0 },
+      { productId: 7, name: 'Wool Socks (3-Pack)', quantity: 1, unitPrice: 12.0, lineTotal: 12.0 },
     ],
     discountCode: 'SAVE5',
     discountTotal: 5.0,
     taxTotal: 0.0,
-    total: 18.0,
+    total: 41.0,
     paymentMethod: 'WooCommerce In-Person Payments',
     refunds: [
       {
         id: 1,
-        amount: 3.0,
+        amount: 12.0,
         date: 'Aug 29, 2025 at 12:26 PM',
         reason: 'Customer bought an extra item.',
-        items: [{ name: 'Cup', quantity: 1, unitPrice: 3.0, lineTotal: 3.0 }],
+        items: [{ productId: 7, name: 'Wool Socks (3-Pack)', quantity: 1, unitPrice: 12.0, lineTotal: 12.0 }],
       },
     ],
   },
@@ -67,12 +71,12 @@ export const orders: MockOrder[] = [
     customerEmail: 'johndoe@mail.com',
     status: 'Processing',
     items: [
-      { name: "Women's Haircut", quantity: 1, unitPrice: 55.0, lineTotal: 55.0 },
-      { name: 'Canvas Tote Bag', quantity: 1, unitPrice: 18.0, lineTotal: 18.0 },
+      { productId: 4, name: 'Leather Belt', quantity: 1, unitPrice: 24.0, lineTotal: 24.0 },
+      { productId: 10, name: 'Canvas Tote Bag', quantity: 1, unitPrice: 18.0, lineTotal: 18.0 },
     ],
     discountTotal: 0,
-    taxTotal: 3.9,
-    total: 43.9,
+    taxTotal: 3.6,
+    total: 45.6,
     paymentMethod: 'Cash',
     refunds: [],
   },
@@ -82,10 +86,10 @@ export const orders: MockOrder[] = [
     date: 'Jul 27, 2025 at 4:02 PM',
     customerEmail: 'maria@mail.com',
     status: 'Failed',
-    items: [{ name: 'Espresso Beans 1kg', quantity: 2, unitPrice: 24.0, lineTotal: 48.0 }],
+    items: [{ productId: 5, name: 'Denim Jacket', quantity: 1, unitPrice: 89.0, lineTotal: 89.0 }],
     discountTotal: 0,
     taxTotal: 0,
-    total: 48.0,
+    total: 89.0,
     paymentMethod: 'Card',
     refunds: [],
   },

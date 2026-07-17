@@ -34,7 +34,7 @@ export function Settings({ initialCategory = 'store' }: { initialCategory?: Cate
 
   const categoryList = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar title="Settings" onBack={() => navigate('/products')} backIcon="close" />
+      <Toolbar title="Settings" onBack={() => navigate('/products')} />
       <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm) var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
         {CATEGORIES.map((c) => (
           <MenuItem

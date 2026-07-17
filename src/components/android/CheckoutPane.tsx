@@ -36,6 +36,11 @@ export function CheckoutPane({
   const { methods } = usePaymentSettings();
   const [state, setState] = useState<PayState>('idle');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setLoading(false), 650);
+    return () => window.clearTimeout(t);
+  }, []);
 
   // Which methods Settings → Payments has enabled — the checkout only surfaces these.
   const otherMethods = methods.scanToPay || methods.markAsPaid;
@@ -91,7 +96,9 @@ export function CheckoutPane({
           textAlign: 'center',
         }}
       >
-        {state === 'failed' ? (
+        {loading ? (
+          <CheckoutSkeleton />
+        ) : state === 'failed' ? (
           <>
             <ErrorX size="var(--size-small)" />
             <Text variant="heading" bold align="center">
@@ -156,7 +163,7 @@ export function CheckoutPane({
             <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
               To process this payment, please connect your reader.
             </Text>
-            <div style={{ width: '100%' }}>
+            <div style={{ width: '100%', maxWidth: 460 }}>
               <Button text="Connect to reader" fullWidth onClick={startConnecting} />
             </div>
             <div style={{ width: '100%', maxWidth: 460 }}>
@@ -166,7 +173,7 @@ export function CheckoutPane({
         )}
       </div>
 
-      {(methods.cash || otherMethods) && (
+      {!loading && (methods.cash || otherMethods) && (
         <div
           style={{
             padding: 'var(--space-md)',
@@ -210,6 +217,24 @@ const btnStack: React.CSSProperties = {
   flexDirection: 'column',
   gap: 'var(--space-md)',
 };
+
+function CheckoutSkeleton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', width: '100%', maxWidth: 460 }}>
+      <div className="woopos-skeleton" style={{ width: 'var(--size-xlarge)', height: 'var(--size-xlarge)', borderRadius: '50%' }} />
+      <div className="woopos-skeleton" style={{ width: '55%', height: 28, borderRadius: 'var(--radius-sm)' }} />
+      <div className="woopos-skeleton" style={{ width: '75%', height: 18, borderRadius: 'var(--radius-sm)' }} />
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-sm)' }}>
+        {(['50%', '40%', '60%'] as const).map((w, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-lg)' }}>
+            <div className="woopos-skeleton" style={{ width: w, height: 18, borderRadius: 'var(--radius-sm)' }} />
+            <div className="woopos-skeleton" style={{ width: '25%', height: 18, borderRadius: 'var(--radius-sm)' }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function Method({ label, onClick }: { label: string; onClick: () => void }) {
   return (

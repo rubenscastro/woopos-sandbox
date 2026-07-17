@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PosText } from './PosText';
-import { Description, SettingsFilled, ExitToApp } from '../android/icons';
+import { Description, SettingsFilled, ExitToApp } from './IosIcons';
 import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCardReader } from '../../tools/CardReaderContext';

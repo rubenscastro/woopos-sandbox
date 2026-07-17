@@ -5,7 +5,9 @@ import { Card } from '../../components/android/Card';
 import { Button, OutlinedButton } from '../../components/android/Button';
 import { Toolbar } from '../../components/android/Toolbar';
 import { SearchInput } from '../../components/android/SearchInput';
-import { Inventory, Search, ChevronLeft, DotsHorizontal } from '../../components/android/icons';
+import { Search, ArrowBack, Close, DotsHorizontal } from '../../components/android/icons';
+import { ProductImage } from '../../components/android/ProductImage';
+import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { formatUsd } from '../../lib/currency';
@@ -45,7 +47,7 @@ export function OrderHistory() {
             aria-label="Back"
             style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, flex: 'none', cursor: 'pointer' }}
           >
-            <ChevronLeft size="var(--icon-medium)" />
+            <ArrowBack size="var(--icon-medium)" />
           </button>
           <div style={{ flex: 1 }}>
             <SearchInput value={query} onChange={setQuery} autoFocus placeholder="Search orders" />
@@ -55,7 +57,6 @@ export function OrderHistory() {
         <Toolbar
           title="Orders"
           onBack={() => navigate('/products')}
-          backIcon="close"
           trailing={
             <RoundIconButton ariaLabel="Search orders" onClick={() => setSearchOpen(true)}>
               <Search size="var(--icon-small)" />
@@ -94,8 +95,8 @@ export function OrderHistory() {
 
   return (
     <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
-      <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0 }}>{list}</div>
-      <div className="woopos-safe-pane" style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{detail}</div>
+      <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{list}</div>
+      <div className="woopos-safe-pane" style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface)' }}>{detail}</div>
     </div>
   );
 }
@@ -114,9 +115,8 @@ function RoundIconButton({ children, ariaLabel, onClick }: { children: React.Rea
         width: 'var(--size-xsmall)',
         height: 'var(--size-xsmall)',
         borderRadius: '50%',
-        background: 'var(--color-surface-container-low)',
+        background: 'var(--color-surface)',
         color: 'var(--color-on-surface)',
-        boxShadow: 'var(--shadow-soft-medium)',
         flex: 'none',
         cursor: 'pointer',
       }}
@@ -131,14 +131,14 @@ function OrderRow({ order, selected, onClick }: { order: MockOrder; selected: bo
     <Card onClick={onClick} selected={selected} padding="var(--space-md)">
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-sm)' }}>
         <div style={{ minWidth: 0 }}>
-          <Text variant="bodyLarge" bold>
-            Order {order.number}
+          <Text variant="bodySmall" bold>
+            {order.number}
           </Text>
-          <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 2 }}>
+          <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>
             {order.date}
           </Text>
           {order.customerEmail && (
-            <Text variant="bodySmall" color="var(--color-on-surface-variant-lowest)" style={{ display: 'block' }}>
+            <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>
               {order.customerEmail}
             </Text>
           )}
@@ -146,7 +146,7 @@ function OrderRow({ order, selected, onClick }: { order: MockOrder; selected: bo
             <StatusBadge status={order.status} />
           </div>
         </div>
-        <Text variant="bodyLarge" bold>
+        <Text variant="bodySmall">
           {formatUsd(order.total)}
         </Text>
       </div>
@@ -154,22 +154,24 @@ function OrderRow({ order, selected, onClick }: { order: MockOrder; selected: bo
   );
 }
 
+/** Matches WooPosOrdersStatusBadge.kt exactly: bodySmall regular text (not caption/bold),
+ *  uniform Spacing.Small padding, Spacing.Small corner radius. */
 function StatusBadge({ status }: { status: MockOrder['status'] }) {
   const c = STATUS_COLORS[status];
   return (
-    <span
+    <Text
+      variant="bodySmall"
+      color={c.fg}
       style={{
         display: 'inline-block',
         background: c.bg,
-        color: c.fg,
-        borderRadius: 'var(--radius-md)',
-        padding: '4px 10px',
-        fontSize: 'var(--font-caption-size)',
-        fontWeight: 700,
+        borderRadius: 'var(--space-sm)',
+        padding: 'var(--space-sm)',
+        lineHeight: 1,
       }}
     >
       {status}
-    </span>
+    </Text>
   );
 }
 
@@ -186,7 +188,7 @@ function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: ()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar
-        title={`Order ${order.number}`}
+        title={order.number}
         onBack={onBack}
         trailing={
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flex: 'none' }}>
@@ -201,7 +203,7 @@ function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: ()
             {order.date}
           </Text>
           {order.customerEmail && (
-            <Text variant="bodySmall" color="var(--color-on-surface-variant-lowest)" style={{ display: 'block' }}>
+            <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>
               {order.customerEmail}
             </Text>
           )}
@@ -212,7 +214,10 @@ function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: ()
 
         <Section title="Products">
           {order.items.map((it, i) => (
-            <LineItemRow key={i} item={it} />
+            <div key={i}>
+              {i > 0 && <Divider />}
+              <LineItemRow item={it} />
+            </div>
           ))}
         </Section>
 
@@ -227,6 +232,7 @@ function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: ()
           <TotalRow label="Taxes" value={formatUsd(order.taxTotal)} />
           <Divider />
           <TotalRow label="Total" value={formatUsd(order.total)} bold />
+          <Divider />
           <TotalRow label="Total paid" value={formatUsd(order.total)} bold />
           <Text variant="caption" color="var(--color-on-surface-variant-lowest)">
             Via {order.paymentMethod}
@@ -307,11 +313,43 @@ function OrderActionsMenu({ onEmail }: { onEmail: () => void }) {
   );
 }
 
-function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }) {
-  const [selected, setSelected] = useState<Set<number>>(new Set(order.items.map((_, i) => i)));
-  const [confirming, setConfirming] = useState(false);
+type RefundStep = 'select' | 'review' | 'reason' | 'confirm' | 'success';
 
-  const refundTotal = order.items.reduce((s, it, i) => (selected.has(i) ? s + it.lineTotal : s), 0);
+/** WooPosIssueRefundScreen's RefundScreenHeader: back button pinned to the start, title
+ *  truly centered in the header — distinct from the normal left-aligned Toolbar. */
+function RefundHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'var(--size-xsmall)', padding: '0 var(--space-md)' }}>
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Back"
+        style={{ position: 'absolute', left: 'var(--space-sm)', border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}
+      >
+        <ArrowBack size="var(--icon-medium)" />
+      </button>
+      <Text variant="heading" bold align="center" style={{ padding: '0 var(--space-xxl)' }}>
+        {title}
+      </Text>
+    </div>
+  );
+}
+
+/** WooPosIssueRefundScreen's item-selection → review → reason → confirm → success sub-flow.
+ *  Rendered full screen (position:absolute + inset:0 resolves against .device-screen, the
+ *  nearest positioned ancestor, since none of the panes in between set their own position)
+ *  so it covers the whole device rather than just the detail pane. */
+function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }) {
+  const navigate = useNav();
+  const [step, setStep] = useState<RefundStep>('select');
+  const [selected, setSelected] = useState<Set<number>>(new Set(order.items.map((_, i) => i)));
+  const [reason, setReason] = useState('');
+  const [reasonDraft, setReasonDraft] = useState('');
+
+  const itemsSubtotal = order.items.reduce((s, it, i) => (selected.has(i) ? s + it.lineTotal : s), 0);
+  const productsSubtotal = order.items.reduce((s, it) => s + it.lineTotal, 0);
+  const taxes = productsSubtotal > 0 ? order.taxTotal * (itemsSubtotal / productsSubtotal) : 0;
+  const refundTotal = itemsSubtotal + taxes;
   const count = selected.size;
 
   const toggle = (i: number) =>
@@ -322,59 +360,153 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
       return next;
     });
 
-  if (confirming) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Toolbar title="Confirm refund" onBack={() => setConfirming(false)} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-md)', padding: 'var(--space-xl)', textAlign: 'center' }}>
-          <Text variant="heading" bold align="center">
-            Refund {formatUsd(refundTotal)}
-          </Text>
-          <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)" style={{ maxWidth: 480 }}>
-            Are you sure you wish to process the refund {formatUsd(refundTotal)} via {order.paymentMethod}?
-            {'\n\n'}This action cannot be undone.
-          </Text>
-          <div className="woopos-fullscreen-action" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            <Button text="Yes, proceed" fullWidth onClick={onDone} />
-            <OutlinedButton text="Cancel" fullWidth onClick={() => setConfirming(false)} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar title="Select items to refund" onBack={onDone} />
-      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg)' }}>
-        <Text variant="bodySmall" bold color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
-          {count} SELECTED
-        </Text>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-          {order.items.map((it, i) => (
-            <Card key={i} onClick={() => toggle(i)} padding="var(--space-sm)">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-                <input type="checkbox" checked={selected.has(i)} readOnly style={{ width: 20, height: 20, accentColor: 'var(--color-primary)' }} />
-                <div style={{ width: 'var(--size-medium)', height: 'var(--size-medium)', background: 'var(--color-surface-dim)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
-                  <Inventory size="var(--icon-medium)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+    <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: 'var(--color-surface)', display: 'flex', flexDirection: 'column', height: '100%', paddingTop: 'var(--device-safe-top, 0px)' }}>
+      {step === 'select' && (
+        <>
+          <RefundHeader title="Select items to refund" onBack={onDone} />
+          <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg)' }}>
+            <Text variant="bodySmall" bold color="var(--color-on-surface-variant-highest)" style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
+              {count} SELECTED
+            </Text>
+            {/* Plain rows separated by dividers — WooPosIssueRefundScreen's RefundableItemRow
+                has no card/shadow container, unlike the Products section on the order detail. */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {order.items.map((it, i) => (
+                <div key={i}>
+                  {i > 0 && <Divider />}
+                  <button
+                    type="button"
+                    onClick={() => toggle(i)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: 'var(--space-sm) 0', cursor: 'pointer' }}
+                  >
+                    <input type="checkbox" checked={selected.has(i)} readOnly style={{ width: 20, height: 20, accentColor: 'var(--color-primary)', flex: 'none' }} />
+                    <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', overflow: 'hidden', flex: 'none' }}>
+                      <ProductImage id={it.productId} radius="var(--radius-md)" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text variant="bodyLarge" bold style={{ display: 'block' }}>
+                        {it.name}
+                      </Text>
+                      <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)">
+                        {it.quantity} × {formatUsd(it.unitPrice)}
+                      </Text>
+                    </div>
+                    <Text variant="bodyLarge">{formatUsd(it.lineTotal)}</Text>
+                  </button>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Text variant="bodyLarge" bold style={{ display: 'block' }}>
-                    {it.name}
-                  </Text>
-                  <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)">
-                    {it.quantity} × {formatUsd(it.unitPrice)}
-                  </Text>
-                </div>
-                <Text variant="bodyLarge">{formatUsd(it.lineTotal)}</Text>
+              ))}
+            </div>
+          </div>
+          <div style={{ padding: 'var(--space-md)' }}>
+            <Button text="Continue" fullWidth state={count > 0 ? 'enabled' : 'disabled'} onClick={() => setStep('review')} />
+          </div>
+        </>
+      )}
+
+      {step === 'review' && (
+        <>
+          <RefundHeader title="Review refund" onBack={() => setStep('select')} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-xl) var(--space-lg)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <TotalRow label={`Items subtotal (${count} item${count === 1 ? '' : 's'})`} value={formatUsd(itemsSubtotal)} />
+              <TotalRow label="Taxes" value={formatUsd(taxes)} />
+              <Divider />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <TotalRow label="Refund total" value={formatUsd(refundTotal)} bold />
+                <Text variant="bodyMedium" color="var(--color-on-surface-variant-highest)">
+                  Via {order.paymentMethod}
+                </Text>
               </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-      <div style={{ padding: 'var(--space-md)' }}>
-        <Button text={`Continue · ${formatUsd(refundTotal)}`} fullWidth state={count > 0 ? 'enabled' : 'disabled'} onClick={() => setConfirming(true)} />
-      </div>
+              <Divider />
+              <button
+                type="button"
+                onClick={() => { setReasonDraft(reason); setStep('reason'); }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text variant="bodyLarge" bold>Refund reason</Text>
+                  <Text variant="bodyMedium" color="var(--color-primary)">Edit reason</Text>
+                </div>
+                {reason && (
+                  <Text variant="bodyMedium" color="var(--color-on-surface-variant-highest)">
+                    {reason}
+                  </Text>
+                )}
+              </button>
+            </div>
+          </div>
+          <div style={{ padding: 'var(--space-md)' }}>
+            <Button text="Continue" fullWidth onClick={() => setStep('confirm')} />
+          </div>
+        </>
+      )}
+
+      {step === 'reason' && (
+        <>
+          <Toolbar title="Refund reason" onBack={() => setStep('review')} />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
+            <textarea
+              autoFocus
+              value={reasonDraft}
+              onChange={(e) => setReasonDraft(e.target.value)}
+              placeholder="Reason for refunding order"
+              rows={3}
+              style={{ width: '100%', maxWidth: 640, resize: 'none', border: 'none', outline: 'none', textAlign: 'center', background: 'transparent', font: 'inherit', fontSize: 'var(--font-body-lg-size)', color: 'var(--color-on-surface)' }}
+            />
+          </div>
+          <div style={{ padding: 'var(--space-md)' }}>
+            <Button text="Add" fullWidth onClick={() => { setReason(reasonDraft); setStep('review'); }} />
+          </div>
+        </>
+      )}
+
+      {step === 'confirm' && (
+        <>
+          <RefundHeader title="Confirm refund" onBack={() => setStep('review')} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-md)', padding: 'var(--space-xl)', textAlign: 'center' }}>
+            <Text variant="heading" bold align="center">
+              Refund {formatUsd(refundTotal)}
+            </Text>
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)" style={{ maxWidth: 480 }}>
+              Are you sure you wish to process the refund {formatUsd(refundTotal)} via {order.paymentMethod}?
+              {'\n\n'}This action cannot be undone.
+            </Text>
+          </div>
+          <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            <Button text="Yes, proceed" fullWidth onClick={() => setStep('success')} />
+            <OutlinedButton text="Cancel" fullWidth onClick={() => setStep('review')} />
+          </div>
+        </>
+      )}
+
+      {step === 'success' && (
+        <>
+          <div style={{ padding: 'var(--space-md)' }}>
+            <button type="button" aria-label="Close" onClick={onDone} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+              <Close size="var(--icon-medium)" />
+            </button>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)', padding: 'var(--space-xl)', textAlign: 'center' }}>
+            <SuccessCheckmark />
+            <Text variant="heading" bold align="center" style={{ marginTop: 'var(--space-md)' }}>
+              Refund complete
+            </Text>
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              You refunded {formatUsd(refundTotal)} via {order.paymentMethod}.
+            </Text>
+            {order.customerEmail && (
+              <Text variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
+                A receipt has been sent to {order.customerEmail}.
+              </Text>
+            )}
+          </div>
+          <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            <Button text="Done" fullWidth onClick={onDone} />
+            <OutlinedButton text="Email receipt" fullWidth onClick={() => navigate('/email-receipt')} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -393,8 +525,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function LineItemRow({ item }: { item: OrderLineItem }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-      <div style={{ width: 'var(--size-medium)', height: 'var(--size-medium)', background: 'var(--color-surface-dim)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
-        <Inventory size="var(--icon-medium)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+      <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', overflow: 'hidden', flex: 'none' }}>
+        <ProductImage id={item.productId} radius="var(--radius-md)" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <Text variant="bodyLarge" bold style={{ display: 'block' }}>

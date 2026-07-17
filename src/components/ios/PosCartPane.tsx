@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react';
 import { PosText } from './PosText';
 import { PosButton } from './PosButton';
 import { ProductImage } from '../android/ProductImage';
-import { Trash, Barcode, Tag, ChevronLeft } from '../android/icons';
+import { Trash, Barcode, Tag, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
+import lightBagsImg from '../../assets/ios/shopping-bags-light.png';
+import darkBagsImg from '../../assets/ios/shopping-bags-dark.png';
 
 /**
  * iOS cart pane (CartView.swift). Header "Cart" + item count with a trailing "Clear cart"
@@ -28,6 +31,15 @@ export function PosCartPane({
 }) {
   const { lines, itemCount, clear, removeLine, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
+
+  // When transitioning into checkout (hideCheckout flips true), show a skeleton for ~650ms
+  // then reveal the "applied" coupon state (green icon + discount amount). Resets on back.
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  useEffect(() => {
+    if (!hideCheckout) { setCheckoutReady(false); return; }
+    const t = window.setTimeout(() => setCheckoutReady(true), 650);
+    return () => window.clearTimeout(t);
+  }, [hideCheckout]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-surface-bright)' }}>
@@ -66,14 +78,11 @@ export function PosCartPane({
               AFTER it. The icon is the tappable affordance — tinted primary (SwiftUI button default
               tint) — and opens the barcode scanner setup; the words are muted. Each line is its own
               row so the spacing is uniform. */}
-          {/* bodyMedium's default line-height (32px for a 20px font) is generous enough for a
-              paragraph but reads as uneven gaps once these short lines are stacked — pin all three
-              to the same tight line-height instead of the token's looser default. */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.3 }}>Tap on a product</PosText>
-            <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.3 }}>to add it to the cart, or</PosText>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, lineHeight: 1.3 }}>
-              <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.3 }}>Scan barcode</PosText>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-xs)' }}>
+            <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.15 }}>Tap on a product</PosText>
+            <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.15 }}>to add it to the cart, or</PosText>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, lineHeight: 1.15 }}>
+              <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)" style={{ lineHeight: 1.15 }}>Scan barcode</PosText>
               <button
                 type="button"
                 aria-label="Scan barcode"
@@ -87,13 +96,25 @@ export function PosCartPane({
         </div>
       ) : (
         <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: 'var(--space-xs) var(--space-md) var(--space-md)' }}>
-          {/* Barcode-scanned products resolve after a brief loading row (shared Barcode tool). */}
-          {Array.from({ length: pendingScans }).map((_, i) => (
-            <PosCartRowSkeleton key={`scan-${i}`} />
-          ))}
-          {lines.map((line) => (
-            <PosCartRow key={line.key} line={line} onRemove={() => removeLine(line.key)} />
-          ))}
+          {/* While checkout is initialising, mirror each cart row with a skeleton. */}
+          {hideCheckout && !checkoutReady ? (
+            lines.map((_, i) => <PosCartRowSkeleton key={`checkout-skel-${i}`} />)
+          ) : (
+            <>
+              {Array.from({ length: pendingScans }).map((_, i) => (
+                <PosCartRowSkeleton key={`scan-${i}`} />
+              ))}
+              {lines.map((line) => (
+                <PosCartRow
+                  key={line.key}
+                  line={line}
+                  onRemove={() => removeLine(line.key)}
+                  isCheckout={checkoutReady && hideCheckout}
+                  hideRemove={hideCheckout}
+                />
+              ))}
+            </>
+          )}
         </div>
       )}
 
@@ -106,30 +127,47 @@ export function PosCartPane({
   );
 }
 
-/** iOS empty-cart illustration (WooFoundation shopping-bags asset): two flat, filled bags —
- *  a lighter back bag with a solid handle loop and a darker front bag with a cut-out handle arc. */
+function useIsDark() {
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
+  );
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+  return isDark;
+}
+
+/** iOS empty-cart illustration: the WooFoundation shopping-bags asset.
+ *  Both PDFs render with a white background; blend modes remove the seam:
+ *  light mode — multiply (white × white surface = invisible bg, grey bags visible)
+ *  dark mode — invert(1) + screen (white→black blends into dark surface, inverted bags visible) */
 function ShoppingBags() {
-  const light = 'var(--color-on-surface-variant-lowest)';
-  const dark = 'var(--color-on-surface-variant-highest)';
-  const bg = 'var(--color-surface-bright)';
+  const isDark = useIsDark();
   return (
-    <svg width="112" height="104" viewBox="0 0 112 104" fill="none" aria-hidden style={{ opacity: 0.55 }}>
-      {/* Back-left bag: filled body with a solid inverted-U handle. */}
-      <path d="M14 34h46l5 54a4 4 0 0 1-4 4H13a4 4 0 0 1-4-4l5-54z" fill={light} />
-      <path d="M25 36v-6a12 12 0 0 1 24 0v6" fill="none" stroke={dark} strokeWidth="6" strokeLinecap="round" />
-      {/* Front-right bag: darker trapezoid (wider at bottom) with a cut-out handle arc. */}
-      <path d="M63 46h34l6 48a4 4 0 0 1-4 4H61a4 4 0 0 1-4-4l6-48z" fill={dark} />
-      <path d="M71 47v-4a9 9 0 0 1 18 0v4" fill="none" stroke={bg} strokeWidth="5" strokeLinecap="round" />
-    </svg>
+    <img
+      src={lightBagsImg}
+      alt=""
+      aria-hidden
+      style={{
+        width: 112, height: 104, objectFit: 'contain',
+        ...(isDark
+          ? { filter: 'invert(1)', mixBlendMode: 'screen' as const }
+          : { mixBlendMode: 'multiply' as const }),
+      }}
+    />
   );
 }
 
 /** Loading placeholder shown while a barcode-scanned product resolves. */
 function PosCartRowSkeleton() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-sm)' }}>
-      <div className="woopos-skeleton" style={{ width: 'var(--size-medium)', height: 'var(--size-medium)', borderRadius: 'var(--radius-md)', flex: 'none' }} />
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+      <div className="woopos-skeleton" style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none' }} />
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-sm) var(--space-sm) var(--space-sm) 0' }}>
         <div className="woopos-skeleton" style={{ width: '70%', height: 10, borderRadius: 'var(--radius-sm)' }} />
         <div className="woopos-skeleton" style={{ width: '40%', height: 10, borderRadius: 'var(--radius-sm)' }} />
       </div>
@@ -137,36 +175,61 @@ function PosCartRowSkeleton() {
   );
 }
 
-function PosCartRow({ line, onRemove }: { line: CartLine; onRemove: () => void }) {
+function PosCartRow({ line, onRemove, isCheckout = false, hideRemove = false }: { line: CartLine; onRemove: () => void; isCheckout?: boolean; hideRemove?: boolean }) {
   const title = line.kind === 'coupon' ? line.code : line.name;
-  const detail =
-    line.kind === 'coupon'
-      ? `-${formatUsd(line.discount)}`
-      : line.kind === 'custom'
-        ? formatUsd(line.amount)
-        : line.quantity > 1
+  const priceDetail =
+    line.kind === 'custom'
+      ? formatUsd(line.amount)
+      : line.kind === 'product'
+        ? line.quantity > 1
           ? `${line.quantity} × ${formatUsd(line.price)}`
-          : formatUsd(line.price);
+          : formatUsd(line.price)
+        : null;
+
+  // Coupon icon tile — matches POSCouponImageView.swift exactly: a solid-fill rectangle,
+  // muted gray normally, solid success green once applied at checkout, with the tag glyph
+  // switching to onSuccess (white) rather than the tile just gaining a tint.
+  const couponIconBg = isCheckout ? 'var(--color-success)' : 'var(--color-surface-dim)';
+  const couponIconColor = isCheckout ? 'var(--color-on-success)' : 'var(--color-on-surface-variant-lowest)';
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-sm)' }}>
-      <div style={{ width: 'var(--size-medium)', height: 'var(--size-medium)', borderRadius: 'var(--radius-md)', overflow: 'hidden', flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
+      {/* Flush to the card's edges — no padding, no radius of its own; the outer card's
+          overflow:hidden clips it into the rounded left corners (ItemRowView.swift: the
+          image sits directly in the row with no inset, only the row itself is clipped). */}
+      <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: line.kind === 'coupon' ? couponIconBg : 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {line.kind === 'product' ? (
-          <ProductImage id={line.productId} radius="var(--radius-md)" />
+          <ProductImage id={line.productId} />
         ) : (
-          <Tag size="var(--icon-medium)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+          <Tag size="var(--icon-medium)" style={{ color: couponIconColor }} />
         )}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
         <PosText variant="bodySmall" bold style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
           {title}
         </PosText>
-        <PosText variant="bodySmall" color={line.kind === 'coupon' ? 'var(--color-success)' : 'var(--color-on-surface-variant-highest)'}>
-          {detail}
-        </PosText>
+        {line.kind === 'coupon' ? (
+          <>
+            {line.summary && (
+              <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
+                {line.summary}
+              </PosText>
+            )}
+            {isCheckout && line.discount > 0 && (
+              <PosText variant="bodySmall" color="var(--color-success)" style={{ display: 'block' }}>
+                {`-${formatUsd(line.discount)}`}
+              </PosText>
+            )}
+          </>
+        ) : (
+          <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)">{priceDetail}</PosText>
+        )}
       </div>
-      <button type="button" aria-label={`Remove ${title}`} onClick={onRemove} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface-variant-highest)', padding: 6, cursor: 'pointer', flex: 'none' }}>
-        <Trash size="var(--icon-small)" />
-      </button>
+      {!hideRemove && (
+        <button type="button" aria-label={`Remove ${title}`} onClick={onRemove} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface-variant-highest)', padding: '0 var(--space-sm) 0 0', cursor: 'pointer', flex: 'none' }}>
+          <Trash size="var(--icon-small)" />
+        </button>
+      )}
     </div>
   );
 }

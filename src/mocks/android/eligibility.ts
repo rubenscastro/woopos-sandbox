@@ -44,12 +44,6 @@ export type EligibilityState =
       suggestionText: string;
     }
   | {
-      kind: 'ciab';
-      title: string;
-      suggestionText: string;
-      learnMoreUrl: string;
-    }
-  | {
       kind: 'loading';
       title: string;
       suggestionText: string;
@@ -65,19 +59,7 @@ export const retryableIneligiblePreview: EligibilityState = {
     'support for assistance.',
 };
 
-// From WooPosEligibilityCiabPreview
-export const ciabUpgradePreview: EligibilityState = {
-  kind: 'ciab',
-  title: 'Pro plan required',
-  suggestionText:
-    'Accept payments in person for just 2.70% + $0.10 per transaction. Upgrade to Pro to ' +
-    'access tap-to-pay on your phone and our full point of sale system with real-time ' +
-    'inventory and order syncing.',
-  learnMoreUrl: 'https://wordpress.com/setup/woo-hosted-plans/',
-};
-
 export const eligibilityButtons = {
   retry: 'Retry',
-  learnMore: 'Learn More',
   exit: 'Exit POS',
 };

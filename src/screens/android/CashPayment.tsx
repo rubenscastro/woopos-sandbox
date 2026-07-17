@@ -37,25 +37,29 @@ export function CashPayment() {
           textAlign: 'center',
         }}
       >
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value.replace(/[^0-9.]/g, ''))}
-          inputMode="decimal"
-          placeholder="$0.00"
-          autoFocus
-          style={{
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            textAlign: 'center',
-            minWidth: 200,
-            padding: 'var(--space-sm) 0',
-            color: 'var(--color-on-surface)',
-            fontFamily: 'var(--font-family)',
-            fontSize: 'var(--font-heading-size)',
-            fontWeight: 700,
-          }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+          <span style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-heading-size)', fontWeight: 700, color: 'var(--color-on-surface)' }}>$</span>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value.replace(/[^0-9.]/g, ''))}
+            inputMode="numeric"
+            placeholder="0.00"
+            autoFocus
+            style={{
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              textAlign: 'left',
+              width: `${Math.max(3, text.length || 4)}ch`,
+              minWidth: '2ch',
+              padding: 'var(--space-sm) 0',
+              color: 'var(--color-on-surface)',
+              fontFamily: 'var(--font-family)',
+              fontSize: 'var(--font-heading-size)',
+              fontWeight: 700,
+            }}
+          />
+        </div>
 
         {showError ? (
           <Text variant="bodyLarge" align="center" color="var(--color-error)">
@@ -70,7 +74,7 @@ export function CashPayment() {
         )}
       </div>
 
-      <div style={{ padding: 'var(--space-md)' }}>
+      <div style={{ padding: 'var(--space-md)', paddingBottom: 'calc(var(--space-md) + var(--device-keyboard-height, 0px))' }}>
         <Button
           text="Mark order as complete"
           fullWidth
