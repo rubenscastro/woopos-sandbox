@@ -146,13 +146,16 @@ export function ItemSelector({
         ) : (
           <>
         {tab === 'products'
-          ? shownProducts.map((p) => (
-              <PosItemCard
-                key={p.id}
-                item={{ id: p.id, name: p.name, detail: p.variable ? 'Options available' : formatUsd(p.price), variable: p.variable }}
-                onClick={() => (p.variable ? setVariationOf(p) : cart.addProduct({ id: p.id, name: p.name, price: p.price }))}
-              />
-            ))
+          ? <>
+              {!searchOpen && <CustomAmountEntryRow onTap={() => setCustomAmountOpen(true)} />}
+              {shownProducts.map((p) => (
+                <PosItemCard
+                  key={p.id}
+                  item={{ id: p.id, name: p.name, detail: p.variable ? 'Options available' : formatUsd(p.price), variable: p.variable }}
+                  onClick={() => (p.variable ? setVariationOf(p) : cart.addProduct({ id: p.id, name: p.name, price: p.price }))}
+                />
+              ))}
+            </>
           : shownCoupons.map((c) => (
               <PosItemCard
                 key={c.id}

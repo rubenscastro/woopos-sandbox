@@ -471,7 +471,7 @@ function CouponsList({
   }
 
   if (searchOpen && !q) {
-    return <List />;
+    return <List>{null}</List>;
   }
 
   if (filtered.length === 0) {

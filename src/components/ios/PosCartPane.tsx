@@ -7,7 +7,6 @@ import { Trash, Barcode, Tag, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
 import lightBagsImg from '../../assets/ios/shopping-bags-light.png';
-import darkBagsImg from '../../assets/ios/shopping-bags-dark.png';
 
 /**
  * iOS cart pane (CartView.swift). Header "Cart" + item count with a trailing "Clear cart"

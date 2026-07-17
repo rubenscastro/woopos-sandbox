@@ -4,7 +4,6 @@ import { useNav } from '../../device/platformNav';
 import { Text } from './Text';
 import { Button, OutlinedButton } from './Button';
 import { Toolbar } from './Toolbar';
-import { DragScroll } from './DragScroll';
 import { OrderSummary } from './OrderSummary';
 import { BottomSheet } from './BottomSheet';
 import { Spinner } from './Spinner';
