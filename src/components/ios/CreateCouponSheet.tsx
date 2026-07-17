@@ -100,11 +100,11 @@ export function CreateCouponSheet({
           )}
         </div>
 
-        <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-          {step === 'type'
-            ? <PosButton label="Cancel" variant="outlined" fullWidth onClick={onClose} />
-            : <PosButton label="Create" fullWidth disabled={!amount.trim()} onClick={create} />}
-        </div>
+        {step === 'editor' && (
+          <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+            <PosButton label="Create" fullWidth disabled={!amount.trim()} onClick={create} />
+          </div>
+        )}
       </div>
     </div>
   );
