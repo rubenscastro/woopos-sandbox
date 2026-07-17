@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PosText } from './PosText';
 import { PosButton } from './PosButton';
 import { ProductImage } from '../android/ProductImage';
+import { DragScroll } from '../android/DragScroll';
 import { Trash, Barcode, Tag, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
@@ -20,6 +21,7 @@ export function PosCartPane({
   onBack,
   hideCheckout = false,
   showItemCount = true,
+  checkoutReady = false,
 }: {
   onCheckout?: () => void;
   onScanBarcode?: () => void;
@@ -28,22 +30,17 @@ export function PosCartPane({
   hideCheckout?: boolean;
   /** Phone drawer hides the "N items" count next to the title. */
   showItemCount?: boolean;
+  /** Whether the checkout pane (shown alongside this cart) has finished loading — coupons
+   *  only flip to their applied (green) state once it has, so both panes resolve on the
+   *  exact same timer instead of each running its own. Owned by the parent (ItemSelector). */
+  checkoutReady?: boolean;
 }) {
   const { lines, itemCount, clear, removeLine, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
 
-  // When transitioning into checkout (hideCheckout flips true), show a skeleton for ~650ms
-  // then reveal the "applied" coupon state (green icon + discount amount). Resets on back.
-  const [checkoutReady, setCheckoutReady] = useState(false);
-  useEffect(() => {
-    if (!hideCheckout) { setCheckoutReady(false); return; }
-    const t = window.setTimeout(() => setCheckoutReady(true), 650);
-    return () => window.clearTimeout(t);
-  }, [hideCheckout]);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-surface-bright)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-md) var(--space-sm)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-md) var(--space-md)' }}>
         {onBack && (
           <button type="button" aria-label="Back" onClick={onBack} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
             <ChevronLeft size="var(--icon-medium)" />
@@ -95,27 +92,20 @@ export function PosCartPane({
           </div>
         </div>
       ) : (
-        <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: 'var(--space-xs) var(--space-md) var(--space-md)' }}>
-          {/* While checkout is initialising, mirror each cart row with a skeleton. */}
-          {hideCheckout && !checkoutReady ? (
-            lines.map((_, i) => <PosCartRowSkeleton key={`checkout-skel-${i}`} />)
-          ) : (
-            <>
-              {Array.from({ length: pendingScans }).map((_, i) => (
-                <PosCartRowSkeleton key={`scan-${i}`} />
-              ))}
-              {lines.map((line) => (
-                <PosCartRow
-                  key={line.key}
-                  line={line}
-                  onRemove={() => removeLine(line.key)}
-                  isCheckout={checkoutReady && hideCheckout}
-                  hideRemove={hideCheckout}
-                />
-              ))}
-            </>
-          )}
-        </div>
+        <DragScroll style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: 'var(--space-sm) var(--space-md) var(--space-md)' }}>
+          {Array.from({ length: pendingScans }).map((_, i) => (
+            <PosCartRowSkeleton key={`scan-${i}`} />
+          ))}
+          {lines.map((line) => (
+            <PosCartRow
+              key={line.key}
+              line={line}
+              onRemove={() => removeLine(line.key)}
+              isCheckout={checkoutReady && hideCheckout}
+              hideRemove={hideCheckout}
+            />
+          ))}
+        </DragScroll>
       )}
 
       {!empty && !hideCheckout && (
@@ -165,7 +155,7 @@ function ShoppingBags() {
 /** Loading placeholder shown while a barcode-scanned product resolves. */
 function PosCartRowSkeleton() {
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+    <div className="woopos-cart-item" style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
       <div className="woopos-skeleton" style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none' }} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-sm) var(--space-sm) var(--space-sm) 0' }}>
         <div className="woopos-skeleton" style={{ width: '70%', height: 10, borderRadius: 'var(--radius-sm)' }} />
@@ -193,7 +183,7 @@ function PosCartRow({ line, onRemove, isCheckout = false, hideRemove = false }: 
   const couponIconColor = isCheckout ? 'var(--color-on-success)' : 'var(--color-on-surface-variant-lowest)';
 
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
+    <div className="woopos-cart-item" style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
       {/* Flush to the card's edges — no padding, no radius of its own; the outer card's
           overflow:hidden clips it into the rounded left corners (ItemRowView.swift: the
           image sits directly in the row with no inset, only the row itself is clipped). */}

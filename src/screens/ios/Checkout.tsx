@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { PosText } from '../../components/ios/PosText';
 import { PosButton } from '../../components/ios/PosButton';
 import { Spinner } from '../../components/android/Spinner';
+import { DragScroll } from '../../components/android/DragScroll';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
 import { CardReaderNotConnected } from '../../components/android/illustrations';
 import { ErrorX, ChevronLeft } from '../../components/ios/IosIcons';
@@ -24,7 +25,18 @@ import { formatUsd } from '../../lib/currency';
  */
 type State = 'idle' | 'processing' | 'success' | 'failed' | 'cash' | 'email';
 
-export function Checkout({ onBack, showBack = true }: { onBack?: () => void; showBack?: boolean }) {
+export function Checkout({
+  onBack,
+  showBack = true,
+  loading: loadingProp,
+}: {
+  onBack?: () => void;
+  showBack?: boolean;
+  /** Controlled from the parent (ItemSelector) so it can share one timer with
+   *  PosCartPane's coupon-green state. When omitted (the standalone phone /checkout
+   *  route), falls back to an internal 3s timer. */
+  loading?: boolean;
+}) {
   const nav = useNav();
   const isPhone = useIsPhone();
   const back = onBack ?? (() => nav('/products'));
@@ -32,11 +44,13 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
   const { connected, startConnecting } = useCardReader();
   const printer = usePrinter();
   const [state, setState] = useState<State>('idle');
-  const [loading, setLoading] = useState(true);
+  const [internalLoading, setInternalLoading] = useState(true);
   useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 650);
+    if (loadingProp !== undefined) return;
+    const t = window.setTimeout(() => setInternalLoading(false), 3000);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [loadingProp]);
+  const loading = loadingProp ?? internalLoading;
   const [cash, setCash] = useState('');
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
@@ -161,7 +175,7 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
         {showBack && <BackButton onClick={back} />}
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }}>
+      <DragScroll style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }}>
         {loading ? (
           <IosCheckoutSkeleton />
         ) : state === 'failed' ? (
@@ -187,7 +201,7 @@ export function Checkout({ onBack, showBack = true }: { onBack?: () => void; sho
             <Totals subtotal={subtotal} discountTotal={discountTotal} taxTotal={taxTotal} total={total} />
           </>
         )}
-      </div>
+      </DragScroll>
 
       {/* Bottom payment-method row (POSCheckoutPaymentButtonsRow): Card reader (primary, when
           disconnected) + Cash payment, full width. Hidden while loading. */}
@@ -276,20 +290,14 @@ function BackButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+/** Hides the card reader status + order summary + payment CTAs behind three plain
+ *  skeleton lines while the checkout pane loads — not a detailed mock of the real layout. */
 function IosCheckoutSkeleton() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', width: '100%', maxWidth: 420 }}>
-      <div className="woopos-skeleton" style={{ width: 'var(--size-xlarge)', height: 'var(--size-xlarge)', borderRadius: '50%' }} />
-      <div className="woopos-skeleton" style={{ width: '55%', height: 28, borderRadius: 'var(--radius-sm)' }} />
-      <div className="woopos-skeleton" style={{ width: '75%', height: 18, borderRadius: 'var(--radius-sm)' }} />
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-sm)' }}>
-        {(['50%', '40%', '60%'] as const).map((w, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-lg)' }}>
-            <div className="woopos-skeleton" style={{ width: w, height: 18, borderRadius: 'var(--radius-sm)' }} />
-            <div className="woopos-skeleton" style={{ width: '25%', height: 18, borderRadius: 'var(--radius-sm)' }} />
-          </div>
-        ))}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', width: '100%', maxWidth: 420 }}>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="woopos-skeleton" style={{ width: '85%', height: 24, borderRadius: 'var(--radius-sm)' }} />
+      ))}
     </div>
   );
 }

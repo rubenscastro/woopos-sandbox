@@ -48,6 +48,15 @@ export function ItemSelector({
   const [createCouponOpen, setCreateCouponOpen] = useState(autoCreateCoupon);
   const [customAmountOpen, setCustomAmountOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
+  // Shared by PosCartPane (coupon green state) and Checkout (its own skeleton) so both
+  // resolve on the exact same timer — the coupons must not go green before the checkout
+  // pane has actually finished loading.
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  useEffect(() => {
+    if (!checkout) { setCheckoutReady(false); return; }
+    const t = window.setTimeout(() => setCheckoutReady(true), 3000);
+    return () => window.clearTimeout(t);
+  }, [checkout]);
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
   const [cartBumping, setCartBumping] = useState(false);
   const prevItemCount = useRef(cart.itemCount);
@@ -109,17 +118,19 @@ export function ItemSelector({
             <TabTitle label="Products" active={tab === 'products'} onClick={() => setTab('products')} />
             <TabTitle label="Coupons" active={tab === 'coupons'} onClick={() => setTab('coupons')} />
             <div style={{ flex: 1 }} />
-            {tab === 'coupons' && !isPhone && (
-              <button type="button" aria-label="Create coupon" onClick={() => setCreateCouponOpen(true)} style={iconBtn}>
-                <Plus size="var(--icon-small)" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+              {tab === 'coupons' && !isPhone && (
+                <button type="button" aria-label="Create coupon" onClick={() => setCreateCouponOpen(true)} style={iconBtn}>
+                  <Plus size="var(--icon-small)" />
+                </button>
+              )}
+              <button type="button" aria-label="Search" onClick={() => setSearchOpen(true)} style={iconBtn}>
+                <Search size="var(--icon-small)" />
               </button>
-            )}
-            <button type="button" aria-label="Search" onClick={() => setSearchOpen(true)} style={iconBtn}>
-              <Search size="var(--icon-small)" />
-            </button>
-            {/* Phone: the main menu lives top-right next to search (tablet uses the floating control).
-                When on the Coupons tab, "Create coupon" appears as the first item in this menu. */}
-            {isPhone && <PhoneHeaderMenu tab={tab} onCreateCoupon={() => setCreateCouponOpen(true)} />}
+              {/* Phone: the main menu lives top-right next to search (tablet uses the floating control).
+                  When on the Coupons tab, "Create coupon" appears as the first item in this menu. */}
+              {isPhone && <PhoneHeaderMenu tab={tab} onCreateCoupon={() => setCreateCouponOpen(true)} />}
+            </div>
           </div>
         )}
       </div>
@@ -217,11 +228,12 @@ export function ItemSelector({
             onCheckout={() => setCheckout(true)}
             onScanBarcode={openSetup}
             hideCheckout={checkout}
+            checkoutReady={checkoutReady}
             onBack={checkout ? () => setCheckout(false) : undefined}
           />
         </div>
         <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>
-          <Checkout onBack={() => setCheckout(false)} showBack={false} />
+          <Checkout onBack={() => setCheckout(false)} showBack={false} loading={checkout && !checkoutReady} />
         </div>
       </div>
       <PosFloatingControl />

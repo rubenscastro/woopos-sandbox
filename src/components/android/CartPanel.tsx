@@ -22,9 +22,15 @@ interface CartPanelProps {
   hideClear?: boolean;
   /** Read-only cart (e.g. during checkout): hides the per-item remove buttons. */
   hideRemove?: boolean;
+  /** Whether the checkout pane (shown alongside this cart) has finished loading — coupons
+   *  only flip to their applied (green) state once it has, so both panes resolve on the
+   *  exact same timer instead of each running its own. Owned by the parent (ItemSelection)
+   *  so it can be shared with CheckoutPane; defaults to false for standalone usage (the
+   *  phone /cart route, which never shows checkout-mode coupon coloring). */
+  checkoutReady?: boolean;
 }
 
-export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hideClear, hideRemove }: CartPanelProps) {
+export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hideClear, hideRemove, checkoutReady = false }: CartPanelProps) {
   const { lines, itemCount, clear, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
 
@@ -36,16 +42,6 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
     return () => window.clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // `hideCheckout` doubles as "we're in the checkout pane" — coupons only flip to their
-  // applied (green) state once checkout has had a moment to load, not the instant it opens.
-  // Mirrors the iOS PosCartPane checkoutReady delay.
-  const [checkoutReady, setCheckoutReady] = useState(false);
-  useEffect(() => {
-    if (!hideCheckout) { setCheckoutReady(false); return; }
-    const t = window.setTimeout(() => setCheckoutReady(true), 650);
-    return () => window.clearTimeout(t);
-  }, [hideCheckout]);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-surface-bright)' }}>
       <div
@@ -53,7 +49,7 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
           display: 'flex',
           alignItems: 'center',
           gap: 'var(--space-sm)',
-          padding: 'var(--space-md) var(--space-md) var(--space-sm)',
+          padding: 'var(--space-md) var(--space-md) var(--space-md)',
         }}
       >
         {onBack && (
@@ -92,7 +88,7 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-sm)',
-            padding: 'var(--space-xs) var(--space-md) var(--space-md)',
+            padding: 'var(--space-sm) var(--space-md) var(--space-md)',
           }}
         >
           {Array.from({ length: pendingScans }).map((_, i) => (
@@ -175,7 +171,7 @@ function ClearCartMenu({ onClear }: { onClear: () => void }) {
 /** Shimmering placeholder for a product being scanned into the cart. */
 function CartLineSkeleton() {
   return (
-    <Card padding="0">
+    <Card padding="0" className="woopos-cart-item">
       <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-sm)', gap: 'var(--space-sm)' }}>
         <div
           className="woopos-skeleton"

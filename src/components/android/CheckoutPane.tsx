@@ -3,6 +3,7 @@ import { useNav } from '../../device/platformNav';
 import { Text } from './Text';
 import { Button, OutlinedButton } from './Button';
 import { Toolbar } from './Toolbar';
+import { DragScroll } from './DragScroll';
 import { OrderSummary } from './OrderSummary';
 import { BottomSheet } from './BottomSheet';
 import { Spinner } from './Spinner';
@@ -25,22 +26,29 @@ export function CheckoutPane({
   onBack,
   active = true,
   showBackButton = true,
+  loading: loadingProp,
 }: {
   onBack?: () => void;
   active?: boolean;
   /** On tablet the back affordance lives on the cart pane, so the totals pane hides it. */
   showBackButton?: boolean;
+  /** Controlled from the parent (ItemSelection) so it can share one timer with CartPanel's
+   *  coupon-green state. When omitted (the standalone phone /totals route), falls back to
+   *  an internal 3s timer. */
+  loading?: boolean;
 }) {
   const navigate = useNav();
   const { connected, startConnecting } = useCardReader();
   const { methods } = usePaymentSettings();
   const [state, setState] = useState<PayState>('idle');
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [internalLoading, setInternalLoading] = useState(true);
   useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 650);
+    if (loadingProp !== undefined) return;
+    const t = window.setTimeout(() => setInternalLoading(false), 3000);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [loadingProp]);
+  const loading = loadingProp ?? internalLoading;
 
   // Which methods Settings → Payments has enabled — the checkout only surfaces these.
   const otherMethods = methods.scanToPay || methods.markAsPaid;
@@ -218,20 +226,14 @@ const btnStack: React.CSSProperties = {
   gap: 'var(--space-md)',
 };
 
+/** Hides the card reader status + order summary + payment CTAs behind three plain
+ *  skeleton lines while the checkout pane loads — not a detailed mock of the real layout. */
 function CheckoutSkeleton() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', width: '100%', maxWidth: 460 }}>
-      <div className="woopos-skeleton" style={{ width: 'var(--size-xlarge)', height: 'var(--size-xlarge)', borderRadius: '50%' }} />
-      <div className="woopos-skeleton" style={{ width: '55%', height: 28, borderRadius: 'var(--radius-sm)' }} />
-      <div className="woopos-skeleton" style={{ width: '75%', height: 18, borderRadius: 'var(--radius-sm)' }} />
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-sm)' }}>
-        {(['50%', '40%', '60%'] as const).map((w, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-lg)' }}>
-            <div className="woopos-skeleton" style={{ width: w, height: 18, borderRadius: 'var(--radius-sm)' }} />
-            <div className="woopos-skeleton" style={{ width: '25%', height: 18, borderRadius: 'var(--radius-sm)' }} />
-          </div>
-        ))}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', width: '100%', maxWidth: 460 }}>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="woopos-skeleton" style={{ width: '85%', height: 24, borderRadius: 'var(--radius-sm)' }} />
+      ))}
     </div>
   );
 }

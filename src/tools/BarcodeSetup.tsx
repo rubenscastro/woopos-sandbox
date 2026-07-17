@@ -250,7 +250,7 @@ function PairStep({ device, onBack, onNext }: { device: string | null; onBack: (
 }
 
 function TestStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
-  const { activeTool, setActiveTool } = useTools();
+  const { setActiveTool } = useTools();
   const [timedOut, setTimedOut] = useState(false);
   // Scanning the test barcode completes the step; disable the tool as we leave.
   const finish = (next: () => void) => {
@@ -294,12 +294,6 @@ function TestStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }
           1234567890128
         </Text>
       </div>
-
-      {activeTool !== 'barcode' && (
-        <Text variant="caption" align="center" color="var(--color-primary)">
-          Turn on Tools ▸ Barcode, then hover the scanner over the code.
-        </Text>
-      )}
 
       <div style={{ width: '100%', maxWidth: 420 }}>
         <OutlinedButton text="Back" fullWidth onClick={() => finish(onBack)} />

@@ -79,16 +79,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [pendingScans, setPendingScans] = useState(0);
 
+  // Each tap adds its own line — identical products are never merged into a single
+  // "2 x" row, they show as separate cards in the cart.
   const addProduct = useCallback((p: AddableProduct) => {
     setLines((prev) => {
-      const existing = prev.find(
-        (l): l is ProductLine => l.kind === 'product' && l.productId === p.id,
-      );
-      if (existing) {
-        return prev.map((l) =>
-          l === existing ? { ...existing, quantity: existing.quantity + 1 } : l,
-        );
-      }
       const line: ProductLine = {
         key: nextKey('p'),
         kind: 'product',
@@ -142,6 +136,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setPendingScans(0);
   }, []);
 
+  // Coupons always sit above products/custom amounts in the cart, regardless of add
+  // order — e.g. adding a product after a coupon shouldn't push the coupon down. A stable
+  // sort partitions into the two groups while preserving each group's own relative order.
+  const sortedLines = useMemo(
+    () => [...lines].sort((a, b) => Number(b.kind === 'coupon') - Number(a.kind === 'coupon')),
+    [lines],
+  );
+
   const value = useMemo<CartContextValue>(() => {
     const subtotal = lines.reduce((sum, l) => {
       if (l.kind === 'product') return sum + l.price * l.quantity;
@@ -163,7 +165,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       0,
     );
     return {
-      lines,
+      lines: sortedLines,
       itemCount,
       subtotal,
       discountTotal,
@@ -178,7 +180,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQuantity,
       clear,
     };
-  }, [lines, pendingScans, addProduct, scanProduct, addCustomAmount, addCoupon, removeLine, setQuantity, clear]);
+  }, [lines, sortedLines, pendingScans, addProduct, scanProduct, addCustomAmount, addCoupon, removeLine, setQuantity, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

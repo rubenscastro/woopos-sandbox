@@ -49,6 +49,16 @@ export function ItemSelection() {
   // lands back on the checkout pane, not the bare product list. See useCheckoutPane.
   const [checkout, setCheckout] = useCheckoutPane(cart.itemCount);
 
+  // Shared by CartPanel (coupon green state) and CheckoutPane (its own skeleton) so both
+  // resolve on the exact same timer — the coupons must not go green before the checkout
+  // pane has actually finished loading.
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  useEffect(() => {
+    if (!checkout) { setCheckoutReady(false); return; }
+    const t = window.setTimeout(() => setCheckoutReady(true), 3000);
+    return () => window.clearTimeout(t);
+  }, [checkout]);
+
   const goScan = () => openSetup();
 
   const itemsPane = (
@@ -166,13 +176,14 @@ export function ItemSelection() {
             onCheckout={() => setCheckout(true)}
             onScanBarcode={goScan}
             hideCheckout={checkout}
+            checkoutReady={checkoutReady}
             onBack={checkout ? () => setCheckout(false) : undefined}
             hideClear={checkout}
             hideRemove={checkout}
           />
         </div>
         <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>
-          <CheckoutPane active={checkout} onBack={() => setCheckout(false)} showBackButton={false} />
+          <CheckoutPane active={checkout} loading={checkout && !checkoutReady} onBack={() => setCheckout(false)} showBackButton={false} />
         </div>
       </div>
 
@@ -227,15 +238,17 @@ function ItemsToolbar({
           <TabButton label="Products" active={tab === 'products'} onClick={() => onTab('products')} />
           <TabButton label="Coupons" active={tab === 'coupons'} onClick={() => onTab('coupons')} />
           <div style={{ flex: 1 }} />
-          {tab === 'coupons' && !isPhone && (
-            <RoundIconButton ariaLabel="Create coupon" onClick={onAddCoupon}>
-              <Plus size="var(--icon-small)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            {tab === 'coupons' && !isPhone && (
+              <RoundIconButton ariaLabel="Create coupon" onClick={onAddCoupon}>
+                <Plus size="var(--icon-small)" />
+              </RoundIconButton>
+            )}
+            <RoundIconButton ariaLabel="Search products" onClick={onToggleSearch}>
+              <Search size="var(--icon-small)" />
             </RoundIconButton>
-          )}
-          <RoundIconButton ariaLabel="Search products" onClick={onToggleSearch}>
-            <Search size="var(--icon-small)" />
-          </RoundIconButton>
-          {isPhone && <PhoneMenu tab={tab} onAddCoupon={onAddCoupon} />}
+            {isPhone && <PhoneMenu tab={tab} onAddCoupon={onAddCoupon} />}
+          </div>
         </div>
       )}
     </div>

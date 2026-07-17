@@ -132,6 +132,12 @@
     transform: translateY(-12px);
   }
 }
+/* Keeps each row at its intrinsic height rather than letting the flex column compress
+   them once there are enough items to overflow — the cart list scrolls instead. */
+.woopos-cart-item {
+  flex: none;
+}
+
 /* Only apply on non-phone devices (tablet / smallTablet) where the cart is a side pane. */
 :not([data-device='phone']) .woopos-cart-item {
   animation: woopos-cart-item-enter 0.28s cubic-bezier(0.2, 0, 0, 1);

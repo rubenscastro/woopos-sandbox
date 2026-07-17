@@ -445,7 +445,10 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
       {step === 'reason' && (
         <>
           <Toolbar title="Refund reason" onBack={() => setStep('review')} />
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
+          {/* Input + CTA sit just above the on-screen keyboard rather than centering in the
+              whole remaining screen — the flex-end + keyboard-aware bottom padding keep
+              both hugging the keyboard's top edge as it rises. */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 'var(--space-xl)' }}>
             <textarea
               autoFocus
               value={reasonDraft}
@@ -455,7 +458,7 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
               style={{ width: '100%', maxWidth: 640, resize: 'none', border: 'none', outline: 'none', textAlign: 'center', background: 'transparent', font: 'inherit', fontSize: 'var(--font-body-lg-size)', color: 'var(--color-on-surface)' }}
             />
           </div>
-          <div style={{ padding: 'var(--space-md)' }}>
+          <div style={{ padding: 'var(--space-md)', paddingBottom: 'calc(var(--space-md) + var(--device-keyboard-height, 0px))' }}>
             <Button text="Add" fullWidth onClick={() => { setReason(reasonDraft); setStep('review'); }} />
           </div>
         </>
