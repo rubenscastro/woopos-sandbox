@@ -34,6 +34,14 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
   const { lines, itemCount, clear, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
 
+  // WooPosCartViewModel.updateCustomAmountDiscountNotAppliedNote: coupons never discount
+  // custom amounts (they're order fees), so custom-amount rows warn about it — but only at
+  // checkout, and only while a coupon that actually produced a discount is still in the cart.
+  // Source additionally restricts this to whole-cart coupons; every mock coupon here is a
+  // cart-level discount, so a discounting coupon is the equivalent test.
+  const showDiscountNotAppliedNote =
+    checkoutReady && lines.some((l) => l.kind === 'coupon' && l.discount > 0);
+
   // Brief skeleton on mount when items are already in the cart (simulates data fetch).
   const [loading, setLoading] = useState(() => lines.length > 0);
   useEffect(() => {
@@ -99,7 +107,13 @@ export function CartPanel({ onCheckout, onScanBarcode, onBack, hideCheckout, hid
                 <CartLineSkeleton key={`load-${i}`} />
               ))
             : lines.map((line) => (
-                <CartLineRow key={line.key} line={line} hideRemove={hideRemove} isCheckout={checkoutReady} />
+                <CartLineRow
+                  key={line.key}
+                  line={line}
+                  hideRemove={hideRemove}
+                  isCheckout={checkoutReady}
+                  showDiscountNotAppliedNote={showDiscountNotAppliedNote}
+                />
               ))}
         </div>
       )}
@@ -186,7 +200,17 @@ function CartLineSkeleton() {
   );
 }
 
-function CartLineRow({ line, hideRemove, isCheckout = false }: { line: CartLine; hideRemove?: boolean; isCheckout?: boolean }) {
+function CartLineRow({
+  line,
+  hideRemove,
+  isCheckout = false,
+  showDiscountNotAppliedNote = false,
+}: {
+  line: CartLine;
+  hideRemove?: boolean;
+  isCheckout?: boolean;
+  showDiscountNotAppliedNote?: boolean;
+}) {
   const { removeLine } = useCart();
 
   if (line.kind === 'coupon') {
@@ -242,6 +266,13 @@ function CartLineRow({ line, hideRemove, isCheckout = false }: { line: CartLine;
               {formatUsd(line.amount)}
               {line.taxable ? ' · Tax included' : ''}
             </Text>
+            {/* WooPosCartScreen.CustomAmountItem: its own BodySmall line below the amount,
+                in the alert color — not a badge or an icon. */}
+            {showDiscountNotAppliedNote && (
+              <Text variant="bodySmall" color="var(--color-alert)" style={{ display: 'block' }}>
+                Discount not applied
+              </Text>
+            )}
           </div>
           {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />}
         </div>

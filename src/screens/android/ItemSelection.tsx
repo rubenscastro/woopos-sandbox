@@ -13,12 +13,10 @@ import { CouponCreationDialog } from '../../components/android/CouponCreationDia
 import { DragScroll } from '../../components/android/DragScroll';
 import { FloatingToolbar } from '../../components/android/FloatingToolbar';
 import { Toolbar } from '../../components/android/Toolbar';
-import { Button } from '../../components/android/Button';
 import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ArrowBack, Plus } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
-import { useCartSheet } from '../../device/CartSheet';
 import { useCart } from '../../state/CartContext';
 import { useCheckoutPane } from '../../state/useCheckoutPane';
 import { formatUsd } from '../../lib/currency';
@@ -37,7 +35,6 @@ export function ItemSelection() {
   const isPhone = useIsPhone();
   const cart = useCart();
   const { openSetup } = useBarcodeSetup();
-  const { openCartSheet } = useCartSheet();
 
   const [tab, setTab] = useState<Tab>('products');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -110,16 +107,6 @@ export function ItemSelection() {
             )}
           </DragScroll>
         </>
-      )}
-
-      {isPhone && (
-        <div style={{ padding: 'var(--space-md)' }}>
-          <Button
-            text={`Cart (${cart.itemCount})`}
-            fullWidth
-            onClick={openCartSheet}
-          />
-        </div>
       )}
 
       {customOpen && (

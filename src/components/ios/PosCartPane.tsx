@@ -37,6 +37,14 @@ export function PosCartPane({
   const { lines, itemCount, clear, removeLine, pendingScans } = useCart();
   const empty = lines.length === 0 && pendingScans === 0;
 
+  // CartViewHelper.shouldShowCustomAmountDiscountNotAppliedNote: coupons never discount
+  // custom amounts (they're order fees), so the custom-amount rows warn about it once the
+  // order is finalizing and a coupon has actually produced a discount. Source additionally
+  // restricts this to whole-cart coupons; every mock coupon here is a cart-level discount,
+  // so a discounting coupon is the equivalent test.
+  const showDiscountNotAppliedNote =
+    checkoutReady && hideCheckout && lines.some((l) => l.kind === 'coupon' && l.discount > 0);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-surface-bright)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-md) var(--space-md)' }}>
@@ -102,6 +110,7 @@ export function PosCartPane({
               onRemove={() => removeLine(line.key)}
               isCheckout={checkoutReady && hideCheckout}
               hideRemove={hideCheckout}
+              showDiscountNotAppliedNote={showDiscountNotAppliedNote}
             />
           ))}
         </DragScroll>
@@ -164,7 +173,19 @@ function PosCartRowSkeleton() {
   );
 }
 
-function PosCartRow({ line, onRemove, isCheckout = false, hideRemove = false }: { line: CartLine; onRemove: () => void; isCheckout?: boolean; hideRemove?: boolean }) {
+function PosCartRow({
+  line,
+  onRemove,
+  isCheckout = false,
+  hideRemove = false,
+  showDiscountNotAppliedNote = false,
+}: {
+  line: CartLine;
+  onRemove: () => void;
+  isCheckout?: boolean;
+  hideRemove?: boolean;
+  showDiscountNotAppliedNote?: boolean;
+}) {
   const title = line.kind === 'coupon' ? line.code : line.name;
   const priceDetail =
     line.kind === 'custom'
@@ -211,7 +232,15 @@ function PosCartRow({ line, onRemove, isCheckout = false, hideRemove = false }: 
             )}
           </>
         ) : (
-          <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)">{priceDetail}</PosText>
+          <>
+            <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)">{priceDetail}</PosText>
+            {/* CustomAmountRowView: a third line under the amount, in posAlert. */}
+            {line.kind === 'custom' && showDiscountNotAppliedNote && (
+              <PosText variant="bodySmall" color="var(--color-alert)" style={{ display: 'block' }}>
+                Discount not applied
+              </PosText>
+            )}
+          </>
         )}
       </div>
       {!hideRemove && (

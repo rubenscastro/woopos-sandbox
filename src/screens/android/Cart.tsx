@@ -2,6 +2,7 @@ import { useNav } from '../../device/platformNav';
 import { CartPanel } from '../../components/android/CartPanel';
 import { usePageBackground } from '../../device/PageBackground';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
+import { useIsPhone } from '../../hooks/useBreakpoint';
 
 /**
  * Flow 6 — standalone Cart (WooPosCartScreen / WooPosPhoneCartScreen). On phone this is a
@@ -11,12 +12,15 @@ import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 export function Cart() {
   const navigate = useNav();
   const { openSetup } = useBarcodeSetup();
+  const isPhone = useIsPhone();
   usePageBackground('var(--color-surface-bright)');
   return (
     <CartPanel
       onBack={() => navigate('/products')}
-      onCheckout={() => navigate('/totals')}
       onScanBarcode={openSetup}
+      /* WooPosCartCheckoutButtonSlot.External on phone — the shell's persistent button owns
+         checkout. Tablet keeps the pane's own button, since it has no persistent button. */
+      hideCheckout={isPhone}
     />
   );
 }

@@ -1,6 +1,6 @@
 import { PosText } from './PosText';
 import { ProductImage } from '../android/ProductImage';
-import { ChevronRight, Tag } from './IosIcons';
+import { ChevronRight, Tag, Check } from './IosIcons';
 
 /**
  * iOS product/coupon card (Item Selector/SimpleProductCardView.swift + card constants). A
@@ -21,6 +21,8 @@ export interface PosItemCardData {
   variable?: boolean;
   thumbnail?: React.ReactNode;
   expired?: boolean;
+  /** CouponCardView.accessibilityValue — read after the card's label (e.g. "Applied"). */
+  accessibilityValue?: string;
 }
 
 export function PosItemCard({ item, onClick }: { item: PosItemCardData; onClick: () => void }) {
@@ -32,6 +34,7 @@ export function PosItemCard({ item, onClick }: { item: PosItemCardData; onClick:
     <button
       type="button"
       onClick={onClick}
+      aria-description={item.accessibilityValue || undefined}
       style={{
         display: 'flex',
         alignItems: 'stretch',
@@ -78,11 +81,19 @@ export function PosItemCard({ item, onClick }: { item: PosItemCardData; onClick:
  * Reuses the same shared `Tag` icon as the cart row (PosCartPane) instead of a
  * separately hand-drawn shape, so both places render identically.
  */
-export function CouponThumbnail({ expired = false }: { expired?: boolean }) {
-  const iconColor = expired ? 'var(--color-on-disabled-container)' : 'var(--color-on-surface-variant-lowest)';
+export function CouponThumbnail({ expired = false, applied = false }: { expired?: boolean; applied?: boolean }) {
+  // POSCouponImageView.imageState: expired wins over applied; applied reuses the .success
+  // colors (posSuccess fill / posOnSuccess glyph) but swaps the tag glyph for a checkmark.
+  const tileColor = !expired && applied ? 'var(--color-success)' : 'var(--color-surface-dim)';
+  const iconColor = expired
+    ? 'var(--color-on-disabled-container)'
+    : applied
+      ? 'var(--color-on-success)'
+      : 'var(--color-on-surface-variant-lowest)';
+  const Glyph = !expired && applied ? Check : Tag;
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: 112, background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Tag size="var(--icon-medium)" style={{ color: iconColor }} />
+    <div style={{ width: '100%', height: '100%', minHeight: 112, background: tileColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Glyph size="var(--icon-medium)" style={{ color: iconColor }} />
     </div>
   );
 }

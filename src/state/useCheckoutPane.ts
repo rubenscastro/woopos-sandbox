@@ -26,3 +26,15 @@ export function useCheckoutPane(cartCount: number): [boolean, (open: boolean) =>
 
   return [open, setOpen];
 }
+
+/**
+ * Force the checkout pane shut from outside a component that owns it.
+ *
+ * Mirrors Android's `ChildToParentEvent.BackFromCheckoutToCartClicked`: a full-screen payment
+ * sub-screen (currently only Scan to pay's "Collect on the register") can dismiss itself *and*
+ * drop the tablet's checkout pane back to the editable cart, rather than returning to the
+ * "Ready for payment" pane the way a plain Back does.
+ */
+export function closeCheckoutPane() {
+  sessionStorage.removeItem(KEY);
+}

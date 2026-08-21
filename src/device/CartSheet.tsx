@@ -8,7 +8,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { useNav } from './platformNav';
 import { CartPanel } from '../components/android/CartPanel';
 import { useBarcodeSetup } from '../tools/BarcodeSetup';
 import './CartSheet.css';
@@ -41,13 +40,18 @@ export function useCartSheet(): CartSheetValue {
   return ctx;
 }
 
-// translateY of the 90%-tall sheet: 0 = full (90% visible), 44.4% ≈ 50% visible, 100% = off.
-const SNAP = { off: '100%', half: '44.4%', full: '0%' } as const;
+// Each snap is a height (bottom edge pinned to the screen bottom) plus the transform used to
+// slide the sheet off. Sizing by height — rather than translating a taller sheet down — keeps
+// the cart's pinned "Check out" footer on screen at every snap.
+const SNAP = {
+  off: { height: '50%', transform: 'translateY(100%)' },
+  half: { height: '50%', transform: 'translateY(0)' },
+  full: { height: '90%', transform: 'translateY(0)' },
+} as const;
 type Snap = keyof typeof SNAP;
 
 export function CartSheetHost() {
   const { open, closeCartSheet } = useCartSheet();
-  const navigate = useNav();
   const { openSetup } = useBarcodeSetup();
   const [snap, setSnap] = useState<Snap>('off');
   const snapRef = useRef<Snap>('off');
@@ -87,15 +91,18 @@ export function CartSheetHost() {
     <div className="cart-sheet-scrim woopos-scrim" onClick={close} role="presentation">
       <div
         className="cart-sheet"
-        style={{ transform: `translateY(${SNAP[snap]})` }}
+        style={SNAP[snap]}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="cart-sheet__handle-area" onPointerDown={onHandleDown}>
           <div className="cart-sheet__handle" />
         </div>
         <div className="cart-sheet__body">
+          {/* WooPosCartCheckoutButtonSlot.External — on phone the cart renders no checkout
+              button; the shell's persistent button (PhonePersistentButton) owns it and stays
+              pinned above the sheet at every snap. */}
           <CartPanel
-            onCheckout={() => { close(); navigate('/totals'); }}
+            hideCheckout
             onScanBarcode={() => { close(); openSetup(); }}
           />
         </div>

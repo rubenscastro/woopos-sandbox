@@ -7,24 +7,42 @@ import { Spinner } from '../../components/android/Spinner';
 import { ErrorX } from '../../components/android/icons';
 import { usePublishPreviewState } from '../../device/PreviewStateContext';
 import { useCart } from '../../state/CartContext';
+import { closeCheckoutPane } from '../../state/useCheckoutPane';
+import { useIsPhone } from '../../hooks/useBreakpoint';
 import { formatUsd } from '../../lib/currency';
 
 /**
  * Flow 12 — Scan to pay (WooPosScanToPayScreen). Shows a QR code for the customer to pay
- * from their phone; loading and failed states are reachable via the preview menu. A
- * "Simulate payment" affordance stands in for the customer completing payment.
+ * from their phone; loading, failed and pay-in-person states are reachable via the preview
+ * menu. A "Simulate payment" affordance stands in for the customer completing payment.
+ *
+ * "Pay in person" (WooPosScanToPayState.PayInPersonSelected) is driven by the customer
+ * choosing to pay at the counter on their own phone, so — like Failed — it has no in-screen
+ * trigger and is reached through the preview menu rather than an invented button.
  */
-type State = 'loading' | 'qr' | 'failed';
+type State = 'loading' | 'qr' | 'payInPerson' | 'failed';
 
 export function ScanToPay() {
   const navigate = useNav();
   const { total } = useCart();
+  const isPhone = useIsPhone();
   const [state, setState] = useState<State>('loading');
+
+  /* WooPosScanToPayUIEvent.CollectOnRegisterClicked: leave Scan to pay *and* drop checkout
+     back to the cart, so the associate can take the money on the register. On tablet the
+     checkout is a pane inside ItemSelection, so we close it and pop; on phone the cart is
+     its own route. Plain Cancel/Back, by contrast, returns to checkout untouched. */
+  const collectOnRegister = () => {
+    closeCheckoutPane();
+    if (isPhone) navigate('/cart');
+    else navigate(-1);
+  };
 
   usePublishPreviewState({
     options: [
       { id: 'loading', label: 'Loading' },
       { id: 'qr', label: 'Showing QR' },
+      { id: 'payInPerson', label: 'Pay in person' },
       { id: 'failed', label: 'Failed' },
     ],
     active: state,
@@ -68,6 +86,35 @@ export function ScanToPay() {
               <Button text="Simulate payment" fullWidth onClick={() => navigate('/payment-success')} />
             </div>
           </>
+        )}
+
+        {state === 'payInPerson' && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: 0,
+              width: '100%',
+            }}
+          >
+            <Text variant="heading" bold align="center">
+              Customer chose to pay in person
+            </Text>
+            <div style={{ height: 'var(--space-md)' }} />
+            <Text variant="bodyLarge" align="center" style={{ maxWidth: 420 }}>
+              No payment was taken online. Collect it on the register, or show the code again.
+            </Text>
+            <div style={{ height: 'var(--space-xl)' }} />
+            <div
+              className="woopos-fullscreen-action"
+              style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
+            >
+              <Button text="Collect on the register" fullWidth onClick={collectOnRegister} />
+              <OutlinedButton text="Show the code again" fullWidth onClick={() => setState('loading')} />
+            </div>
+          </div>
         )}
 
         {state === 'failed' && (

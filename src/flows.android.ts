@@ -34,7 +34,7 @@ export const flowGroups: FlowGroup[] = [
   {
     priority: 'Priority 2 — supporting flows',
     flows: [
-      { num: 12, title: 'Scan to pay', description: 'QR / remote tap-to-pay checkout.', path: '/scan-to-pay', built: true },
+      { num: 12, title: 'Scan to pay', description: 'QR checkout, incl. the pay-in-person fallback.', path: '/scan-to-pay', built: true },
       { num: 13, title: 'Email receipt', description: 'Post-sale receipt delivery.', path: '/email-receipt', built: true },
       { num: 14, title: 'Order history', description: 'Past POS orders, details, refunds.', path: '/order-history', built: true },
       { num: 15, title: 'Scanning / barcode setup', description: 'Barcode scanner onboarding wizard.', path: '/barcode-setup', built: true },

@@ -23,6 +23,7 @@ import { ConnectivityOsHost } from '../tools/ConnectivityOsHost';
 import { useFlags, FLAG_DEFS } from '../state/FlagsContext';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
 import { CartSheetProvider, CartSheetHost } from './CartSheet';
+import { PhonePersistentButtonHost } from '../components/android/PhonePersistentButton';
 import { CardReaderConnectionHost } from '../tools/CardReaderConnectionDialog';
 import { PrinterSetupHost } from '../components/ios/PosPrinterSetupModal';
 import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } from '../components/android/icons';
@@ -115,6 +116,7 @@ export function DeviceLayout() {
               <PrinterSetupHost />
               <ConnectivityOsHost />
               <CartSheetHost />
+              <PhonePersistentButtonHost />
               <DeviceKeyboard />
             </>
           }

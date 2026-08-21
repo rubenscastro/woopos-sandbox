@@ -156,19 +156,26 @@ export function ItemSelector({
                 />
               ))}
             </>
-          : shownCoupons.map((c) => (
-              <PosItemCard
-                key={c.id}
-                item={{
-                  id: 100 + c.id,
-                  name: c.code,
-                  detail: c.expiredOn ? `Expired ${c.expiredOn}` : c.summary,
-                  thumbnail: <CouponThumbnail expired={!!c.expiredOn} />,
-                  expired: !!c.expiredOn,
-                }}
-                onClick={() => !c.expiredOn && cart.addCoupon(c.code, c.summary, c.discount)}
-              />
-            ))}
+          : shownCoupons.map((c) => {
+              // ItemListViewHelper.shouldShowAppliedCouponIndicator — phone only: on compact
+              // layout the cart is behind a sheet, so the list is the merchant's only feedback
+              // that a tapped coupon landed. On tablet the cart is always on screen already.
+              const applied = isPhone && cart.lines.some((l) => l.kind === 'coupon' && l.code === c.code);
+              return (
+                <PosItemCard
+                  key={c.id}
+                  item={{
+                    id: 100 + c.id,
+                    name: c.code,
+                    detail: c.expiredOn ? `Expired ${c.expiredOn}` : c.summary,
+                    thumbnail: <CouponThumbnail expired={!!c.expiredOn} applied={applied} />,
+                    expired: !!c.expiredOn,
+                    accessibilityValue: applied ? 'Applied' : undefined,
+                  }}
+                  onClick={() => !c.expiredOn && cart.addCoupon(c.code, c.summary, c.discount)}
+                />
+              );
+            })}
           </>
         )}
       </div>

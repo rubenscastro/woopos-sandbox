@@ -10,14 +10,23 @@
 .cart-sheet {
   position: relative;
   width: 100%;
-  height: 90%;
+  /*
+   * The snap *is* the height: the sheet's bottom edge always rests on the screen bottom, so
+   * CartPanel's pinned "Check out" footer stays reachable at every snap. Previously the sheet
+   * was a fixed 90% tall and pushed down with translateY to fake the half snap, which shoved
+   * the footer below the device frame — the button rendered, but was permanently off-screen.
+   * translateY is now only used to slide the sheet in and out.
+   */
+  height: 50%;
   background: var(--color-surface-bright);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-normal-large);
   display: flex;
   flex-direction: column;
   transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0, 0, 1),
+    height 0.3s cubic-bezier(0.2, 0, 0, 1);
   overflow: hidden;
 }
 
@@ -49,4 +58,11 @@
 .cart-sheet__body {
   flex: 1;
   min-height: 0;
+  /*
+   * The shell's persistent "Check out" button (PhonePersistentButton) is drawn over the sheet
+   * rather than inside it, mirroring the real phone shell where the button is a BottomCenter
+   * overlay on the home Box. Reserve its height so the last cart row can still scroll clear
+   * of it: button (80px) + the button container's own padding + the safe-area inset.
+   */
+  padding-bottom: calc(80px + var(--space-md) * 2 + var(--space-sm) + var(--device-safe-bottom, 0px));
 }
