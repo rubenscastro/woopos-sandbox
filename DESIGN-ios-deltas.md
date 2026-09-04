@@ -12,6 +12,14 @@ almost 1:1 (`posAlert`, `posDefault`, `posErrorLowest`, `posOnSurface`, etc.) �
 otherwise. Values are defined per xcasset (`Modules/Sources/PointOfSale/Colors/
 POSColorPalette.xcassets/`) with explicit light/dark variants, same as Android.
 
+iOS-only tokens with no Android counterpart yet (added in the 2026-09-04 sync):
+- `posAlertLowest` — light **#F5ECE6**, dark **#FFB68A**
+- `posOnAlertLowest` — **#543100**, universal (no dark variant)
+
+Both exist for `POSNoticeView`'s new `.alertLowest` style (dark-brown text on cream/peach;
+first used by the HTTPS configuration warning banner). They mirror the existing
+`posErrorLowest` / `posOnErrorLowest` pattern.
+
 ## Typography
 Font **sizes** are identical to Android: heading 36 / bodyXLarge 30 / bodyLarge 24 /
 bodyMedium 20 / bodySmall 16 / caption 14, with the same tablet/phone adaptive split
