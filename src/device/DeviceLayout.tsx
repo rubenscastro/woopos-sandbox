@@ -64,7 +64,9 @@ export function DeviceLayout() {
             <FlowsMenu />
             {/* The Barcode + Card reader tools drive shared state (cart scans, reader connection
                 and transactions), so both platforms get them — iOS flows respond to the same tool
-                input as Android. The preview-state menu is Android-only for now. */}
+                input as Android. The preview-state menu renders whenever the current screen
+                publishes states (both platforms) — it is the standard control for inducing
+                edge cases / error states; screens default to the happy path. */}
             <ToolsMenu />
             <ConnectivityMenu />
             <CardReaderMenu />
@@ -73,7 +75,7 @@ export function DeviceLayout() {
             {/* Catalog sync only exists for the scaling-pos-experience proposal's System
                 Events surface — hidden everywhere else since there's nothing to trigger. */}
             <CatalogSyncMenu />
-            {platform === 'android' && <PreviewStateMenu />}
+            <PreviewStateMenu />
             <FlagsMenu />
           </div>
           <div className="chrome-right">
@@ -227,6 +229,7 @@ function ToolsMenu() {
  */
 function CardReaderMenu() {
   const cr = useCardReader();
+  const { platform } = usePlatform();
   const [open, setOpen] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
   const s = cr.connectionState;
@@ -264,6 +267,24 @@ function CardReaderMenu() {
               <span className="chrome-switch__knob" />
             </span>
           </button>
+
+          {/* Local network permission (Android only, 2026-09-04 sync): turning it OFF makes the
+              next connect find a phone-as-reader ("Pixel 9") and gates Connect behind the
+              MissingLocalNetworkPermission dialog state. Granting (in-dialog or here) auto-resumes. */}
+          {platform === 'android' && (
+            <button
+              type="button"
+              className="chrome-reader__toggle"
+              role="switch"
+              aria-checked={cr.localNetworkGranted}
+              onClick={() => cr.setLocalNetworkGranted(!cr.localNetworkGranted)}
+            >
+              <span>Local network permission</span>
+              <span className={`chrome-switch${cr.localNetworkGranted ? ' is-on' : ''}`} aria-hidden>
+                <span className="chrome-switch__knob" />
+              </span>
+            </button>
+          )}
 
           <div className="chrome-reader__divider" />
 

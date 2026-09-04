@@ -113,6 +113,12 @@ platform split.
 
 - Build one flow at a time. After each one, stop and let the designer review before moving
   to the next — don't batch multiple flows into one uninterrupted run.
+- **Happy path by default; edge cases via toolbar.** Screens always render the happy path
+  unless the reviewer induces an edge case / error state from the chrome toolbar — either
+  the per-screen State menu (`usePublishPreviewState`, e.g. "Refund error", "Products →
+  HTTPS warning", Scan to Pay's states) or a tool menu's world-state toggle (e.g. Card
+  reader → "Local network permission"). Never ship an error state as always-on, and never
+  add in-screen debug buttons to trigger one.
 - If a flow depends on a component or pattern not yet in `DESIGN.md` (new to that specific
   screen), note it in a code comment rather than silently inventing a style.
 - Prefer matching the real app's structure over "improving" it — this is a prototyping

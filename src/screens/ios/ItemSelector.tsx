@@ -6,9 +6,11 @@ import { PosCartPane } from '../../components/ios/PosCartPane';
 import { CreateCouponSheet } from '../../components/ios/CreateCouponSheet';
 import { AddCustomAmountForm } from '../../components/ios/AddCustomAmountForm';
 import { PosPreSearch } from '../../components/ios/PosPreSearch';
+import { PosNotice } from '../../components/ios/PosNotice';
 import { PosFloatingControl, OperatorRow } from '../../components/ios/PosFloatingControl';
 import { Checkout } from './Checkout';
-import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp } from '../../components/ios/IosIcons';
+import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp, InfoCircle } from '../../components/ios/IosIcons';
+import { usePublishPreviewState } from '../../device/PreviewStateContext';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
@@ -58,6 +60,19 @@ export function ItemSelector({
     return () => window.clearTimeout(t);
   }, [checkout]);
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
+  // HTTPS configuration warning (POSHTTPSConfigurationNotice, 2026-09-04 sync). Happy path by
+  // default; the warning is induced from the chrome's State menu. Dismissing the banner resets
+  // the menu to Happy path (upstream, dismissal also clears the main app's banner).
+  const [productsState, setProductsState] = useState<'default' | 'https'>('default');
+  usePublishPreviewState({
+    label: 'Products',
+    options: [
+      { id: 'default', label: 'Happy path' },
+      { id: 'https', label: 'HTTPS warning' },
+    ],
+    active: productsState,
+    onSelect: (id) => setProductsState(id as 'default' | 'https'),
+  });
   const [cartBumping, setCartBumping] = useState(false);
   const prevItemCount = useRef(cart.itemCount);
   useEffect(() => {
@@ -134,6 +149,28 @@ export function ItemSelector({
           </div>
         )}
       </div>
+
+      {/* HTTPS configuration warning — Products tab only (not Coupons, not search), pinned above
+          the scrolling list like ItemListView.listView. The whole card is tappable (upstream opens
+          the SSL docs in a webview — a no-op here); × dismisses. */}
+      {tab === 'products' && !searchOpen && productsState === 'https' && (
+        <div style={{ padding: '0 var(--space-lg) var(--space-md)' }}>
+          <PosNotice
+            title="Secure your store with HTTPS"
+            icon={<InfoCircle size="var(--icon-small)" />}
+            style="alertLowest"
+            onDismiss={() => setProductsState('default')}
+            onTap={() => {}}
+          >
+            <PosText variant="bodyMedium" color="var(--color-on-alert-lowest)">
+              Your store supports HTTPS, but its address is configured to use HTTP. Update it to HTTPS to protect your store and prevent connection problems.
+            </PosText>
+            <PosText variant="bodySmall" bold color="var(--color-on-alert-lowest)">
+              Learn more
+            </PosText>
+          </PosNotice>
+        </div>
+      )}
 
       {/* Extra bottom padding on tablet so the last product clears the floating menu / reader pill. */}
       <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: `0 var(--space-lg) ${isPhone ? 'var(--space-md)' : 'calc(var(--size-small) + var(--space-xl))'}` }}>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
-import { Close, ChevronLeft, DotsHorizontal } from '../../components/ios/IosIcons';
+import { Close, ChevronLeft, DotsHorizontal, ErrorX } from '../../components/ios/IosIcons';
+import { usePublishPreviewState } from '../../device/PreviewStateContext';
+import { refundScenarioOptions, type RefundScenario } from '../../state/refundScenarios';
 import { PosButton } from '../../components/ios/PosButton';
 import { ProductImage } from '../../components/android/ProductImage';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
@@ -22,6 +24,15 @@ export function Orders() {
   const [showDetailOnPhone, setShowDetailOnPhone] = useState(false);
   const selected = orders.find((o) => o.id === selectedId) ?? orders[0];
 
+  // Refund error scenario, induced from the chrome's State menu (happy path by default).
+  const [refundScenario, setRefundScenario] = useState<RefundScenario>('none');
+  usePublishPreviewState({
+    label: 'Refund error',
+    options: refundScenarioOptions("Create: couldn't confirm"),
+    active: refundScenario,
+    onSelect: (id) => setRefundScenario(id as RefundScenario),
+  });
+
   const list = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
@@ -41,6 +52,7 @@ export function Orders() {
   const detail = (
     <OrderDetail
       order={selected}
+      scenario={refundScenario}
       onBack={isPhone ? () => setShowDetailOnPhone(false) : undefined}
       onEmail={() => nav('/email-receipt')}
     />
@@ -72,12 +84,13 @@ function OrderRow({ order, selected, onClick }: { order: MockOrder; selected: bo
   );
 }
 
-function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: () => void; onEmail: () => void }) {
+function OrderDetail({ order, scenario, onBack, onEmail }: { order: MockOrder; scenario: RefundScenario; onBack?: () => void; onEmail: () => void }) {
   const [refunding, setRefunding] = useState(false);
   const productsSubtotal = order.items.reduce((s, i) => s + i.lineTotal, 0);
 
   if (refunding) {
-    return <IssueRefund order={order} onDone={() => setRefunding(false)} />;
+    // Keyed on the scenario so switching it in the State menu restarts the refund flow armed.
+    return <IssueRefund key={scenario} order={order} scenario={scenario} onDone={() => setRefunding(false)} />;
   }
 
   return (
@@ -190,7 +203,7 @@ function OrderDetailActions({ onIssueRefund, onEmail }: { onIssueRefund: () => v
   );
 }
 
-type RefundStep = 'select' | 'review' | 'reason' | 'confirm' | 'success';
+type RefundStep = 'select' | 'review' | 'reason' | 'confirm' | 'success' | 'error' | 'nothing';
 
 /** Left-aligned header (icon + title side by side) — used for the "Refund reason" step,
  *  distinct from the centered RefundHeader used by select/review/confirm. */
@@ -225,18 +238,37 @@ function RefundHeader({ title, onBack }: { title: string; onBack: () => void }) 
  *  OrderHistory.tsx), styled with iOS components. Rendered full screen — position:absolute
  *  + inset:0 resolves against the nearest positioned ancestor (the device screen), since
  *  none of the panes in between set their own position. */
-function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }) {
+function IssueRefund({ order, scenario, onDone }: { order: MockOrder; scenario: RefundScenario; onDone: () => void }) {
   const nav = useNav();
-  const [step, setStep] = useState<RefundStep>('select');
+  // orderNotRefundable at load routes to the terminal POSRefundNothingToRefundView.
+  const [step, setStep] = useState<RefundStep>(scenario === 'loadNothing' ? 'nothing' : 'select');
   const [selected, setSelected] = useState<Set<number>>(new Set(order.items.map((_, i) => i)));
+  // Indexes dropped by a "Review remaining items" reload (simulates an item refunded elsewhere).
+  const [removed, setRemoved] = useState<Set<number>>(new Set());
+  // A recovery action resolves the armed scenario for the rest of this flow.
+  const [resolved, setResolved] = useState(false);
   const [reason, setReason] = useState('');
   const [reasonDraft, setReasonDraft] = useState('');
 
-  const itemsSubtotal = order.items.reduce((s, it, i) => (selected.has(i) ? s + it.lineTotal : s), 0);
+  const visibleItems = order.items.map((it, i) => ({ it, i })).filter(({ i }) => !removed.has(i));
+  const itemsSubtotal = visibleItems.reduce((s, { it, i }) => (selected.has(i) ? s + it.lineTotal : s), 0);
   const productsSubtotal = order.items.reduce((s, it) => s + it.lineTotal, 0);
   const taxes = productsSubtotal > 0 ? order.taxTotal * (itemsSubtotal / productsSubtotal) : 0;
   const refundTotal = itemsSubtotal + taxes;
-  const count = selected.size;
+  const count = visibleItems.filter(({ i }) => selected.has(i)).length;
+
+  // Inline preview failure on the selection step (POSRefundItemsSelectionView.actionsFooter):
+  // centered error text + an outlined recovery button above the disabled Continue.
+  const previewFailure = scenario === 'loadItemsChanged' && !resolved;
+
+  // "Review remaining items" (refreshRefundableItems): reloads the refundable items — the
+  // first item is gone (refunded elsewhere). iOS re-applies the previous selection intersected
+  // with what's still refundable. Android diverges: it clears the selection (see OrderHistory.tsx).
+  const refreshItems = () => {
+    setRemoved(new Set([0]));
+    setSelected((prev) => new Set([...prev].filter((i) => i !== 0)));
+    setResolved(true);
+  };
 
   const toggle = (i: number) =>
     setSelected((prev) => {
@@ -258,9 +290,9 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
             {/* Plain rows separated by dividers — no card/shadow container, unlike the
                 Items section on the order detail. */}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {order.items.map((it, i) => (
+              {visibleItems.map(({ it, i }, vi) => (
                 <div key={i}>
-                  {i > 0 && <PosDivider />}
+                  {vi > 0 && <PosDivider />}
                   <button
                     type="button"
                     onClick={() => toggle(i)}
@@ -282,8 +314,18 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
               ))}
             </div>
           </div>
-          <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-            <PosButton label="Continue" fullWidth disabled={count === 0} onClick={() => setStep('review')} />
+          {/* actionsFooter: on preview failure, centered error text + one outlined recovery
+              button above Continue, which stays disabled while the error is showing. */}
+          <div style={{ padding: 'var(--space-md) var(--space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            {previewFailure && (
+              <>
+                <PosText variant="bodyMedium" align="center" color="var(--color-error)" style={{ display: 'block' }}>
+                  The selected quantity is more than what's left to refund.
+                </PosText>
+                <PosButton label="Review remaining items" variant="outlined" fullWidth onClick={refreshItems} />
+              </>
+            )}
+            <PosButton label="Continue" fullWidth disabled={count === 0 || previewFailure} onClick={() => setStep('review')} />
           </div>
         </>
       )}
@@ -361,8 +403,70 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
             </PosText>
           </div>
           <div style={{ padding: 'var(--space-md) var(--space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            <PosButton label="Yes, proceed" fullWidth onClick={() => setStep('success')} />
+            <PosButton label="Yes, proceed" fullWidth onClick={() => setStep(scenario.startsWith('create') && !resolved ? 'error' : 'success')} />
             <PosButton label="Cancel" variant="outlined" fullWidth onClick={() => setStep('review')} />
+          </div>
+        </>
+      )}
+
+      {/* Full-screen refund error (POSRefundErrorView via POSRefundModalContentView): back
+          chevron header, ErrorXMark + centered title/subtitle, buttons per the error's recovery —
+          Retry alone (transient), "Review remaining items" + "Back to order" (deterministic
+          rejection), or "Back to order" alone (card-present "Couldn't confirm refund"). */}
+      {step === 'error' && (
+        <>
+          <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+            <button type="button" aria-label="Back" onClick={onDone} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+              <ChevronLeft size="30px" />
+            </button>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)', padding: 'var(--space-xl)', textAlign: 'center' }}>
+            <ErrorX size="var(--size-small)" />
+            <PosText variant="heading" bold align="center" style={{ marginTop: 'var(--space-lg)' }}>
+              {scenario === 'createTerminal' ? "Couldn't confirm refund" : 'Failed to create refund'}
+            </PosText>
+            <PosText variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              {scenario === 'createItemsChanged'
+                ? 'One of the selected items has already been fully refunded.'
+                : scenario === 'createTerminal'
+                  ? 'Go back to the order and check it before trying again.'
+                  : 'Please try again.'}
+            </PosText>
+          </div>
+          <div style={{ padding: 'var(--space-md) var(--space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            {scenario === 'createNetwork' && (
+              <PosButton label="Retry" fullWidth onClick={() => { setResolved(true); setStep('success'); }} />
+            )}
+            {scenario === 'createItemsChanged' && (
+              <>
+                <PosButton label="Review remaining items" fullWidth onClick={() => { refreshItems(); setStep('select'); }} />
+                <PosButton label="Back to order" variant="outlined" fullWidth onClick={onDone} />
+              </>
+            )}
+            {scenario === 'createTerminal' && (
+              <PosButton label="Back to order" variant="outlined" fullWidth onClick={onDone} />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Terminal POSRefundNothingToRefundView: back chevron header, centered heading + message,
+          a single filled Done button. */}
+      {step === 'nothing' && (
+        <>
+          <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+            <button type="button" aria-label="Back" onClick={onDone} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+              <ChevronLeft size="30px" />
+            </button>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)', padding: 'var(--space-xl)', textAlign: 'center' }}>
+            <PosText variant="heading" bold align="center">Nothing to refund</PosText>
+            <PosText variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              All items in this order have already been refunded.
+            </PosText>
+          </div>
+          <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+            <PosButton label="Done" fullWidth onClick={onDone} />
           </div>
         </>
       )}

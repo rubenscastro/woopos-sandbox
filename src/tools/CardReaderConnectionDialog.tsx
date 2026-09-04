@@ -92,6 +92,34 @@ export function CardReaderConnectionHost() {
           </>
         )}
 
+        {/* MissingLocalNetworkPermission (Android, 2026-09-04 sync): shown when tapping Connect on
+            a discovered phone-as-reader without the local network permission. Same layout as the
+            Bluetooth/location permission states (MissingPermissionContent): error icon, message,
+            Grant permission + Cancel, then the remote-reader hint strip. Not dismissable
+            (showCloseButton = false); granting auto-resumes the connect. */}
+        {s === 'localNetworkPermission' && (
+          <>
+            <Text variant="heading" bold align="center">
+              Local network permission required
+            </Text>
+            <CardReaderIllustration variant="error" size="var(--size-xlarge)" />
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              Local network permission is required to connect to a phone used as a card reader.
+            </Text>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <Button text="Grant permission" fullWidth onClick={cr.grantLocalNetworkPermission} />
+              <OutlinedButton text="Cancel" fullWidth onClick={cr.cancelLocalNetworkPermission} />
+              {/* WooPosRemoteReaderHintStrip — underlined link-style strip; entry point not mocked. */}
+              <button
+                type="button"
+                style={{ border: 'none', background: 'none', padding: 'var(--space-sm) var(--space-lg)', color: 'var(--color-primary)', textDecoration: 'underline', font: 'inherit', fontSize: 'var(--font-body-md-size)', cursor: 'pointer' }}
+              >
+                Use an Android phone as a card reader
+              </button>
+            </div>
+          </>
+        )}
+
         {s === 'connecting' && (
           <>
             <Text variant="heading" bold align="center">

@@ -5,9 +5,11 @@ import { Card } from '../../components/android/Card';
 import { Button, OutlinedButton } from '../../components/android/Button';
 import { Toolbar } from '../../components/android/Toolbar';
 import { SearchInput } from '../../components/android/SearchInput';
-import { Search, ArrowBack, Close, DotsHorizontal } from '../../components/android/icons';
+import { Search, ArrowBack, Close, DotsHorizontal, ErrorX } from '../../components/android/icons';
 import { ProductImage } from '../../components/android/ProductImage';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
+import { usePublishPreviewState } from '../../device/PreviewStateContext';
+import { refundScenarioOptions, type RefundScenario } from '../../state/refundScenarios';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { formatUsd } from '../../lib/currency';
@@ -26,6 +28,15 @@ export function OrderHistory() {
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const selected = orders.find((o) => o.id === selectedId) ?? orders[0];
+
+  // Refund error scenario, induced from the chrome's State menu (happy path by default).
+  const [refundScenario, setRefundScenario] = useState<RefundScenario>('none');
+  usePublishPreviewState({
+    label: 'Refund error',
+    options: refundScenarioOptions('Create: store not updated'),
+    active: refundScenario,
+    onSelect: (id) => setRefundScenario(id as RefundScenario),
+  });
 
   const q = query.trim().toLowerCase();
   const filteredOrders = q
@@ -84,6 +95,7 @@ export function OrderHistory() {
     <OrderDetail
       key={selected.id}
       order={selected}
+      scenario={refundScenario}
       onBack={isPhone ? () => setShowDetailOnPhone(false) : undefined}
       onEmail={() => navigate('/email-receipt')}
     />
@@ -175,11 +187,12 @@ function StatusBadge({ status }: { status: MockOrder['status'] }) {
   );
 }
 
-function OrderDetail({ order, onBack, onEmail }: { order: MockOrder; onBack?: () => void; onEmail: () => void }) {
+function OrderDetail({ order, scenario, onBack, onEmail }: { order: MockOrder; scenario: RefundScenario; onBack?: () => void; onEmail: () => void }) {
   const [refunding, setRefunding] = useState(false);
 
   if (refunding) {
-    return <IssueRefund order={order} onDone={() => setRefunding(false)} />;
+    // Keyed on the scenario so switching it in the State menu restarts the refund flow armed.
+    return <IssueRefund key={scenario} order={order} scenario={scenario} onDone={() => setRefunding(false)} />;
   }
 
   const productsSubtotal = order.items.reduce((s, i) => s + i.lineTotal, 0);
@@ -313,7 +326,7 @@ function OrderActionsMenu({ onEmail }: { onEmail: () => void }) {
   );
 }
 
-type RefundStep = 'select' | 'review' | 'reason' | 'confirm' | 'success';
+type RefundStep = 'select' | 'review' | 'reason' | 'confirm' | 'success' | 'error' | 'nothing';
 
 /** WooPosIssueRefundScreen's RefundScreenHeader: back button pinned to the start, title
  *  truly centered in the header — distinct from the normal left-aligned Toolbar. */
@@ -339,18 +352,39 @@ function RefundHeader({ title, onBack }: { title: string; onBack: () => void }) 
  *  Rendered full screen (position:absolute + inset:0 resolves against .device-screen, the
  *  nearest positioned ancestor, since none of the panes in between set their own position)
  *  so it covers the whole device rather than just the detail pane. */
-function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }) {
+function IssueRefund({ order, scenario, onDone }: { order: MockOrder; scenario: RefundScenario; onDone: () => void }) {
   const navigate = useNav();
-  const [step, setStep] = useState<RefundStep>('select');
+  // order_not_refundable at load swaps the whole flow to the terminal screen
+  // (WooPosRefundState.NoRefundableItems) instead of showing an error.
+  const [step, setStep] = useState<RefundStep>(scenario === 'loadNothing' ? 'nothing' : 'select');
   const [selected, setSelected] = useState<Set<number>>(new Set(order.items.map((_, i) => i)));
+  // Indexes dropped by a "Review remaining items" reload (simulates an item refunded elsewhere).
+  const [removed, setRemoved] = useState<Set<number>>(new Set());
+  // A recovery action resolves the armed scenario for the rest of this flow.
+  const [resolved, setResolved] = useState(false);
   const [reason, setReason] = useState('');
   const [reasonDraft, setReasonDraft] = useState('');
 
-  const itemsSubtotal = order.items.reduce((s, it, i) => (selected.has(i) ? s + it.lineTotal : s), 0);
+  const visibleItems = order.items.map((it, i) => ({ it, i })).filter(({ i }) => !removed.has(i));
+  const itemsSubtotal = visibleItems.reduce((s, { it, i }) => (selected.has(i) ? s + it.lineTotal : s), 0);
   const productsSubtotal = order.items.reduce((s, it) => s + it.lineTotal, 0);
   const taxes = productsSubtotal > 0 ? order.taxTotal * (itemsSubtotal / productsSubtotal) : 0;
   const refundTotal = itemsSubtotal + taxes;
-  const count = selected.size;
+  const count = visibleItems.filter(({ i }) => selected.has(i)).length;
+
+  // Inline preview failure on the selection step (WooPosRefundState.Content.previewFailure):
+  // Continue stays disabled and an outlined recovery button appears above it.
+  const previewFailure = scenario === 'loadItemsChanged' && !resolved;
+
+  // "Review remaining items" (WooPosRefundUIEvent.RefreshRefundableItems): reloads the
+  // refundable items — the first item is gone (refunded elsewhere). Android clears the item
+  // selection on any reload that isn't the flow start, but keeps the typed reason (FlowDraft).
+  // iOS diverges here: it re-applies the surviving selection (see Orders.tsx).
+  const refreshItems = () => {
+    setRemoved(new Set([0]));
+    setSelected(new Set());
+    setResolved(true);
+  };
 
   const toggle = (i: number) =>
     setSelected((prev) => {
@@ -372,9 +406,9 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
             {/* Plain rows separated by dividers — WooPosIssueRefundScreen's RefundableItemRow
                 has no card/shadow container, unlike the Products section on the order detail. */}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {order.items.map((it, i) => (
+              {visibleItems.map(({ it, i }, vi) => (
                 <div key={i}>
-                  {i > 0 && <Divider />}
+                  {vi > 0 && <Divider />}
                   <button
                     type="button"
                     onClick={() => toggle(i)}
@@ -398,8 +432,18 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
               ))}
             </div>
           </div>
-          <div style={{ padding: 'var(--space-md)' }}>
-            <Button text="Continue" fullWidth state={count > 0 ? 'enabled' : 'disabled'} onClick={() => setStep('review')} />
+          {/* SelectItemsStepButtons: on preview failure, the error text (error color) plus one
+              outlined recovery button sit above Continue, which stays disabled. */}
+          <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            {previewFailure && (
+              <>
+                <Text variant="bodyMedium" color="var(--color-error)" style={{ display: 'block', width: '100%' }}>
+                  The selected quantity is more than what's left to refund.
+                </Text>
+                <OutlinedButton text="Review remaining items" fullWidth onClick={refreshItems} />
+              </>
+            )}
+            <Button text="Continue" fullWidth state={count > 0 && !previewFailure ? 'enabled' : 'disabled'} onClick={() => setStep('review')} />
           </div>
         </>
       )}
@@ -477,8 +521,70 @@ function IssueRefund({ order, onDone }: { order: MockOrder; onDone: () => void }
             </Text>
           </div>
           <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            <Button text="Yes, proceed" fullWidth onClick={() => setStep('success')} />
+            <Button
+              text="Yes, proceed"
+              fullWidth
+              onClick={() => setStep(scenario.startsWith('create') && !resolved ? 'error' : 'success')}
+            />
             <OutlinedButton text="Cancel" fullWidth onClick={() => setStep('review')} />
+          </div>
+        </>
+      )}
+
+      {/* Full-screen refund error (ErrorContent + RefundErrorButtons): the buttons follow the
+          error's recovery — Retry (transient), "Review remaining items" + "Back to order"
+          (deterministic rejection), or "Back to order" alone (terminal, incl. the
+          card-refunded-but-store-not-updated case whose copy replaces the store message). */}
+      {step === 'error' && (
+        <>
+          <div style={{ padding: 'var(--space-md)' }}>
+            <button type="button" aria-label="Close" onClick={onDone} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+              <Close size="var(--icon-medium)" />
+            </button>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-md)', padding: 'var(--space-xl)', textAlign: 'center' }}>
+            <ErrorX size="var(--size-small)" />
+            <Text variant="heading" bold align="center" style={{ marginTop: 'var(--space-md)' }}>
+              Failed to create refund
+            </Text>
+            <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
+              {scenario === 'createItemsChanged'
+                ? 'One of the selected items has already been fully refunded.'
+                : scenario === 'createTerminal'
+                  ? "The card was refunded, but your store wasn't updated. Record this refund in your store admin."
+                  : 'Please try again'}
+            </Text>
+          </div>
+          <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            {scenario === 'createNetwork' && (
+              <>
+                <Button text="Retry" fullWidth onClick={() => { setResolved(true); setStep('success'); }} />
+                <OutlinedButton text="Cancel" fullWidth onClick={onDone} />
+              </>
+            )}
+            {scenario === 'createItemsChanged' && (
+              <>
+                <Button text="Review remaining items" fullWidth onClick={() => { refreshItems(); setStep('select'); }} />
+                <OutlinedButton text="Back to order" fullWidth onClick={onDone} />
+              </>
+            )}
+            {scenario === 'createTerminal' && (
+              <Button text="Back to order" fullWidth onClick={onDone} />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Terminal "nothing to refund" screen (WooPosRefundState.NoRefundableItems → NoItemsContent):
+          centered body text, header without a navigation icon, a single Close button. */}
+      {step === 'nothing' && (
+        <>
+          <div style={{ minHeight: 'var(--size-xsmall)' }} />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
+            <Text variant="bodyLarge" align="center">No items available for refund</Text>
+          </div>
+          <div style={{ padding: 'var(--space-md)' }}>
+            <Button text="Close" fullWidth onClick={onDone} />
           </div>
         </>
       )}

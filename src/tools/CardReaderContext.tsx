@@ -23,15 +23,31 @@ import { useConnectivity } from './ConnectivityContext';
  * both apps re-checking requirements when the app becomes active again.
  */
 export type TransactionResult = 'authorized' | 'declined';
-export type ConnectionState = 'idle' | 'bluetoothOff' | 'scanning' | 'found' | 'connecting' | 'connected' | 'failed';
+export type ConnectionState =
+  | 'idle'
+  | 'bluetoothOff'
+  | 'scanning'
+  | 'found'
+  | 'localNetworkPermission'
+  | 'connecting'
+  | 'connected'
+  | 'failed';
 
 export const SAMPLE_READER_NAME = 'STRM261380012691';
+/** Phone-as-reader name, matching the upstream @Preview (MissingLocalNetworkPermission, "Pixel 9"). */
+export const SAMPLE_PHONE_READER_NAME = 'Pixel 9';
 
 interface CardReaderValue {
   connected: boolean;
   setConnected: (v: boolean) => void;
   connectionState: ConnectionState;
   readerName: string;
+  // Local network permission (Android, 2026-09-04 sync): gates connecting to a phone-as-reader.
+  // Granted by default (happy path); turned off from the Card reader tool to induce the state.
+  localNetworkGranted: boolean;
+  setLocalNetworkGranted: (v: boolean) => void;
+  grantLocalNetworkPermission: () => void;
+  cancelLocalNetworkPermission: () => void;
   // Connect flow
   startConnecting: () => void;
   readerFound: () => void;
@@ -56,6 +72,10 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
   // off from the chrome's Card reader tool to demo the failure path.
   const [connected, setConnected] = useState(true);
   const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
+  const [localNetworkGranted, setLocalNetworkGranted] = useState(true);
+  // Captured at discovery time so the name doesn't flip back to the Bluetooth reader when
+  // the permission is granted mid-connect (the discovered device is still the phone).
+  const [readerName, setReaderName] = useState(SAMPLE_READER_NAME);
   const [canProcess, setCanProcess] = useState(false);
   const handlerRef = useRef<((r: TransactionResult) => void) | null>(null);
 
@@ -68,8 +88,17 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
   const startConnecting = useCallback(() => {
     setConnectionState(connectivity.bluetooth ? 'scanning' : 'bluetoothOff');
   }, [connectivity.bluetooth]);
-  const readerFound = useCallback(() => setConnectionState('found'), []);
-  const connectReader = useCallback(() => setConnectionState('connecting'), []);
+  // With the permission revoked, discovery finds a phone-as-reader — the only reader kind
+  // the local network permission applies to.
+  const readerFound = useCallback(() => {
+    setReaderName(localNetworkGranted ? SAMPLE_READER_NAME : SAMPLE_PHONE_READER_NAME);
+    setConnectionState('found');
+  }, [localNetworkGranted]);
+  // Tapping Connect on a discovered phone reader checks the local network permission first
+  // (WooPosCardReaderConnectionViewModel.onPhoneConnectClicked) — Bluetooth readers are unaffected.
+  const connectReader = useCallback(() => {
+    setConnectionState(localNetworkGranted ? 'connecting' : 'localNetworkPermission');
+  }, [localNetworkGranted]);
   const keepSearching = useCallback(() => setConnectionState('scanning'), []);
   const failConnection = useCallback(() => setConnectionState('failed'), []);
   const retryConnection = useCallback(() => setConnectionState('scanning'), []);
@@ -78,6 +107,14 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
     setConnected(true);
     setConnectionState('connected');
   }, []);
+  // "Grant permission" in the dialog grants and auto-resumes the connect for the same reader —
+  // no second tap needed (mirrors recheckPermissions() resuming the pending phone connect).
+  const grantLocalNetworkPermission = useCallback(() => {
+    setLocalNetworkGranted(true);
+    setConnectionState('connecting');
+  }, []);
+  // Cancel returns to the discovered reader (discovery updates were paused while showing).
+  const cancelLocalNetworkPermission = useCallback(() => setConnectionState('found'), []);
 
   // "Connected" shows briefly, then the dialog closes (mirrors the app's 1.5s delay).
   useEffect(() => {
@@ -94,12 +131,24 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
     }
   }, [connectivity.bluetooth, connectionState]);
 
+  // Granting local network permission by any means (the dialog button or the chrome toggle)
+  // while parked on the permission state resumes the pending connect.
+  useEffect(() => {
+    if (localNetworkGranted && connectionState === 'localNetworkPermission') {
+      setConnectionState('connecting');
+    }
+  }, [localNetworkGranted, connectionState]);
+
   const value = useMemo<CardReaderValue>(
     () => ({
       connected,
       setConnected,
       connectionState,
-      readerName: SAMPLE_READER_NAME,
+      readerName,
+      localNetworkGranted,
+      setLocalNetworkGranted,
+      grantLocalNetworkPermission,
+      cancelLocalNetworkPermission,
       startConnecting,
       readerFound,
       connectReader,
@@ -115,6 +164,10 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
     [
       connected,
       connectionState,
+      readerName,
+      localNetworkGranted,
+      grantLocalNetworkPermission,
+      cancelLocalNetworkPermission,
       canProcess,
       process,
       registerHandler,

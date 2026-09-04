@@ -137,6 +137,16 @@
    shape/elevation deltas are handled in the iOS component layer / added here as confirmed. */
 [data-platform='ios'] {
   --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Segoe UI', sans-serif;
+
+  /* iOS-only tokens with no Android counterpart yet (2026-09-04 sync): posAlertLowest /
+     posOnAlertLowest, introduced for POSNoticeView's .alertLowest style (HTTPS warning).
+     Mirrors the posErrorLowest/posOnErrorLowest pattern; on-alert-lowest has no dark variant. */
+  --color-alert-lowest: #f5ece6;
+  --color-on-alert-lowest: #543100;
+}
+
+[data-platform='ios'][data-theme='dark'] {
+  --color-alert-lowest: #ffb68a;
 }
 
 /* ---- Dark mode ---- */

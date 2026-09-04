@@ -51,7 +51,12 @@ export function Checkout({
     return () => window.clearTimeout(t);
   }, [loadingProp]);
   const loading = loadingProp ?? internalLoading;
-  const [cash, setCash] = useState('');
+  /* ATM-style minor-unit cash entry (POSCashAmountInputFormatter, 2026-09-04 sync): the field
+     opens pre-filled with the order total; the first digit typed wipes the preset and starts
+     over from the minor units (`1` → $0.01, `123` → $1.23), the first backspace clears it to
+     $0.00. Digits shift in from the right with live thousands grouping; the decimal key does
+     nothing. null = untouched preset. */
+  const [cashCents, setCashCents] = useState<number | null>(null);
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [printPending, setPrintPending] = useState(false);
@@ -61,7 +66,20 @@ export function Checkout({
     setPrinting(true);
     window.setTimeout(() => setPrinting(false), 1200);
   };
-  const changeDue = (parseFloat(cash) || 0) - total;
+  const cashAmount = cashCents === null ? total : cashCents / 100;
+  const changeDue = cashAmount - total;
+  const onCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '');
+    let next: string;
+    if (cashCents === null) {
+      // First edit on the preset: an added digit replaces the whole preset, a deletion clears it.
+      const preset = String(Math.round(total * 100));
+      next = digits.length > preset.length ? digits.slice(preset.length) : '';
+    } else {
+      next = digits;
+    }
+    setCashCents(next === '' ? 0 : parseInt(next.slice(0, 13), 10));
+  };
   const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 
   // The Card reader tool drives the transaction while checkout is active, connected and idle.
@@ -150,19 +168,19 @@ export function Checkout({
     return (
       <FullScreen bg="var(--color-surface)" align="stretch">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
-          <BackButton onClick={() => { setCash(''); setState('idle'); }} />
+          <BackButton onClick={() => { setCashCents(null); setState('idle'); }} />
           <div>
             <PosText variant="heading" bold>Cash payment</PosText>
             <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>Total: {formatUsd(total)}</PosText>
           </div>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-xl)', textAlign: 'center' }}>
-          <input value={cash} onChange={(e) => setCash(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="$0.00" autoFocus inputMode="decimal"
+          <input value={cashCents === null ? formatUsd(total) : formatUsd(cashCents / 100)} onChange={onCashChange} autoFocus inputMode="decimal"
             style={{ border: 'none', outline: 'none', background: 'transparent', textAlign: 'center', minWidth: 200, color: 'var(--color-on-surface)', caretColor: 'var(--color-primary)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-heading-size)', fontWeight: 700 }} />
           {changeDue > 0 && <PosText variant="bodySmall" color="var(--color-on-surface-variant-lowest)">Change due {formatUsd(changeDue)}</PosText>}
         </div>
         <BottomStrip>
-          <PosButton label="Mark payment as complete" fullWidth disabled={(parseFloat(cash) || 0) < total || total <= 0} onClick={() => setState('success')} />
+          <PosButton label="Mark payment as complete" fullWidth disabled={cashAmount < total || total <= 0} onClick={() => setState('success')} />
         </BottomStrip>
       </FullScreen>
     );
@@ -211,7 +229,7 @@ export function Checkout({
         ) : !connected ? (
           <PosButton label="Card reader" fullWidth onClick={startConnecting} />
         ) : null}
-        <PosButton label="Cash payment" variant="outlined" fullWidth onClick={() => { setCash(total.toFixed(2)); setState('cash'); }} />
+        <PosButton label="Cash payment" variant="outlined" fullWidth onClick={() => { setCashCents(null); setState('cash'); }} />
       </BottomStrip>}
     </div>
   );

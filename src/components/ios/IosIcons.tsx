@@ -198,6 +198,17 @@ export function Check({ size, style, ...rest }: IconProps) {
 }
 
 // questionmark.circle — SF Symbol "questionmark.circle"
+// info.circle
+export function InfoCircle({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} style={{ ...base(size), ...style }} {...rest}>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="11" x2="12" y2="16.5" />
+      <line x1="12" y1="7.5" x2="12.01" y2="7.5" strokeWidth={2.5} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function HelpCircle({ size, style, ...rest }: IconProps) {
   return (
     <svg {...S} style={{ ...base(size), ...style }} {...rest}>
