@@ -15,6 +15,8 @@ Studio/Xcode.
 - The actual Kotlin/Compose source (sparse-cloned locally, see FLOWS.md) is the source of
   truth for layout, copy, states, and interactions — read the real files for a flow before
   building its prototype. Don't guess or infer from the flow name alone.
+- `SYNC.md` documents how to pull the latest source trunks and diff them against what's
+  built; `FLOW_PARITY.md`'s "Source sync log" records each sync's pinned SHAs and deltas.
 
 ## Output format
 
