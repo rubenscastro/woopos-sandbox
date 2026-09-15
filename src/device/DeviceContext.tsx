@@ -20,8 +20,8 @@ interface DeviceContextValue {
 
 const DeviceContext = createContext<DeviceContextValue | null>(null);
 
-const DEVICE_KEY = 'woopos.device';
-const THEME_KEY = 'woopos.theme';
+const DEVICE_KEY = 'woopos.device.v2';
+const THEME_KEY = 'woopos.theme.v2';
 
 function readStored<T extends string>(key: string, allowed: T[], fallback: T): T {
   if (typeof localStorage === 'undefined') return fallback;
@@ -39,7 +39,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     readStored(DEVICE_KEY, ['tablet', 'phone'], 'tablet'),
   );
   const [theme, setTheme] = useState<ThemeId>(() =>
-    readStored(THEME_KEY, ['light', 'dark'], 'light'),
+    readStored(THEME_KEY, ['light', 'dark'], 'dark'),
   );
 
   // Theme applies to the whole document so chrome and device both respond.

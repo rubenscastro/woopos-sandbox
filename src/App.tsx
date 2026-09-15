@@ -19,9 +19,19 @@ import { resolvePath, parseRoutedPath } from './versions/routing';
 import { androidRouteDefs } from './routes/androidRouteDefs';
 import { iosRouteDefs } from './routes/iosRouteDefs';
 import { mergeRouteDefs } from './routes/mergeRouteDefs';
-import { Setup } from './screens/Setup';
 
-/** `/` and unknown paths land directly on the active version+platform's product catalog
+/** Loading the prototype boots the active platform the way the real app does — Android's
+ *  WooPosSplashScreen, iOS's PointOfSaleLoadingView — both of which sync the catalog and
+ *  then open the products screen. Replaces the old Setup gate; platform/device/theme are
+ *  now changed from the chrome sidebar instead of being picked up front. */
+function StartupRedirect() {
+  const { platform } = usePlatform();
+  const { version } = useVersion();
+  const startup = platform === 'android' ? '/splash' : '/loading';
+  return <Navigate to={resolvePath(version, platform, startup)} replace />;
+}
+
+/** Unknown paths land directly on the active version+platform's product catalog
  *  (no launcher). */
 function RootRedirect() {
   const { platform } = usePlatform();
@@ -59,9 +69,10 @@ export default function App() {
           <BrowserRouter>
             <RouteContextSync />
             <Routes>
-              {/* First screen on load — pick Platform/Device/Theme, then "Load prototype"
-                  drops into that platform's normal startup path (see Setup.tsx). */}
-              <Route path="/" element={<Setup />} />
+              {/* No landing gate — loading the prototype goes straight into the startup
+                  path for the persisted platform (default iOS / tablet / dark). Platform,
+                  device and theme are changed from the chrome sidebar, not up front. */}
+              <Route path="/" element={<StartupRedirect />} />
 
               {/* ---- Main version — Android platform tree ---- */}
               <Route path="/android">

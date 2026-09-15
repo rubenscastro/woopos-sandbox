@@ -5,7 +5,7 @@ import { useVersion } from '../versions/VersionContext';
 import { VERSIONS, type VersionId } from '../versions/registry';
 import { mapVersion } from '../versions/routing';
 import { useClickOutside } from '../hooks/useClickOutside';
-import { Check } from '../components/android/icons';
+import { Check, ChevronRight } from '../components/android/icons';
 
 /**
  * Version dropdown — switches between `main` and proposal versions (see registry.ts),
@@ -35,7 +35,7 @@ export function VersionSwitcher() {
       <span className="chrome-menu__label">Version</span>
       <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
         {current.label}
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 260 }}>

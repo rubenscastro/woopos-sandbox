@@ -9,7 +9,7 @@
 }
 
 [data-theme='dark'] .device-stage {
-  background: #202327;
+  background: #34383e;
 }
 
 /* Layout box carries the *scaled* footprint so the stage centers correctly. */
@@ -25,10 +25,62 @@
   left: 0;
   background: #0e0f12;
   box-sizing: border-box;
+  /* No drop shadow — the device sits flat on the canvas. The inset highlight and the
+     hairline ring are edge definition, not elevation. */
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 30px 60px -20px rgba(0, 0, 0, 0.55),
     0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Dark-mode bezel surface. Flat #0e0f12 sits within a point of the app's own dark surface
+   (--color-surface #101517), so the frame visually dissolves into the screen it's holding.
+   Lifting it into a graphite lit from the left separates the two. The first two layers are
+   one continuous diagonal sheen across the whole frame, so the reflection carries through
+   every strip of the bezel — brightest on the left rail and the top-left, fading through the
+   middle, with a weak bounce returning at the bottom-right. */
+[data-theme='dark'] .device-bezel {
+  background:
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.038) 0%,
+      rgba(255, 255, 255, 0.021) 20%,
+      rgba(255, 255, 255, 0.007) 46%,
+      rgba(255, 255, 255, 0) 70%,
+      rgba(255, 255, 255, 0.012) 100%
+    ),
+    linear-gradient(150deg, #171b1f 0%, #131619 45%, #101215 100%);
+}
+
+/* Dark-mode rim light: a 1.5px gradient border that reads as the device edge catching light
+   from the top-left, dimming through the middle and picking up a weaker bounce at the
+   bottom-right. Drawn as a masked gradient ring (paint the full box, then punch out
+   everything inside the padding) rather than a border, so it follows `border-radius` exactly
+   and never affects layout. Slightly over 1px so it survives the frame's `scale()`. */
+[data-theme='dark'] .device-bezel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.16) 18%,
+    rgba(255, 255, 255, 0.03) 42%,
+    rgba(255, 255, 255, 0.03) 58%,
+    rgba(255, 255, 255, 0.14) 82%,
+    rgba(255, 255, 255, 0.34) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .device-notch {

@@ -16,6 +16,9 @@ interface DeviceSpec {
   notch: boolean;
 }
 
+/** Shrinks the fitted device so it reads as a preview on a canvas, not a full-bleed screen. */
+const FIT_RATIO = 0.81;
+
 const SPECS: Record<DeviceId, DeviceSpec> = {
   tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false },
   phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 46, notch: true },
@@ -45,7 +48,8 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
-  // Scale the frame to fit the available stage area, never upscaling past 1:1.
+  // Scale the frame to fit the available stage area, never upscaling past 1:1, then hold it
+  // at 90% so the device sits inside the canvas rather than filling it edge to edge.
   useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -53,7 +57,7 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
       const pad = 32;
       const availW = stage.clientWidth - pad;
       const availH = stage.clientHeight - pad;
-      setScale(Math.min(1, availW / outerW, availH / outerH));
+      setScale(Math.min(1, availW / outerW, availH / outerH) * FIT_RATIO);
     };
     recompute();
     const ro = new ResizeObserver(recompute);

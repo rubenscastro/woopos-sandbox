@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
  * in one app (screens/android + screens/ios, components/android + components/ios); this is
  * the source of truth for which route tree and which token deltas apply. Set as
  * `data-platform` on <html> so tokens.css can key off it (like [data-theme]/[data-device]),
- * and persisted to localStorage. Defaults to Android.
+ * and persisted to localStorage. Defaults to iOS.
  */
 export type PlatformId = 'android' | 'ios';
 
@@ -16,12 +16,14 @@ interface PlatformContextValue {
 
 const PlatformContext = createContext<PlatformContextValue | null>(null);
 
-const PLATFORM_KEY = 'woopos.platform';
+// Key is versioned: bumping it retires stored picks from before the iOS/tablet/dark default,
+// so an existing session lands on the new default once instead of keeping the old one forever.
+const PLATFORM_KEY = 'woopos.platform.v2';
 
 function readStored(): PlatformId {
-  if (typeof localStorage === 'undefined') return 'android';
+  if (typeof localStorage === 'undefined') return 'ios';
   const v = localStorage.getItem(PLATFORM_KEY);
-  return v === 'ios' || v === 'android' ? v : 'android';
+  return v === 'ios' || v === 'android' ? v : 'ios';
 }
 
 export function PlatformProvider({ children }: { children: ReactNode }) {

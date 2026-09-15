@@ -1,9 +1,17 @@
 # Versioning
 
-This prototype supports multiple **versions** side by side: `main` (the current shipped
-WooPOS flows) and any number of **proposals** — design explorations for new features, built
-in their own space so they don't disturb `main`. Switch between them with the **Version**
-control in the chrome sidebar.
+This prototype supports multiple **versions** side by side: **Trunk** (id `main`) and any
+number of **proposals** — design explorations for new features, built in their own space so
+they don't disturb Trunk. Switch between them with the **Version** select at the top of the
+chrome sidebar.
+
+**Trunk** tracks the flows currently on the iOS and Android trunks. It is the version all
+flow-parity work is measured against (`FLOW_PARITY.md`, `SYNC.md`) — keep it matching source.
+Proposals fork off it and are *not* expected to match source; don't file their divergences as
+parity findings.
+
+Its id stays `main` so existing routes, bookmarks and stored preferences keep working — only
+the label reads "Trunk".
 
 ## Registry
 
@@ -11,8 +19,9 @@ control in the chrome sidebar.
 
 ```ts
 export const VERSIONS: VersionEntry[] = [
-  { id: 'main', label: 'Main', description: '...' },
+  { id: 'main', label: 'Trunk', description: '...' },
   { id: 'scaling-pos-experience', label: 'Scaling POS experience', description: '...' },
+  { id: 'cash-reconciliation', label: 'Cash reconciliation', description: '...' },
 ];
 ```
 
@@ -27,7 +36,7 @@ registry in `App.tsx`.
 
 ## Routing
 
-- `main` is unprefixed, same as before: `/android/*`, `/ios/*`.
+- Trunk (`main`) is unprefixed: `/android/*`, `/ios/*`.
 - Every proposal routes under `/versions/<id>/android/*` and `/versions/<id>/ios/*`, e.g.
   `/versions/scaling-pos-experience/android/products`.
 - `useNav()` (`src/device/platformNav.ts`) and the chrome's `resolvePath()`
@@ -49,9 +58,11 @@ export const versionOverrides = {
 };
 ```
 
-Any path not listed falls back to `main`'s screen for that route (via `mergeRouteDefs` in
+Any path not listed falls back to Trunk's screen for that route (via `mergeRouteDefs` in
 `src/routes/mergeRouteDefs.ts`), so a brand-new proposal with empty override arrays is
-already clickable end-to-end — it's just `main` until you start forking screens.
+already clickable end-to-end — it's just Trunk until you start forking screens. That is what
+"copy of Trunk" means here: no files are duplicated, the proposal simply inherits every
+screen until one is deliberately forked. `cash-reconciliation` is in exactly that state.
 
 Put forked screens under `src/screens/versions/<id>/android/` and
 `src/screens/versions/<id>/ios/` (mirroring the `src/screens/android/` /
@@ -61,9 +72,10 @@ library.
 
 ## Switching versions
 
-The **Version** dropdown in the chrome sidebar (`src/device/VersionSwitcher.tsx`) swaps the
-version while staying on the same platform and, where possible, the same screen — it falls
-back to the product catalog if the target version has no route for the current screen (see
+The **Version** select at the top of the chrome sidebar (`src/device/VersionSwitcher.tsx`,
+mounted in `DeviceLayout`) swaps the version while staying on the same platform and, where
+possible, the same screen — it falls back to the product catalog if the target version has
+no route for the current screen (see
 `mapVersion()` in `src/versions/routing.ts`). This mirrors how the Platform switcher already
 behaves for Android ↔ iOS (`FLOW_PARITY.md`).
 

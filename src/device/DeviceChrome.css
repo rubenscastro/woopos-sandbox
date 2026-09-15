@@ -105,10 +105,11 @@
   gap: 8px;
   width: 100%;
   background: var(--menu-ctrl-bg);
-  border: 1px solid var(--menu-ctrl-border);
+  border: none;
   color: var(--menu-fg);
   border-radius: 8px;
-  padding: 9px 12px;
+  /* +1px on each side replaces the removed 1px border, so control metrics don't shift. */
+  padding: 10px 13px;
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
@@ -125,13 +126,25 @@
 
 .chrome-menu__trigger.is-active {
   background: var(--color-primary);
-  border-color: var(--color-primary);
   color: #fff;
 }
 
 .chrome-menu__caret {
-  opacity: 0.7;
+  opacity: 0.6;
+  flex: none;
+}
+
+/* Section heading inside a dropdown that groups more than one tool (e.g. Hardware). */
+.chrome-menu__section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 2px;
   font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--menu-muted);
 }
 
 /* Dropdowns open to the right of the side menu, floating over the device stage. */
@@ -146,6 +159,17 @@
   padding: 6px;
   box-shadow: var(--menu-dd-shadow);
   z-index: 20;
+}
+/* Settings holds segmented controls rather than rows, so it needs real padding. Its trigger
+   sits at the very bottom of the sidebar, so the panel is bottom-anchored — it grows upward
+   instead of off the bottom of the viewport. */
+.chrome-menu__dropdown--settings {
+  top: auto;
+  bottom: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .chrome-menu__item {
@@ -202,10 +226,10 @@
   gap: 8px;
   width: 100%;
   background: var(--menu-ctrl-bg);
-  border: 1px solid var(--menu-ctrl-border);
+  border: none;
   color: var(--menu-fg);
   border-radius: 8px;
-  padding: 9px 12px;
+  padding: 10px 13px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -220,7 +244,6 @@
 
 .chrome-tool-btn.is-active {
   background: var(--color-primary);
-  border-color: var(--color-primary);
   color: #fff;
 }
 
@@ -322,9 +345,9 @@
   display: flex;
   width: 100%;
   background: var(--menu-ctrl-bg);
-  border: 1px solid var(--menu-ctrl-border);
+  border: none;
   border-radius: 8px;
-  padding: 3px;
+  padding: 4px;
   gap: 2px;
 }
 

@@ -5,6 +5,7 @@ import { DeviceCursor } from './DeviceCursor';
 import { useDevice, type DeviceId, type ThemeId } from './DeviceContext';
 import { usePlatform, type PlatformId } from './PlatformContext';
 import { PlatformSwitcher } from './PlatformSwitcher';
+import { VersionSwitcher } from './VersionSwitcher';
 import { useVersion } from '../versions/VersionContext';
 import { resolvePath } from '../versions/routing';
 import {
@@ -26,7 +27,16 @@ import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { PhonePersistentButtonHost } from '../components/android/PhonePersistentButton';
 import { CardReaderConnectionHost } from '../tools/CardReaderConnectionDialog';
 import { PrinterSetupHost } from '../components/ios/PosPrinterSetupModal';
-import { Barcode, Card as CardIcon, Check, TabletIcon, PhoneIcon, Sun, Moon } from '../components/android/icons';
+import {
+  Barcode,
+  Card as CardIcon,
+  Check,
+  ChevronRight,
+  TabletIcon,
+  PhoneIcon,
+  Sun,
+  Moon,
+} from '../components/android/icons';
 import { useCart } from '../state/CartContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { products } from '../mocks/android/products';
@@ -61,7 +71,12 @@ export function DeviceLayout() {
               <img src="/favicon.png" alt="" aria-hidden className="chrome-brand-logo" />
               POS Sandbox
             </Link>
-            <FlowsMenu />
+            {/* Version sits above the flow picker: which prototype you're in scopes which
+                flows the picker is even listing. Trunk is the source-parity baseline; the
+                rest are proposals (see VERSIONS.md). */}
+            <VersionSwitcher />
+            {/* Flow picker temporarily hidden — re-enable by restoring <FlowsMenu /> here. */}
+            {false && <FlowsMenu />}
             {/* The Barcode + Card reader tools drive shared state (cart scans, reader connection
                 and transactions), so both platforms get them — iOS flows respond to the same tool
                 input as Android. The preview-state menu renders whenever the current screen
@@ -69,9 +84,7 @@ export function DeviceLayout() {
                 edge cases / error states; screens default to the happy path. */}
             <ToolsMenu />
             <ConnectivityMenu />
-            <CardReaderMenu />
-            {/* Receipt printers are iOS-only in the prototype. */}
-            {platform === 'ios' && <PrinterMenu />}
+            <HardwareMenu />
             {/* Catalog sync only exists for the scaling-pos-experience proposal's System
                 Events surface — hidden everywhere else since there's nothing to trigger. */}
             <CatalogSyncMenu />
@@ -79,34 +92,15 @@ export function DeviceLayout() {
             <FlagsMenu />
           </div>
           <div className="chrome-right">
-            <div className="chrome-segmented-group">
-              <span className="chrome-segmented-label">Platform</span>
-              <PlatformSwitcher />
-            </div>
-            <div className="chrome-segmented-group">
-              <span className="chrome-segmented-label">Device</span>
-              <Segmented<DeviceId>
-                ariaLabel="Device"
-                value={device}
-                onChange={setDevice}
-                options={[
-                  { id: 'tablet', label: 'Tablet', icon: <TabletIcon size="18px" /> },
-                  { id: 'phone', label: 'Phone', icon: <PhoneIcon size="18px" /> },
-                ]}
-              />
-            </div>
-            <div className="chrome-segmented-group">
-              <span className="chrome-segmented-label">Theme</span>
-              <Segmented<ThemeId>
-                ariaLabel="Color scheme"
-                value={theme}
-                onChange={setTheme}
-                options={[
-                  { id: 'light', label: 'Light', icon: <Sun size="18px" /> },
-                  { id: 'dark', label: 'Dark', icon: <Moon size="18px" /> },
-                ]}
-              />
-            </div>
+            {/* Platform / Device / Theme are how you're *viewing* the prototype rather than
+                what you're driving inside it, so they live behind one Settings menu instead of
+                three always-open rails. */}
+            <SettingsMenu
+              device={device}
+              setDevice={setDevice}
+              theme={theme}
+              setTheme={setTheme}
+            />
           </div>
         </aside>
 
@@ -178,7 +172,7 @@ function ToolsMenu() {
       >
         <Barcode size="18px" />
         Barcode
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 240 }}>
@@ -223,20 +217,104 @@ function ToolsMenu() {
 }
 
 /**
- * Card reader tool — drives the connect flow (start / reader found / connect completes or
- * fails) and processes authorized / declined transactions at checkout. No simulate buttons
- * appear on the dialog; these tool options stand in for the hardware events.
+ * Settings menu — Platform, Device and Theme. These describe how the prototype is being
+ * *viewed* rather than what is being driven inside it, so they sit behind one trigger at the
+ * bottom of the sidebar instead of three permanently open segmented rails. The segmented
+ * controls themselves are unchanged; they just live in a dropdown now.
  */
-function CardReaderMenu() {
-  const cr = useCardReader();
-  const { platform } = usePlatform();
+function SettingsMenu({
+  device,
+  setDevice,
+  theme,
+  setTheme,
+}: {
+  device: DeviceId;
+  setDevice: (d: DeviceId) => void;
+  theme: ThemeId;
+  setTheme: (t: ThemeId) => void;
+}) {
   const [open, setOpen] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
-  const s = cr.connectionState;
+
+  return (
+    <div className="chrome-menu" ref={menuRef}>
+      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
+        Settings
+        <ChevronRight size="14px" className="chrome-menu__caret" />
+      </button>
+      {open && (
+        <div className="chrome-menu__dropdown chrome-menu__dropdown--settings" style={{ minWidth: 240 }}>
+          <div className="chrome-segmented-group">
+            <span className="chrome-segmented-label">Platform</span>
+            <PlatformSwitcher />
+          </div>
+          <div className="chrome-segmented-group">
+            <span className="chrome-segmented-label">Device</span>
+            <Segmented<DeviceId>
+              ariaLabel="Device"
+              value={device}
+              onChange={setDevice}
+              options={[
+                { id: 'tablet', label: 'Tablet', icon: <TabletIcon size="18px" /> },
+                { id: 'phone', label: 'Phone', icon: <PhoneIcon size="18px" /> },
+              ]}
+            />
+          </div>
+          <div className="chrome-segmented-group">
+            <span className="chrome-segmented-label">Theme</span>
+            <Segmented<ThemeId>
+              ariaLabel="Color scheme"
+              value={theme}
+              onChange={setTheme}
+              options={[
+                { id: 'light', label: 'Light', icon: <Sun size="18px" /> },
+                { id: 'dark', label: 'Dark', icon: <Moon size="18px" /> },
+              ]}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Hardware tool — one menu covering every simulated peripheral: the card reader (all
+ * platforms) and the receipt printer (iOS only, which is the only platform whose POS prints).
+ * Both used to be separate sidebar items; they are siblings of the same kind, so they share
+ * one trigger and the dropdown sections them apart. The trigger summarises how many are
+ * connected, the way Connectivity summarises its three radios.
+ */
+function HardwareMenu() {
+  const { platform } = usePlatform();
+  const cr = useCardReader();
+  const p = usePrinter();
+  const [open, setOpen] = useState(false);
+
+  // While a peripheral is mid-connect, the flow is driven from *inside* this menu (reader
+  // found → connect completes/fails, and the printer's discovery equivalents). Dismissing it
+  // on an outside click would pull the controls out from under whoever is stepping through
+  // the on-screen dialog, so the menu is pinned for the duration: no outside-click listener,
+  // and it opens itself if the flow was started from the screen rather than from here. The
+  // trigger still toggles it, which keeps a way out.
+  const flowActive =
+    cr.connectionState !== 'idle' || p.setupOpen || p.setupState !== 'idle';
+  const menuRef = useClickOutside<HTMLDivElement>(open && !flowActive, () => setOpen(false));
+  useEffect(() => {
+    if (flowActive) setOpen(true);
+  }, [flowActive]);
+
+  const close = () => {
+    if (!flowActive) setOpen(false);
+  };
+
+  const hasPrinter = platform === 'ios';
+  const total = hasPrinter ? 2 : 1;
+  const connected = (cr.connected ? 1 : 0) + (hasPrinter && p.connected ? 1 : 0);
 
   return (
     <div className="chrome-menu chrome-menu--state" ref={menuRef}>
-      <span className="chrome-menu__label">Card reader</span>
+      <span className="chrome-menu__label">Hardware</span>
       <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
         <CardIcon size="18px" />
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -245,15 +323,49 @@ function CardReaderMenu() {
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: cr.connected ? 'var(--color-success)' : 'var(--color-alert)',
+              background: connected > 0 ? 'var(--color-success)' : 'var(--color-alert)',
             }}
           />
-          {cr.connected ? 'Connected' : 'Not connected'}
+          {connected}/{total} connected
         </span>
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 280 }}>
+          <div className="chrome-menu__section">
+            <CardIcon size="14px" />
+            Card reader
+          </div>
+          <CardReaderSection close={close} />
+          {hasPrinter && (
+            <>
+              <div className="chrome-reader__divider" />
+              <div className="chrome-menu__section">
+                <PrinterChromeIcon />
+                Receipt printer
+              </div>
+              <PrinterSection close={close} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Card reader controls — drives the connect flow (start / reader found / connect completes or
+ * fails) and processes authorized / declined transactions at checkout. No simulate buttons
+ * appear on the dialog; these tool options stand in for the hardware events.
+ */
+function CardReaderSection({ close }: { close: () => void }) {
+  const cr = useCardReader();
+  const { platform } = usePlatform();
+  const s = cr.connectionState;
+
+  return (
+    <>
+
           {/* ---- Quick toggle — set connected directly, skipping the connect flow ---- */}
           <button
             type="button"
@@ -290,10 +402,10 @@ function CardReaderMenu() {
 
           {/* ---- Connection ---- */}
           {!cr.connected && s === 'idle' && (
-            <ReaderItem label="Connect card reader" onClick={() => { setOpen(false); cr.startConnecting(); }} />
+            <ReaderItem label="Connect card reader" onClick={() => cr.startConnecting()} />
           )}
           {cr.connected && s === 'idle' && (
-            <ReaderItem label="Disconnect reader" onClick={() => { setOpen(false); cr.setConnected(false); }} />
+            <ReaderItem label="Disconnect reader" onClick={() => { close(); cr.setConnected(false); }} />
           )}
           {s === 'scanning' && <ReaderItem label="Reader found" onClick={cr.readerFound} />}
           {s === 'connecting' && (
@@ -312,19 +424,17 @@ function CardReaderMenu() {
           <ReaderItem
             label="Process authorized transaction"
             disabled={!cr.canProcess}
-            onClick={() => { setOpen(false); cr.process('authorized'); }}
+            onClick={() => { close(); cr.process('authorized'); }}
           />
           <ReaderItem
             label="Process declined transaction"
             disabled={!cr.canProcess}
-            onClick={() => { setOpen(false); cr.process('declined'); }}
+            onClick={() => { close(); cr.process('declined'); }}
           />
           {!cr.canProcess && (
             <div className="chrome-reader__hint">Open checkout with a connected reader to process.</div>
           )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -343,29 +453,17 @@ function ReaderItem({ label, onClick, disabled }: { label: string; onClick: () =
 }
 
 /**
- * Receipt printer tool (iOS) — drives the whole POSPrinterSetupModal flow: open setup, stand in for
- * the Bluetooth discovery events (printer found / connect completes or fails), and connect/disconnect
- * directly. Mirrors the Card reader tool; no simulate buttons appear in the modal itself.
+ * Receipt printer controls (iOS) — drives the whole POSPrinterSetupModal flow: open setup,
+ * stand in for the Bluetooth discovery events (printer found / connect completes or fails),
+ * and connect/disconnect directly. No simulate buttons appear in the modal itself.
  */
-function PrinterMenu() {
+function PrinterSection({ close }: { close: () => void }) {
   const p = usePrinter();
-  const [open, setOpen] = useState(false);
-  const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
   const s = p.setupState;
 
   return (
-    <div className="chrome-menu chrome-menu--state" ref={menuRef}>
-      <span className="chrome-menu__label">Receipt printer</span>
-      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
-        <PrinterChromeIcon />
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.connected ? 'var(--color-success)' : 'var(--color-alert)' }} />
-          {p.connected ? 'Connected' : 'Not connected'}
-        </span>
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
-      </button>
-      {open && (
-        <div className="chrome-menu__dropdown" style={{ minWidth: 280 }}>
+    <>
+
           {/* ---- Quick toggle — set connected directly, skipping the setup flow ---- */}
           <button type="button" className="chrome-reader__toggle" role="switch" aria-checked={p.connected} onClick={() => p.setConnected(!p.connected)}>
             <span>Connected</span>
@@ -378,7 +476,7 @@ function PrinterMenu() {
 
           {/* ---- Setup / discovery flow ---- */}
           {!p.connected && (s === 'idle' || s === 'error') && (
-            <ReaderItem label="Open printer setup" onClick={() => { setOpen(false); p.openSetup(); }} />
+            <ReaderItem label="Open printer setup" onClick={() => p.openSetup()} />
           )}
           {s === 'searching' && (
             <>
@@ -396,11 +494,9 @@ function PrinterMenu() {
             <div className="chrome-reader__hint">Follow the on-screen setup…</div>
           )}
           {p.connected && s !== 'connecting' && (
-            <ReaderItem label="Disconnect printer" onClick={() => { setOpen(false); p.disconnect(); }} />
+            <ReaderItem label="Disconnect printer" onClick={() => { close(); p.disconnect(); }} />
           )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -421,7 +517,7 @@ function ConnectivityMenu() {
       <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
         <ConnectivityChromeIcon />
         <span>{onCount}/3 on</span>
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 220 }}>
@@ -478,7 +574,7 @@ function FlagsMenu() {
     <div className="chrome-menu" ref={menuRef}>
       <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
         {onCount > 0 ? `Flags · ${onCount} on` : 'Flags'}
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 260 }}>
@@ -536,7 +632,7 @@ function CatalogSyncMenu() {
           />
           {syncFailed ? 'Sync failed' : 'Synced'}
         </span>
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown" style={{ minWidth: 240 }}>
@@ -604,7 +700,7 @@ function FlowsMenu() {
     <div className="chrome-menu" ref={menuRef}>
       <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
         {current ? `${current.num}. ${current.title}` : 'Flows'}
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown">
@@ -652,7 +748,7 @@ function PreviewStateMenu() {
       <span className="chrome-menu__label">{config.label}</span>
       <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
         {active?.label ?? 'Select'}
-        <span className="chrome-menu__caret">{open ? '▴' : '▾'}</span>
+        <ChevronRight size="14px" className="chrome-menu__caret" />
       </button>
       {open && (
         <div className="chrome-menu__dropdown">
