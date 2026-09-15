@@ -115,6 +115,19 @@
   cursor: none !important;
 }
 
+/* No scrollbars anywhere inside the device. iOS and Android both use transient overlay
+   indicators, so a persistent gutter is a browser artefact that makes the simulated screen
+   read wrong — and it eats horizontal space the real layout wouldn't lose. Applies to every
+   scrollable pane in a screen, not just the outer scroller. */
+.device-screen ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.device-screen * {
+  scrollbar-width: none;
+}
+
 .device-scroll {
   position: relative;
   width: 100%;

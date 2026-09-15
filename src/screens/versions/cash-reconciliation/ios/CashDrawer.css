@@ -1,0 +1,302 @@
+/*
+ * Cash drawer (POS Cash Reconciliation 2007:1046). Master/detail proportions come from the
+ * design's 428 / 764 split of a 1192pt frame — ~36% / ~64%, expressed as flex so it holds at
+ * any pane width.
+ */
+.cash-drawer {
+  display: flex;
+  position: relative;
+  background: var(--color-surface);
+}
+
+.cash-drawer--phone {
+  height: 100%;
+}
+
+.cash-drawer__list {
+  flex: 0 0 36%;
+  min-width: 0;
+  background: var(--color-surface-bright);
+}
+
+.cash-drawer__content {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-surface);
+}
+
+.cash-drawer__pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* 16px horizontal / 24px vertical, with the title's own 4px breathing room. */
+.cash-drawer__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+}
+
+.cash-drawer__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: 0 var(--space-md);
+  overflow: auto;
+  /* Clears the floating menu button in the bottom-left, same as Orders and Settings. */
+  padding-bottom: calc(var(--space-lg) + var(--size-small) + var(--space-md));
+}
+
+.cash-drawer__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+  /* Transparent at rest so selecting doesn't shift the card by 2px. */
+  border: 2px solid transparent;
+  box-shadow: var(--pos-shadow-medium);
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.cash-drawer__card.is-selected {
+  border-color: var(--color-inverse-surface);
+}
+
+.cash-drawer__detail {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+/* The detail card holds the whole section, not one control — hence the large inner gap. */
+.cash-drawer__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+  box-shadow: var(--pos-shadow-medium);
+}
+
+.cash-drawer__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cash-drawer__input {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-dim);
+  /* Transparent at rest so gaining focus doesn't shift the field by 2px — same trick the
+     sidebar cards use for their selected border. */
+  border: 2px solid transparent;
+}
+
+/* Focus reads the same as a selected sidebar card: a 2px inverse-surface edge. `:focus-within`
+   because the focus lands on the inner <input>, but the whole field is what should light up. */
+.cash-drawer__input:focus-within {
+  border-color: var(--color-inverse-surface);
+}
+
+.cash-drawer__amount-prefix,
+.cash-drawer__amount {
+  font-family: var(--font-family);
+  /* Heading/Regular — the amount is the number you're committing, not a form value. */
+  font-size: var(--font-heading-size);
+  font-weight: 400;
+  line-height: var(--font-heading-line);
+  color: var(--color-on-surface);
+}
+
+.cash-drawer__amount {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.cash-drawer__amount::placeholder {
+  color: var(--color-on-surface);
+}
+
+/* ---- Running session (2011:1366) ---- */
+.cash-drawer__header-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.cash-drawer__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Expected in drawer: figure on the left, its action pinned to the top-right. */
+.cash-drawer__panel--row {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.cash-drawer__stats {
+  display: flex;
+  gap: var(--space-md);
+}
+
+/* Equal thirds that still collapse gracefully when the pane narrows. */
+.cash-drawer__panel--stat {
+  flex: 1;
+  min-width: 0;
+}
+
+.cash-drawer__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.cash-drawer__stat-value {
+  font-family: var(--font-family);
+  font-size: var(--font-heading-size);
+  font-weight: 400;
+  line-height: var(--font-heading-line);
+  color: var(--color-on-surface);
+}
+
+/* 40px pill used for both header and inline actions — outlined by default, filled when it's
+   the primary way out of the screen. */
+.cash-drawer__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  height: 40px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-inverse-surface);
+  background: transparent;
+  color: var(--color-on-surface);
+  font-family: var(--font-family);
+  font-size: var(--font-body-sm-size);
+  line-height: var(--font-body-sm-line);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cash-drawer__chip.is-primary {
+  border-color: transparent;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.cash-drawer__activity {
+  gap: var(--space-lg);
+}
+
+.cash-drawer__entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.cash-drawer__entry-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Second line: the timestamp, then either a plain note or the order it was recorded against. */
+.cash-drawer__entry-meta {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-body-sm-size);
+  line-height: var(--font-body-sm-line);
+  color: var(--color-on-surface-variant-highest);
+}
+
+.cash-drawer__entry-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cash-drawer__entry-amount {
+  flex: none;
+  font-family: var(--font-family);
+  font-size: var(--font-body-md-size);
+  line-height: var(--font-body-lg-size);
+  font-weight: 400;
+  color: var(--color-on-surface);
+}
+
+.cash-drawer__entry-amount.is-positive {
+  color: var(--color-success);
+}
+
+/* Starting session (2011:1496) — fixed 248px so the pane doesn't jump when the spinner is
+   replaced by the session's own content. */
+.cash-drawer__panel--loading {
+  height: 248px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Past sessions (2011:1572) ---- */
+.cash-drawer__session {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  height: 92px;
+  box-sizing: border-box;
+  padding: var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+  box-shadow: var(--pos-shadow-medium);
+  color: var(--color-on-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cash-drawer__session-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Bare glyph button for the header's trailing slot (the date filter). */
+.cash-drawer__icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}

@@ -1,0 +1,66 @@
+/*
+ * `Link` states, from the POS Design System component (3319:809).
+ *
+ * In CSS rather than inline styles because Focus and Active are interaction states —
+ * `:focus-visible` and `:active` are not reachable from an inline style.
+ *
+ * | Figma state | here                                               |
+ * |-------------|----------------------------------------------------|
+ * | Default     | resting                                            |
+ * | Focus       | keyboard focus                                     |
+ * | Active      | row pressed, or the row is the current destination  |
+ *
+ * No hover state: the component defines three states and hover is not one of them, which is
+ * right for a POS that is used by touch.
+ */
+.pos-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-on-surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.pos-link--left {
+  justify-content: flex-start;
+}
+
+.pos-link--center {
+  justify-content: center;
+}
+
+.pos-link--right {
+  justify-content: flex-end;
+}
+
+/* Focus. */
+.pos-link:focus-visible,
+.pos-link.is-focus {
+  background: var(--color-surface-bright);
+}
+
+.pos-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* Active — pressed, or pinned on by the `state` prop for the current destination. Listed
+   after Focus so a press still reads as pressed on a row that also holds focus. */
+.pos-link:active,
+.pos-link.is-active,
+.pos-link.is-active:focus-visible {
+  background: var(--color-surface-dim);
+}
+
+.pos-link__icon {
+  display: flex;
+  flex: none;
+  width: var(--icon-medium);
+  height: var(--icon-medium);
+}

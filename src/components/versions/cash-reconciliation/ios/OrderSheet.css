@@ -1,0 +1,77 @@
+/*
+ * Full-height order sheet. Keyframes rather than a state-driven transition, for the same
+ * reason the nav drawer uses them: a transform flipped one frame after mount depends on the
+ * browser painting the off-screen position first, which isn't reliably true.
+ */
+@keyframes order-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes order-sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes order-sheet-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes order-sheet-scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.order-sheet__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: color-mix(in srgb, #000 40%, transparent);
+  animation: order-sheet-scrim-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.order-sheet__scrim.is-closing {
+  animation-name: order-sheet-scrim-out;
+}
+
+/* Full height, but stopping short of the top so the sheet still reads as a sheet — the screen
+   behind stays visible above it, which is what says it can be dismissed. The inset clears the
+   status bar as well as leaving margin. */
+.order-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: calc(var(--device-safe-top, 0px) + var(--space-lg));
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  box-shadow: var(--shadow-normal-large);
+  animation: order-sheet-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  will-change: transform;
+}
+
+.order-sheet.is-closing {
+  animation-name: order-sheet-out;
+}

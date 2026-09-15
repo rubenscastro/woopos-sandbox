@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
 import { Close, ChevronLeft, DotsHorizontal, ErrorX } from '../../components/ios/IosIcons';
+import { useVersion } from '../../versions/VersionContext';
+import { PosNavFloatingLauncher } from '../../components/versions/cash-reconciliation/ios/PosNavLauncher';
+import { PosGhostOrderList } from '../../components/ios/PosGhostOrderRow';
+import { PosGhostOrderDetails } from '../../components/ios/PosGhostOrderDetails';
 import { usePublishPreviewState } from '../../device/PreviewStateContext';
 import { refundScenarioOptions, type RefundScenario } from '../../state/refundScenarios';
 import { PosButton } from '../../components/ios/PosButton';
@@ -12,6 +16,9 @@ import { useNav } from '../../device/platformNav';
 import { formatUsd } from '../../lib/currency';
 import { orders, STATUS_COLORS, type MockOrder } from '../../mocks/android/orders';
 
+/** How long the arrival skeleton holds — long enough to register, short enough not to nag. */
+const ARRIVAL_SKELETON_MS = 900;
+
 /**
  * iOS Orders (Orders/POSOrdersView + POSOrderListView + POSOrderDetailsView). Master/detail:
  * order list on the left, details ("Items" + "Totals" sections) on the right (tablet);
@@ -20,6 +27,7 @@ import { orders, STATUS_COLORS, type MockOrder } from '../../mocks/android/order
 export function Orders() {
   const isPhone = useIsPhone();
   const nav = useNav();
+  const isCashRecon = useVersion().version === 'cash-reconciliation';
   const [selectedId, setSelectedId] = useState(orders[0].id);
   const [showDetailOnPhone, setShowDetailOnPhone] = useState(false);
   const selected = orders.find((o) => o.id === selectedId) ?? orders[0];
@@ -33,23 +41,72 @@ export function Orders() {
     onSelect: (id) => setRefundScenario(id as RefundScenario),
   });
 
+  /*
+   * Loading has two halves, because one alone isn't enough to review it.
+   *
+   * `auto` (the default) plays the skeleton on arrival, the way it actually happens: orders
+   * are fetched when the screen opens, so a merchant sees this every single time. It is part
+   * of the happy path, not an edge case — which is why it isn't menu-only.
+   *
+   * The explicit options pin a state open, because a skeleton that clears itself after a beat
+   * is impossible to actually look at. `page` is the append-the-next-page state: one ghost row
+   * under the orders already on screen, not a full sheet.
+   */
+  const [loadingMode, setLoadingMode] = useState<'auto' | 'none' | 'list' | 'page'>('auto');
+  const [arriving, setArriving] = useState(true);
+
+  useEffect(() => {
+    if (loadingMode !== 'auto') return;
+    setArriving(true);
+    const timer = setTimeout(() => setArriving(false), ARRIVAL_SKELETON_MS);
+    return () => clearTimeout(timer);
+  }, [loadingMode]);
+
+  const loading = loadingMode === 'auto' ? (arriving ? 'list' : 'none') : loadingMode;
+
+  usePublishPreviewState({
+    label: 'Orders loading',
+    options: [
+      { id: 'auto', label: 'Auto (on open)' },
+      { id: 'none', label: 'Loaded' },
+      { id: 'list', label: 'Loading list' },
+      { id: 'page', label: 'Loading next page' },
+    ],
+    active: loadingMode,
+    onSelect: (id) => setLoadingMode(id as 'auto' | 'none' | 'list' | 'page'),
+  });
+
   const list = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
-        <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-          <Close size="var(--icon-medium)" />
-        </button>
+        {/* Cash reconciliation drops the close button: the floating menu is always on screen,
+            and leaving is what picking another destination in it already does. */}
+        {!isCashRecon && (
+          <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+            <Close size="var(--icon-medium)" />
+          </button>
+        )}
         <PosText variant="heading" bold>Orders</PosText>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: '0 var(--space-lg) var(--space-xxl)' }}>
-        {orders.map((o) => (
-          <OrderRow key={o.id} order={o} selected={!isPhone && o.id === selectedId} onClick={() => { setSelectedId(o.id); if (isPhone) setShowDetailOnPhone(true); }} />
-        ))}
+      {/* The floating menu button overlays the bottom-left of the screen in this proposal, so the
+          list reserves its height plus a gap — otherwise the last order sits underneath it at
+          the end of the scroll. Trunk has no such button here and keeps its normal padding. */}
+      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: `0 var(--space-lg) ${isCashRecon ? 'calc(var(--space-lg) + var(--size-small) + var(--space-md))' : 'var(--space-xxl)'}` }}>
+        {loading !== 'list' &&
+          orders.map((o) => (
+            <OrderRow key={o.id} order={o} selected={!isPhone && o.id === selectedId} onClick={() => { setSelectedId(o.id); if (isPhone) setShowDetailOnPhone(true); }} />
+          ))}
+        {loading === 'list' && <PosGhostOrderList />}
+        {loading === 'page' && <PosGhostOrderList rows={1} />}
       </div>
     </div>
   );
 
-  const detail = (
+  // The detail pane skeletons alongside the list — source has a loading view for both, and a
+  // half-loaded screen reads as broken rather than loading.
+  const detail = loading === 'list' ? (
+    <PosGhostOrderDetails />
+  ) : (
     <OrderDetail
       order={selected}
       scenario={refundScenario}
@@ -58,12 +115,18 @@ export function Orders() {
     />
   );
 
-  if (isPhone) return <div style={{ height: '100%', background: 'var(--color-surface)' }}>{showDetailOnPhone ? detail : list}</div>;
+  if (isPhone) return (
+    <div style={{ height: '100%', background: 'var(--color-surface)', position: 'relative' }}>
+      {showDetailOnPhone ? detail : list}
+      {isCashRecon && <PosNavFloatingLauncher />}
+    </div>
+  );
 
   return (
-    <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
+    <div className="woopos-fills-safe-top" style={{ display: 'flex', position: 'relative' }}>
       <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{list}</div>
       <div className="woopos-safe-pane" style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface)' }}>{detail}</div>
+      {isCashRecon && <PosNavFloatingLauncher />}
     </div>
   );
 }
@@ -84,7 +147,25 @@ function OrderRow({ order, selected, onClick }: { order: MockOrder; selected: bo
   );
 }
 
-function OrderDetail({ order, scenario, onBack, onEmail }: { order: MockOrder; scenario: RefundScenario; onBack?: () => void; onEmail: () => void }) {
+/**
+ * Exported so the same order detail can be shown outside this screen — Cash reconciliation
+ * opens it in a sheet from the cash-drawer log. One order detail everywhere, so an order looks
+ * and behaves the same (Issue refund, the overflow menu) wherever you reach it from.
+ */
+export function OrderDetail({
+  order,
+  scenario,
+  onBack,
+  backIcon = 'chevron',
+  onEmail,
+}: {
+  order: MockOrder;
+  scenario: RefundScenario;
+  onBack?: () => void;
+  /** `close` for a sheet that dismisses, `chevron` for a pane that goes back. */
+  backIcon?: 'chevron' | 'close';
+  onEmail: () => void;
+}) {
   const [refunding, setRefunding] = useState(false);
   const productsSubtotal = order.items.reduce((s, i) => s + i.lineTotal, 0);
 
@@ -97,8 +178,8 @@ function OrderDetail({ order, scenario, onBack, onEmail }: { order: MockOrder; s
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
         {onBack && (
-          <button type="button" aria-label="Back" onClick={onBack} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
-            <ChevronLeft size="30px" />
+          <button type="button" aria-label={backIcon === 'close' ? 'Close' : 'Back'} onClick={onBack} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
+            {backIcon === 'close' ? <Close size="30px" /> : <ChevronLeft size="30px" />}
           </button>
         )}
         <PosText variant="heading" bold style={{ flex: 1 }}>{order.number}</PosText>

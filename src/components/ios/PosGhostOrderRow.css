@@ -1,0 +1,136 @@
+/*
+ * `POSGhostOrderRowView`. The card matches `POSOrderRowView`'s box — surfaceContainerLowest,
+ * medium padding, the item-card border — so the list doesn't reflow when real orders arrive.
+ */
+.pos-ghost-order {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+  box-shadow: var(--pos-shadow-medium);
+  flex: none;
+}
+
+/* Fixed row heights from GhostConstants: 24 / 24 / 28. The bar inside each is shorter, and
+   centred, which is what gives the skeleton its breathing room. */
+.pos-ghost-order__row {
+  display: flex;
+  align-items: center;
+}
+
+.pos-ghost-order__row--header {
+  height: 24px;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.pos-ghost-order__row--details {
+  height: 24px;
+  /* POSSpacing.xSmall * 3 */
+  margin-bottom: calc(var(--space-xs) * 3);
+}
+
+.pos-ghost-order__row--badge {
+  height: 28px;
+}
+
+.pos-ghost-order__bar {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--color-on-surface-variant-lowest);
+  /* `.shimmering()` — a highlight travelling across the bar rather than the whole bar pulsing. */
+  background-image: linear-gradient(
+    90deg,
+    transparent 25%,
+    color-mix(in srgb, var(--color-surface-bright) 65%, transparent) 37%,
+    transparent 63%
+  );
+  background-size: 400% 100%;
+  animation: pos-ghost-shimmer 1.4s ease infinite;
+}
+
+@keyframes pos-ghost-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-ghost-order__bar {
+    animation: none;
+  }
+}
+
+/* ---- Order detail skeleton (POSOrderDetailsLoadingView) ---- */
+.pos-ghost-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md) var(--space-md);
+}
+
+.pos-ghost-details__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-top: var(--space-md);
+}
+
+.pos-ghost-details__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.pos-ghost-details__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+  box-shadow: var(--pos-shadow-medium);
+}
+
+.pos-ghost-details__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.pos-ghost-details__rows--totals {
+  gap: var(--space-md);
+}
+
+.pos-ghost-details__product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pos-ghost-details__product-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.pos-ghost-details__totals-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pos-ghost-details__divider {
+  height: 1px;
+  margin: var(--space-sm) 0;
+  background: color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+}

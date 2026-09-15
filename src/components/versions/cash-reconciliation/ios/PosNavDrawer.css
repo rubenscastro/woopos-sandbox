@@ -1,0 +1,69 @@
+/*
+ * Nav drawer transitions.
+ *
+ * Keyframes rather than a transition driven from React state: flipping a `transform` one frame
+ * after mount depends on the browser painting the off-screen position first, which is not
+ * something `requestAnimationFrame` reliably guarantees here — the drawer would sometimes mount
+ * and simply sit off-screen. An animation plays from its own start value on mount, so there is
+ * no first-paint race to lose.
+ */
+@keyframes pos-nav-drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pos-nav-drawer-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes pos-nav-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pos-nav-scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.pos-nav-drawer {
+  /* 0.3s `.snappy`, matching the pane pushes the iOS POS uses elsewhere. */
+  animation: pos-nav-drawer-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  will-change: transform;
+}
+
+.pos-nav-drawer.is-closing {
+  animation-name: pos-nav-drawer-out;
+}
+
+.pos-nav-scrim {
+  animation: pos-nav-scrim-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.pos-nav-scrim.is-closing {
+  animation-name: pos-nav-scrim-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-nav-drawer,
+  .pos-nav-scrim {
+    animation-duration: 1ms;
+  }
+}

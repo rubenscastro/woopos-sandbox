@@ -25,6 +25,16 @@ const S: React.SVGProps<SVGSVGElement> = {
   'aria-hidden': true,
 };
 
+// calendar
+export function Calendar({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} width={size} height={size} style={{ ...base(size), ...style }} {...rest}>
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
 // magnifyingglass
 export function Search({ size, style, ...rest }: IconProps) {
   return (

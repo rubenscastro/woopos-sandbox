@@ -7,12 +7,21 @@
  * Every other entry is a proposal, routed under `/versions/<id>/android|ios/*` — see
  * VERSIONS.md for the full convention.
  */
+import type { FlagId } from '../state/flags';
+
 export type VersionId = 'main' | 'scaling-pos-experience' | 'cash-reconciliation';
 
 export interface VersionEntry {
   id: VersionId;
   label: string;
   description: string;
+  /**
+   * Feature flags this version runs with, overriding production defaults (see
+   * `src/state/flags.ts`). A proposal that exists to explore what a flag enables should turn
+   * it on here rather than expecting the reviewer to flip it by hand every session. Flags are
+   * held per version, so this never leaks into Trunk.
+   */
+  flagDefaults?: Partial<Record<FlagId, boolean>>;
 }
 
 export const VERSIONS: VersionEntry[] = [
@@ -33,6 +42,9 @@ export const VERSIONS: VersionEntry[] = [
     label: 'Cash reconciliation',
     description:
       'Proposal exploring cash reconciliation (counting the drawer, shift open/close, over/short). A copy of Trunk — every screen falls back to Trunk until it is forked here.',
+    // Reconciliation is per-operator work — who counted, who closed the shift — so this
+    // proposal runs with POS roles on.
+    flagDefaults: { roles: true },
   },
 ];
 

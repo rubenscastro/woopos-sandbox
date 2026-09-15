@@ -1,44 +1,70 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useVersion } from '../versions/VersionContext';
+import { VERSIONS, type VersionId } from '../versions/registry';
+import { FLAG_DEFAULTS, type FlagId } from './flags';
+
+export { FLAG_DEFS } from './flags';
+export type { FlagId } from './flags';
 
 /**
- * Prototype feature flags — mirror the iOS POS FeatureFlag gates so we can preview behaviour both
- * on and off. Persisted to localStorage. Only the flags we actually wire up are listed here.
+ * Prototype feature flags, held **per version**. A proposal usually exists to explore what a
+ * flag turns on, so it declares its own defaults in `registry.ts` (`flagDefaults`) — e.g. Cash
+ * reconciliation runs with POS roles on, while Trunk keeps production's off. Without the
+ * per-version split, toggling a flag inside a proposal would follow you back into Trunk and
+ * quietly misrepresent the shipped baseline.
+ *
+ * Explicit toggles from the Flags menu are persisted per version, so a version's defaults only
+ * apply until the reviewer overrides them there.
  */
-export type FlagId = 'roles';
+type FlagMap = Record<FlagId, boolean>;
 
-export const FLAG_DEFS: { id: FlagId; label: string; description: string }[] = [
-  // pointOfSaleRoles — signed-in operator + capability gating. Off by default in production.
-  { id: 'roles', label: 'POS roles', description: 'Signed-in operator & role gating' },
-];
+const KEY = 'woopos-flags.v2';
 
-const DEFAULTS: Record<FlagId, boolean> = { roles: false };
-const KEY = 'woopos-flags';
+/** Defaults for a version: production defaults, with that version's declared overrides on top. */
+function defaultsFor(version: VersionId): FlagMap {
+  const entry = VERSIONS.find((v) => v.id === version);
+  return { ...FLAG_DEFAULTS, ...entry?.flagDefaults };
+}
 
-function readStored(): Record<FlagId, boolean> {
-  if (typeof localStorage === 'undefined') return { ...DEFAULTS };
+type StoredFlags = Partial<Record<VersionId, Partial<FlagMap>>>;
+
+function readStored(): StoredFlags {
+  if (typeof localStorage === 'undefined') return {};
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
-    return { ...DEFAULTS, ...raw };
+    return typeof raw === 'object' && raw !== null ? (raw as StoredFlags) : {};
   } catch {
-    return { ...DEFAULTS };
+    return {};
   }
 }
 
 interface FlagsValue {
-  flags: Record<FlagId, boolean>;
+  flags: FlagMap;
   setFlag: (id: FlagId, value: boolean) => void;
 }
 
 const FlagsContext = createContext<FlagsValue | null>(null);
 
 export function FlagsProvider({ children }: { children: ReactNode }) {
-  const [flags, setFlags] = useState<Record<FlagId, boolean>>(readStored);
+  const { version } = useVersion();
+  const [stored, setStored] = useState<StoredFlags>(readStored);
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(flags));
-  }, [flags]);
+    localStorage.setItem(KEY, JSON.stringify(stored));
+  }, [stored]);
 
-  const setFlag = useCallback((id: FlagId, value: boolean) => setFlags((f) => ({ ...f, [id]: value })), []);
+  // The version's declared defaults, with any explicit toggles for that version layered on top.
+  const flags = useMemo<FlagMap>(
+    () => ({ ...defaultsFor(version), ...stored[version] }),
+    [version, stored],
+  );
+
+  const setFlag = useCallback(
+    (id: FlagId, value: boolean) =>
+      setStored((s) => ({ ...s, [version]: { ...s[version], [id]: value } })),
+    [version],
+  );
+
   const value = useMemo<FlagsValue>(() => ({ flags, setFlag }), [flags, setFlag]);
   return <FlagsContext.Provider value={value}>{children}</FlagsContext.Provider>;
 }

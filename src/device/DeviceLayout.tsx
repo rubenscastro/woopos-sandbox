@@ -10,7 +10,8 @@ import { useVersion } from '../versions/VersionContext';
 import { resolvePath } from '../versions/routing';
 import {
   PreviewStateProvider,
-  usePreviewStateConfig,
+  usePreviewStateConfigs,
+  type PreviewStateConfig,
 } from './PreviewStateContext';
 import { PageBackgroundProvider } from './PageBackground';
 import { DeviceKeyboard } from './DeviceKeyboard';
@@ -734,12 +735,23 @@ function FlowsMenu() {
   );
 }
 
+/** One menu per set of states the current screen published. */
 function PreviewStateMenu() {
-  const config = usePreviewStateConfig();
+  const configs = usePreviewStateConfigs();
+  return (
+    <>
+      {configs.map((c) => (
+        <PreviewStateMenuItem key={c.label} config={c} />
+      ))}
+    </>
+  );
+}
+
+function PreviewStateMenuItem({ config }: { config: PreviewStateConfig }) {
   const [open, setOpen] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
-  if (!config || config.options.length === 0) return null;
+  if (config.options.length === 0) return null;
 
   const active = config.options.find((o) => o.id === config.active);
 

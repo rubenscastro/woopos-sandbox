@@ -27,21 +27,42 @@ export interface PreviewStateConfig {
 }
 
 interface PreviewStateContextValue {
-  config: PreviewStateConfig | null;
-  setConfig: (c: PreviewStateConfig | null) => void;
+  configs: PreviewStateConfig[];
+  publish: (c: PreviewStateConfig) => void;
+  retract: (label: string) => void;
 }
 
 const PreviewStateContext = createContext<PreviewStateContextValue | null>(null);
 
+/**
+ * Screens can publish more than one set of states — Orders has both a refund-error scenario
+ * and a loading state, and they're independent. Configs are keyed by label, so republishing
+ * (on every options/active change) replaces in place and keeps the menu order stable.
+ */
 export function PreviewStateProvider({ children }: { children: ReactNode }) {
-  const [config, setConfig] = useState<PreviewStateConfig | null>(null);
-  const value = useMemo(() => ({ config, setConfig }), [config]);
+  const [configs, setConfigs] = useState<PreviewStateConfig[]>([]);
+
+  const publish = useCallback((c: PreviewStateConfig) => {
+    setConfigs((list) => {
+      const i = list.findIndex((x) => x.label === c.label);
+      if (i === -1) return [...list, c];
+      const next = list.slice();
+      next[i] = c;
+      return next;
+    });
+  }, []);
+
+  const retract = useCallback((label: string) => {
+    setConfigs((list) => list.filter((x) => x.label !== label));
+  }, []);
+
+  const value = useMemo(() => ({ configs, publish, retract }), [configs, publish, retract]);
   return <PreviewStateContext.Provider value={value}>{children}</PreviewStateContext.Provider>;
 }
 
-/** Read the currently published config (used by the chrome). */
-export function usePreviewStateConfig(): PreviewStateConfig | null {
-  return useContext(PreviewStateContext)?.config ?? null;
+/** Read every published config, in publish order (used by the chrome). */
+export function usePreviewStateConfigs(): PreviewStateConfig[] {
+  return useContext(PreviewStateContext)?.configs ?? [];
 }
 
 /**
@@ -56,7 +77,8 @@ export function usePublishPreviewState(config: {
   onSelect: (id: string) => void;
 }) {
   const ctx = useContext(PreviewStateContext);
-  const setConfig = ctx?.setConfig;
+  const publish = ctx?.publish;
+  const retract = ctx?.retract;
   const latest = useRef(config);
   latest.current = config;
 
@@ -67,13 +89,13 @@ export function usePublishPreviewState(config: {
   const { active } = config;
 
   useEffect(() => {
-    if (!setConfig) return;
-    setConfig({
+    if (!publish || !retract) return;
+    publish({
       label,
       options: JSON.parse(optionsKey) as PreviewStateOption[],
       active,
       onSelect: stableOnSelect,
     });
-    return () => setConfig(null);
-  }, [setConfig, label, optionsKey, active, stableOnSelect]);
+    return () => retract(label);
+  }, [publish, retract, label, optionsKey, active, stableOnSelect]);
 }

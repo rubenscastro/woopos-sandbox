@@ -145,8 +145,22 @@
   --color-on-alert-lowest: #543100;
 }
 
+/* `data-platform` lives on <html> while `data-theme` is re-declared on the device screen, so
+   the two attributes are rarely on the same element: the descendant form is what actually
+   reaches tokens rendered inside the device, and the compound form covers the chrome. Without
+   both, `[data-theme='dark']` further down wins on the device screen and these deltas never
+   apply where they matter. */
+[data-platform='ios'] [data-theme='dark'],
 [data-platform='ios'][data-theme='dark'] {
   --color-alert-lowest: #ffb68a;
+
+  /* iOS's POS palette is not the Android gray ramp in dark. `posSurfaceDim` and
+     `posSurfaceContainerLow` are both #2C3338, where Android uses Gray80 #373A3E. It shows
+     wherever a surface sits *on* the page background — the nav drawer's active row, cart item
+     tiles, coupon tiles — which read too light before this. Light mode is identical on both
+     (#F6F7F7), so this is a dark-only delta. */
+  --color-surface-dim: #2c3338;
+  --color-surface-container-low: #2c3338;
 }
 
 /* ---- Dark mode ---- */
@@ -155,7 +169,9 @@
   --color-surface-dim: #373a3e;
   --color-surface-bright: #1d2327;
   --color-surface-container-lowest: #3c434a;
-  --color-surface-container-low: #3c434a;
+  /* Gray80. Was Gray70 (#3c434a), duplicating -lowest — WooPosTheme's dark scheme maps
+     surfaceContainerLow to Gray80. */
+  --color-surface-container-low: #373a3e;
   --color-on-surface: #ffffff;
   --color-inverse-surface: #ffffff;
   --color-inverse-on-surface: #101517;

@@ -1,5 +1,6 @@
 import type { RouteDef } from '../routes/androidRouteDefs';
 import { ItemSelection as ScalingItemSelection } from '../screens/versions/scaling-pos-experience/android/ItemSelection';
+import { CashDrawer } from '../screens/versions/cash-reconciliation/ios/CashDrawer';
 
 export interface VersionOverrides {
   android?: RouteDef[];
@@ -20,10 +21,10 @@ export const versionOverrides: Partial<Record<string, VersionOverrides>> = {
     android: [{ path: 'products', element: <ScalingItemSelection /> }],
     ios: [],
   },
-  // Fresh copy of Trunk — nothing forked yet, so every route falls through to Trunk's
-  // screen. Add entries here as cash-reconciliation screens get built.
   'cash-reconciliation': {
     android: [],
-    ios: [],
+    // `cash-drawer` is new to this proposal — a route Trunk has no counterpart for, which is
+    // exactly what an override list is for. Everything else still falls through to Trunk.
+    ios: [{ path: 'cash-drawer', element: <CashDrawer /> }],
   },
 };

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
 import { Close, HelpCircle, ChevronLeft } from '../../components/ios/IosIcons';
+import { useVersion } from '../../versions/VersionContext';
+import { PosNavFloatingLauncher } from '../../components/versions/cash-reconciliation/ios/PosNavLauncher';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
 import { useCardReader } from '../../tools/CardReaderContext';
@@ -35,6 +37,7 @@ const TITLES: Record<Category, string> = { store: 'Store', hardware: 'Hardware',
 export function Settings() {
   const isPhone = useIsPhone();
   const nav = useNav();
+  const isCashRecon = useVersion().version === 'cash-reconciliation';
   const [cat, setCat] = useState<Category>('store');
   const [showDetailOnPhone, setShowDetailOnPhone] = useState(false);
   const pick = (c: Category) => { setCat(c); if (isPhone) setShowDetailOnPhone(true); };
@@ -42,31 +45,50 @@ export function Settings() {
   const list = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
-        <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-          <Close size="var(--icon-medium)" />
-        </button>
+        {/* Cash reconciliation drops the close button: the floating menu is always on screen,
+            and leaving is what picking another destination in it already does. */}
+        {!isCashRecon && (
+          <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+            <Close size="var(--icon-medium)" />
+          </button>
+        )}
         <PosText variant="heading" bold>Settings</PosText>
       </div>
-      <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: '0 var(--space-lg)' }}>
+      {/* Same clearance as Orders: the floating menu button sits over the bottom-left. */}
+      <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: `0 var(--space-lg) ${isCashRecon ? 'calc(var(--space-lg) + var(--size-small) + var(--space-md))' : '0'}` }}>
         {CATS.map((c) => (
           <SettingRow key={c.id} title={c.title} subtitle={c.subtitle} selected={!isPhone && cat === c.id} onClick={() => pick(c.id)} />
         ))}
+        {isCashRecon && (
+          <SettingRow title="Help" subtitle="Get help and support" selected={!isPhone && cat === 'help'} onClick={() => pick('help')} />
+        )}
       </div>
-      <button type="button" onClick={() => pick('help')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', alignSelf: 'flex-start', padding: 'var(--space-lg)', border: 'none', background: 'none', color: !isPhone && cat === 'help' ? 'var(--color-primary)' : 'var(--color-on-surface)', cursor: 'pointer' }}>
-        <HelpCircle size="var(--icon-medium)" />
-        <PosText variant="bodyMedium" bold color={!isPhone && cat === 'help' ? 'var(--color-primary)' : undefined}>Get help and support</PosText>
-      </button>
+      {/* Cash reconciliation promotes Help from a pinned text link at the foot of the sidebar to
+          a card alongside Store and Hardware, so every destination in the list is the same kind
+          of thing. Trunk keeps the link. */}
+      {!isCashRecon && (
+        <button type="button" onClick={() => pick('help')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', alignSelf: 'flex-start', padding: 'var(--space-lg)', border: 'none', background: 'none', color: !isPhone && cat === 'help' ? 'var(--color-primary)' : 'var(--color-on-surface)', cursor: 'pointer' }}>
+          <HelpCircle size="var(--icon-medium)" />
+          <PosText variant="bodyMedium" bold color={!isPhone && cat === 'help' ? 'var(--color-primary)' : undefined}>Get help and support</PosText>
+        </button>
+      )}
     </div>
   );
 
   const detail = <SettingsDetail cat={cat} onBack={isPhone ? () => setShowDetailOnPhone(false) : undefined} />;
 
-  if (isPhone) return <div style={{ height: '100%', background: 'var(--color-surface)' }}>{showDetailOnPhone ? detail : list}</div>;
+  if (isPhone) return (
+    <div style={{ height: '100%', background: 'var(--color-surface)', position: 'relative' }}>
+      {showDetailOnPhone ? detail : list}
+      {isCashRecon && <PosNavFloatingLauncher />}
+    </div>
+  );
   // Sidebar/list = posSurfaceBright (lighter); detail = posSurface (darker) — matches POSSettingsView.
   return (
-    <div className="woopos-fills-safe-top" style={{ display: 'flex', background: 'var(--color-surface)' }}>
+    <div className="woopos-fills-safe-top" style={{ display: 'flex', background: 'var(--color-surface)', position: 'relative' }}>
       <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{list}</div>
       <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface)' }}>{detail}</div>
+      {isCashRecon && <PosNavFloatingLauncher />}
     </div>
   );
 }

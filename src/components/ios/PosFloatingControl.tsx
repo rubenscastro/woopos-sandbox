@@ -5,6 +5,8 @@ import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCardReader } from '../../tools/CardReaderContext';
 import { useFlags } from '../../state/FlagsContext';
+import { useVersion } from '../../versions/VersionContext';
+import { PosNavLauncher } from '../versions/cash-reconciliation/ios/PosNavLauncher';
 
 /**
  * iOS floating controls (POSFloatingControlView): a bottom-left "…" (ellipsis) menu — Orders /
@@ -19,11 +21,20 @@ export function PosFloatingControl() {
   const nav = useNav();
   const { connected, startConnecting } = useCardReader();
   const { flags } = useFlags();
+  const { version } = useVersion();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
+  // Cash reconciliation swaps the ellipsis popover for a hamburger + full-height nav drawer
+  // (see PosNavDrawer). Branching here rather than forking ItemSelector keeps the whole 700-line
+  // screen shared; only the control itself differs.
+  const isCashRecon = version === 'cash-reconciliation';
+
   return (
     <div style={{ position: 'absolute', left: 'var(--space-lg)', bottom: 'var(--space-lg)', zIndex: 20, display: 'flex', gap: 'var(--space-sm)', alignItems: 'stretch' }}>
+      {isCashRecon ? (
+        <PosNavLauncher variant="floating" />
+      ) : (
       <div ref={ref} style={{ position: 'relative' }}>
         {open && (
           <div className="woopos-liquid-glass" style={{ position: 'absolute', bottom: 'calc(var(--size-small) + var(--space-sm))', left: 0, minWidth: 220, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden' }}>
@@ -45,6 +56,7 @@ export function PosFloatingControl() {
           <Ellipsis />
         </button>
       </div>
+      )}
 
       {/* CardReaderConnectionStatusView: the container is the pill; when disconnected a 2px
           primary rounded-rect is overlaid and then inset from the pill edge by POSSpacing.small,
@@ -90,12 +102,23 @@ function MenuDivider() {
   return <div style={{ height: 1, background: 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)' }} />;
 }
 
-/** Signed-in operator label (POSStaffMenuRow): "Name — Role" + person.circle, non-interactive. */
+/**
+ * Signed-in operator label (POSStaffMenuRow) + person.circle, non-interactive.
+ *
+ * Trunk matches source: `pointOfSale.floatingButtons.staff.labelFormat` is "%1$@ - %2$@", so
+ * the row reads "Thomas - Cashier" with a plain hyphen. Cash reconciliation drops the role and
+ * shows the name alone — scoped to that version so Trunk keeps reflecting what merchants see.
+ */
 export const POS_OPERATOR = { name: 'Thomas', role: 'Cashier' };
 export function OperatorRow() {
+  const { version } = useVersion();
+  const showsRole = version !== 'cash-reconciliation';
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', width: '100%', padding: 'var(--space-sm) var(--space-lg)' }}>
-      <PosText variant="bodyMedium" bold style={{ flex: 1, textAlign: 'left' }}>{POS_OPERATOR.name} — {POS_OPERATOR.role}</PosText>
+      <PosText variant="bodyMedium" style={{ flex: 1, textAlign: 'left' }}>
+        {showsRole ? `${POS_OPERATOR.name} - ${POS_OPERATOR.role}` : POS_OPERATOR.name}
+      </PosText>
       <PersonCircle />
     </div>
   );
