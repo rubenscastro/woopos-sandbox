@@ -26,15 +26,21 @@ filtering.
   `home/items/WooPosItemsList.kt`, `home/items/search/`
 
 ### 3. Item selection — variations
-Drill-in screen when a variable product is tapped.
-- Key source: `home/items/variations/`
+Drill-in when a variable product is tapped. Not a separate route: the items pane crossfades
+to the variations list and the toolbar swaps its whole tab strip for one tab named after the
+parent product, plus a back chevron.
+- Key source: `home/items/variations/`, `home/items/WooPosItemsContent.kt`
 
 ### 4. Item selection — coupons
 Coupon list and application, including expired-state handling.
 - Key source: `home/items/coupons/`
 
 ### 5. Custom amount entry
-Dialog for adding a non-catalog line item (e.g. a manual charge).
+Full-pane form for adding a non-catalog line item (e.g. a manual charge), opened from a
+"Custom amount / Add a one-off charge" entry row at the top of the products list. Despite
+the file name, `WooPosCustomAmountDialog.kt` is no longer a dialog — its composable is
+`WooPosCustomAmountFormScreen`, rendered as an `ItemsScreenState.CustomAmountForm` crossfade
+inside the items pane with the toolbar in back-navigation mode.
 - Key source: `home/items/customamount/`
 
 ### 6. Cart
@@ -58,9 +64,11 @@ Cash tendered / change due flow.
 Confirmation screen after a successful charge.
 - Key source: `paymentsuccess/`
 
-### 11. Mark order as complete
-Post-payment order completion step.
-- Key source: `markorderascomplete/`
+### 11. Mark order as paid
+A payment *method*, not a post-payment step: offered in the all-payment-methods sheet
+alongside Card reader / Tap to Pay / Scan to pay, for sales collected some other way. The
+folder name is stale — every string and test tag in it says `mark_order_as_paid`.
+- Key source: `markorderascomplete/`, `home/totals/WooPosPaymentMethod.kt`
 
 ## Priority 2 — supporting flows
 

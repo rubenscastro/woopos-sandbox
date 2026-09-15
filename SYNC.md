@@ -67,10 +67,18 @@ git diff --name-status <old-pin> origin/trunk -- Modules/Sources/PointOfSale Mod
 
 ### 3. Classify deltas
 
-Most commits are plumbing — analytics/Tracks, crash fixes, R8/Gson, refactors, feature-flag
-removals, comment churn. A delta matters to the prototype only if it's **user-visible**:
-new screens/states, changed copy, layout, colors/tokens, icons/illustrations, or
-interaction behavior a designer would notice.
+See CLAUDE.md's "What to report" — it governs here. Most commits are plumbing:
+analytics/Tracks, crash fixes, R8/Gson, refactors, renames, file moves, feature-flag
+removals, comment churn. A delta is worth reporting only if a merchant would experience it:
+new screens/states, changed copy, layout, colors/tokens, icons/illustrations, or interaction
+behavior a designer would notice.
+
+A refactor that moves a screen between folders, renames a class, or splits a view model is
+**not** a delta, even when the diff is enormous. Verify it changed nothing the merchant sees,
+then drop it — don't log it as "structural change".
+
+The two questions worth answering for every real delta: *does this make iOS and Android
+merchants see different things?* and *does this make the prototype wrong?*
 
 For each candidate, read the actual change (`git show origin/trunk:<path>`, `git log -p`),
 and get ground-truth states/copy from the `@Preview` composables (Android, bottom of each

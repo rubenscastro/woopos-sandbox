@@ -8,16 +8,32 @@ import { parseRoutedPath, resolvePath, type RouteMapResult } from '../versions/r
  * confirmed against source — an unknown/missing slug falls back to the target platform's
  * home, per FLOW_PARITY.md's switcher fallback rule.
  *
- * Currently empty on the iOS side: no iOS flows are built yet, so every switch to iOS lands
- * on the iOS home. Populate as iOS flows land.
+ * Several Android routes map onto one iOS route, because iOS folds sub-flows into a host
+ * screen (cash/card/success live inside `/ios/checkout`; the cart is a pane of
+ * `/ios/products`). Lookup is first-match, so order matters for the reverse direction:
+ * keep the *canonical* Android route for a given iOS slug above the ones that fold into it,
+ * so ios `checkout` → android `totals` rather than `cash-payment`.
+ *
+ * Deliberately absent (verified in source but not built on one side, so they fall through
+ * to home with `available: false`): `eligibility`, `mark-complete`, `scan-to-pay`,
+ * `add-coupon`, `settings-payments`, `settings-catalog`.
  */
 const EQUIV: Partial<Record<PlatformId, string>>[] = [
+  // Canonical pairs — keep first for each iOS slug.
   { android: 'products', ios: 'products' },
   { android: 'order-history', ios: 'orders' },
   { android: 'email-receipt', ios: 'email-receipt' },
   { android: 'settings', ios: 'settings' },
-  { android: 'settings-hardware', ios: 'settings' },
   { android: 'totals', ios: 'checkout' },
+  { android: 'splash', ios: 'loading' },
+  // Android sub-flows that iOS folds into a host screen.
+  { android: 'cart', ios: 'products' }, // iOS cart = pane/sheet of the item selector
+  { android: 'card-payment', ios: 'checkout' }, // card-present states are inline in TotalsView
+  { android: 'cash-payment', ios: 'checkout' }, // PointOfSaleCollectCashView opens from checkout
+  { android: 'payment-success', ios: 'checkout' }, // success is a takeover inside checkout
+  { android: 'settings-hardware', ios: 'settings' },
+  { android: 'barcode-setup', ios: 'settings' }, // iOS: Settings → Hardware → Scanner Setup
+  { android: 'support', ios: 'settings' }, // iOS: Help sits at the bottom of the settings list
 ];
 
 export type { RouteMapResult };

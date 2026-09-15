@@ -109,6 +109,38 @@ anything not forked falls back to `main`'s screen automatically. Register a new 
 needed. Forked screens live in `src/screens/versions/<id>/android|ios/`, mirroring the
 platform split.
 
+## What to report
+
+**The designer's only question is: does a merchant using the real app experience this
+differently?** Report a finding for their decision when — and only when — it is one of:
+
+1. **A UX/flow difference between iOS and Android trunk** — different steps, different
+   screen order, a state or action one platform has and the other doesn't, different
+   affordances, different visible copy. Things that make an iOS merchant and an Android
+   merchant have different experiences.
+2. **A prototype-vs-production difference** — the prototype shows something merchants
+   aren't actually seeing on either platform, so iterating on it would be iterating on
+   fiction.
+
+Everything else is not a finding. Do **not** report, and do not build narrative around:
+folder names, file names, class/package structure, where a screen lives in the source tree,
+view-model vs view splits, which string key is stale, how a repo is organized. That is
+plumbing — use it to *locate* the truth, then throw it away. A row in `FLOW_PARITY.md` that
+says "the folder name is misleading" is worthless to the reader; a row that says "iOS offers
+Print receipt and Android doesn't" is the entire point.
+
+When you do report, lead with what the merchant sees, and state the impact plainly. Source
+paths belong in the reference columns, not in the finding.
+
+If something is wrong but has no UX consequence — a stale doc description, a mislabeled
+route, a comment that lies — **just fix it and mention it in one line at the end**. Don't
+ask, don't build a section around it.
+
+**Answer short.** Give the conclusion, not the reasoning that produced it. No recaps of what
+was asked, no explaining what doesn't matter, no "what I'd do next" unless asked. A few lines
+is usually the whole answer; if the detail is worth keeping, it goes in the doc, not the
+reply. Expand only when asked to.
+
 ## Working style
 
 - Build one flow at a time. After each one, stop and let the designer review before moving
