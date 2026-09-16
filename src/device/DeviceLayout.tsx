@@ -7,6 +7,7 @@ import { usePlatform, type PlatformId } from './PlatformContext';
 import { PlatformSwitcher } from './PlatformSwitcher';
 import { VersionSwitcher } from './VersionSwitcher';
 import { useVersion } from '../versions/VersionContext';
+import { pinnedPlatform } from '../versions/registry';
 import { resolvePath } from '../versions/routing';
 import {
   PreviewStateProvider,
@@ -236,6 +237,7 @@ function SettingsMenu({
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  const { version } = useVersion();
 
   return (
     <div className="chrome-menu" ref={menuRef}>
@@ -245,10 +247,14 @@ function SettingsMenu({
       </button>
       {open && (
         <div className="chrome-menu__dropdown chrome-menu__dropdown--settings" style={{ minWidth: 240 }}>
-          <div className="chrome-segmented-group">
-            <span className="chrome-segmented-label">Platform</span>
-            <PlatformSwitcher />
-          </div>
+          {/* A version built for one platform has nothing to switch between, so the control
+              goes rather than sitting there disabled. */}
+          {!pinnedPlatform(version) && (
+            <div className="chrome-segmented-group">
+              <span className="chrome-segmented-label">Platform</span>
+              <PlatformSwitcher />
+            </div>
+          )}
           <div className="chrome-segmented-group">
             <span className="chrome-segmented-label">Device</span>
             <Segmented<DeviceId>

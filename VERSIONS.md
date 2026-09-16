@@ -34,11 +34,29 @@ Adding a new proposal is two steps:
 No routing code needs to change — routes for every proposal are generated from this
 registry in `App.tsx`.
 
+### One-platform proposals
+
+A proposal exploring a single platform says so with `platforms`:
+
+```ts
+{ id: 'cash-reconciliation', label: 'Cash reconciliation', platforms: ['ios'], … }
+```
+
+The other platform then stops existing for that version: its routes aren't generated, the
+Platform switcher disappears from the chrome's Settings menu, and `resolvePath()` clamps to
+the declared platform — so switching into the proposal from the other side, or opening an old
+URL for it, lands on the built platform instead of a dead route. Omit `platforms` for both.
+
+Without this the unbuilt side still routes, and shows Trunk's screens back — which reads as
+"this proposal looks identical over here" rather than "this proposal isn't about that
+platform".
+
 ## Routing
 
 - Trunk (`main`) is unprefixed: `/android/*`, `/ios/*`.
 - Every proposal routes under `/versions/<id>/android/*` and `/versions/<id>/ios/*`, e.g.
-  `/versions/scaling-pos-experience/android/products`.
+  `/versions/scaling-pos-experience/android/products` — except where `platforms` narrows it
+  to one (see above).
 - `useNav()` (`src/device/platformNav.ts`) and the chrome's `resolvePath()`
   (`src/versions/routing.ts`) are both version-aware, so screens keep calling
   `navigate('/totals')` and it resolves into whichever version+platform is currently active

@@ -12,8 +12,9 @@ import { ConnectivityProvider } from './tools/ConnectivityContext';
 import { CardReaderProvider } from './tools/CardReaderContext';
 import { BarcodeScannerProvider } from './tools/BarcodeScannerContext';
 import { SystemEventsProvider } from './components/versions/scaling-pos-experience/android/systemEvents/SystemEventsContext';
+import { CashDrawerProvider } from './state/versions/cash-reconciliation/CashDrawerContext';
 import { VersionProvider, useVersion } from './versions/VersionContext';
-import { PROPOSAL_VERSIONS } from './versions/registry';
+import { PROPOSAL_VERSIONS, versionPlatforms } from './versions/registry';
 import { versionOverrides } from './versions/overrides';
 import { resolvePath, parseRoutedPath } from './versions/routing';
 import { androidRouteDefs } from './routes/androidRouteDefs';
@@ -102,6 +103,9 @@ export default function App() {
                   changes needed here. ---- */}
               {PROPOSAL_VERSIONS.map((v) => (
                 <Route key={v.id} path={`/versions/${v.id}`}>
+                  {/* A proposal built for one platform doesn't route the other at all —
+                      otherwise the unbuilt side quietly serves Trunk's screens back. */}
+                  {versionPlatforms(v.id).includes('android') && (
                   <Route path="android">
                     <Route index element={<Navigate to={`/versions/${v.id}/android/products`} replace />} />
                     <Route
@@ -123,14 +127,31 @@ export default function App() {
                       ))}
                     </Route>
                   </Route>
+                  )}
+                  {versionPlatforms(v.id).includes('ios') && (
                   <Route path="ios">
                     <Route index element={<Navigate to={`/versions/${v.id}/ios/products`} replace />} />
-                    <Route element={<DeviceLayout />}>
+                    <Route
+                      element={
+                        // The cash drawer session outlives the screen showing it, so its
+                        // provider wraps this proposal's whole iOS tree — leaving the drawer
+                        // for the catalog has to keep the session, and is in fact what ages
+                        // it. Scoped to the proposal, like System Events above.
+                        v.id === 'cash-reconciliation' ? (
+                          <CashDrawerProvider>
+                            <DeviceLayout />
+                          </CashDrawerProvider>
+                        ) : (
+                          <DeviceLayout />
+                        )
+                      }
+                    >
                       {mergeRouteDefs(iosRouteDefs, versionOverrides[v.id]?.ios).map((r) => (
                         <Route key={r.path} path={r.path} element={r.element} />
                       ))}
                     </Route>
                   </Route>
+                  )}
                 </Route>
               ))}
 

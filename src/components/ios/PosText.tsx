@@ -44,8 +44,9 @@ export function PosText({
   style,
 }: PosTextProps) {
   const v = VARS[variant];
-  // iOS renders bodyXLarge regular as semibold; headings are bold.
-  const weight = bold || variant === 'heading' ? 700 : variant === 'bodyXLarge' ? 600 : 400;
+  // iOS renders bodyXLarge regular as semibold. Headings come in both weights — titles are
+  // Heading/Bold, figures (a stat, an amount) are Heading/Regular — so `bold` decides.
+  const weight = bold ? 700 : variant === 'bodyXLarge' ? 600 : 400;
   return (
     <Tag style={{ fontSize: v.size, lineHeight: v.line, fontWeight: weight, textAlign: align, color, margin: 0, ...style }}>
       {children}

@@ -1,0 +1,121 @@
+/*
+ * A simulation of SwiftUI's `.datePickerStyle(.graphical)` calendar — the control the app
+ * already uses wherever a date filters a list (Bookings' date filter, Coupon expiry).
+ *
+ * NOT a WooPOS-designed component, which is why it looks like iOS rather than like the rest of
+ * the app: a real one is the system picker, drawn by UIKit, and only its tint is the app's.
+ * DESIGN.md has no entry for it. Measurements follow the system control (44pt day cells,
+ * 17pt day numbers) rather than the POS scale, for the same reason.
+ */
+.pos-datepicker {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 30;
+  width: 320px;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-normal-large);
+}
+
+.pos-datepicker__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.pos-datepicker__month {
+  font-family: var(--font-family);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.pos-datepicker__spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The ‹ › month steppers. The system draws these in the tint colour. */
+.pos-datepicker__step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.pos-datepicker__weekdays,
+.pos-datepicker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.pos-datepicker__weekday {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: var(--space-xs);
+  color: var(--color-on-surface-variant-highest);
+}
+
+.pos-datepicker__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  font-family: var(--font-family);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+/* Today, unselected: the system marks it in the tint colour rather than with a fill. */
+.pos-datepicker__day.is-today {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.pos-datepicker__day.is-selected {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+
+/* Days with no session behind them still render — the picker is a calendar, not a list of
+   results — but they read as unavailable. */
+.pos-datepicker__day:disabled {
+  color: var(--color-on-surface-variant-lowest);
+  cursor: default;
+}
+
+/* The app pairs its graphical pickers with a Clear (BookingDateTimeFilterView), so a filter
+   can be lifted without guessing which date means "all". */
+.pos-datepicker__clear {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+  background: none;
+  font-family: var(--font-family);
+  font-size: 17px;
+  color: var(--color-primary);
+  cursor: pointer;
+}

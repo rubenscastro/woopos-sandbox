@@ -50,20 +50,34 @@
   padding-bottom: calc(var(--space-lg) + var(--size-small) + var(--space-md));
 }
 
+/* Every box on this screen is the same POS card (posItemCardBorderStyles): lowest container,
+   medium radius, the 4-layer card shadow. Only what sits inside them differs. */
+.cash-drawer__card,
+.cash-drawer__panel,
+.cash-drawer__session {
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+  box-shadow: var(--pos-shadow-medium);
+  color: var(--color-on-surface);
+}
+
+/* The two that are buttons. */
+.cash-drawer__card,
+.cash-drawer__session {
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+}
+
 .cash-drawer__card {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  width: 100%;
-  text-align: left;
-  padding: var(--space-md);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-container-lowest);
-  /* Transparent at rest so selecting doesn't shift the card by 2px. */
+  /* Transparent at rest so selecting doesn't shift the card by its border width. */
   border: 2px solid transparent;
-  box-shadow: var(--pos-shadow-medium);
-  color: var(--color-on-surface);
-  cursor: pointer;
 }
 
 .cash-drawer__card.is-selected {
@@ -77,15 +91,17 @@
   padding: 0 var(--space-md) var(--space-md);
 }
 
+/* On a phone the detail fills the width, so the floating menu button in the corner floats over
+   its content. Give the scroll the clearance the sidebar list already has. */
+.cash-drawer--phone .cash-drawer__detail {
+  padding-bottom: calc(var(--space-lg) + var(--size-small) + var(--space-md));
+}
+
 /* The detail card holds the whole section, not one control — hence the large inner gap. */
 .cash-drawer__panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  padding: var(--space-md);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-container-lowest);
-  box-shadow: var(--pos-shadow-medium);
 }
 
 .cash-drawer__field {
@@ -111,26 +127,31 @@
   border-color: var(--color-inverse-surface);
 }
 
-.cash-drawer__amount-prefix,
-.cash-drawer__amount {
-  font-family: var(--font-family);
-  /* Heading/Regular — the amount is the number you're committing, not a form value. */
-  font-size: var(--font-heading-size);
-  font-weight: 400;
-  line-height: var(--font-heading-line);
-  color: var(--color-on-surface);
-}
-
 .cash-drawer__amount {
   flex: 1;
   min-width: 0;
   border: none;
   outline: none;
   background: transparent;
+  font-family: var(--font-family);
+  /* Heading/Regular — the amount is the number you're committing, not a form value. */
+  font-size: var(--font-heading-size);
+  font-weight: 400;
+  line-height: var(--font-heading-line);
+  color: var(--color-on-surface);
+  caret-color: var(--color-primary);
 }
 
-.cash-drawer__amount::placeholder {
-  color: var(--color-on-surface);
+/* Title container (2010:1233): the screen's name, and under it the session's number when
+   there is one. The 4px top/bottom keeps a one-line title on the same baseline as a two-line. */
+.cash-drawer__title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: none;
+  min-width: 0;
+  gap: var(--space-xs);
+  padding: var(--space-xs) 0;
 }
 
 /* ---- Running session (2011:1366) ---- */
@@ -139,18 +160,129 @@
   min-width: 0;
 }
 
+/* 24 between cards, throughout the drawer. */
 .cash-drawer__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Past sessions is a list, not a stack of cards: its rows sit close enough to scan as one
+   column, the way the orders list does. 24 between them reads as separate sections. */
+.cash-drawer__stack--list {
+  gap: var(--space-sm);
+}
+
+/* ---- Closed session report (2019:4198) ----
+   Its cards sit on `surface-container-low`, a step down from the running session's
+   `-lowest` — a report reads as a quieter surface than the drawer you're working in. */
+.cash-drawer__panel--report {
+  background: var(--color-surface-container-low);
+  gap: var(--space-md);
+}
+
+/* Opened / Closed, side by side — one card per end of the day. */
+.cash-drawer__ends {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.cash-drawer__end {
+  flex: 1;
+  min-width: 0;
+}
+
+.cash-drawer__end-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.cash-drawer__end-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* The glyphs sit back from the text they name — they're what the line is about, not part of
+   reading it.
+   The slot is 24 but the glyph inside is 16: in the design the 24 is an SF Symbol's *frame*,
+   and the symbol is drawn at 15pt within it. Our icons fill their whole viewBox, so drawing
+   them at the frame size makes them half again too big next to 16pt text. Keeping the slot
+   keeps the text on the design's own left edge. */
+.cash-drawer__end-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--icon-small);
+  height: var(--icon-small);
+  color: var(--color-on-surface-variant-highest);
+}
+
+/* The summary card holds two blocks: the figures under their title, and the movements under
+   those. 32 between them, against the 16 inside each — so the card reads as two things. */
+.cash-drawer__panel--summary {
+  gap: var(--space-xl);
+}
+
+.cash-drawer__summary-head {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-/* Expected in drawer: figure on the left, its action pinned to the top-right. */
-.cash-drawer__panel--row {
-  flex-direction: row;
+/* The four reconciliation figures, spread across the summary card. 32px is the design's own
+   column gap — wider than --space-lg, narrow enough that four columns still fit. */
+.cash-drawer__summary {
+  display: flex;
   align-items: flex-start;
+  gap: 32px;
+}
+
+.cash-drawer__summary > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A figure over its name. The amount is bodyXLarge semibold here rather than the running
+   session's heading — four of them share a row, so they're set smaller. */
+.cash-drawer__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.cash-drawer__figure-value {
+  font-family: var(--font-family);
+  font-size: var(--font-body-xl-size);
+  font-weight: 600;
+  line-height: var(--font-body-xl-line);
+  color: var(--color-on-surface);
+}
+
+/* Cash sales / Paid in/out / Cash refunds, as rows under the figures they add up to. */
+.cash-drawer__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.cash-drawer__breakdown-row {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
+}
+
+/* A hairline between rows, sitting midway in the gap — the row's own 8px above it comes from
+   the stack, the 8px below from this padding. Derived from the label colour rather than
+   `--color-outline-variant`, which stays light in dark mode and would read as a bright rule
+   across the card. */
+.cash-drawer__breakdown-row + .cash-drawer__breakdown-row {
+  padding-top: var(--space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--color-on-surface) 15%, transparent);
 }
 
 .cash-drawer__stats {
@@ -171,40 +303,6 @@
   min-width: 0;
 }
 
-.cash-drawer__stat-value {
-  font-family: var(--font-family);
-  font-size: var(--font-heading-size);
-  font-weight: 400;
-  line-height: var(--font-heading-line);
-  color: var(--color-on-surface);
-}
-
-/* 40px pill used for both header and inline actions — outlined by default, filled when it's
-   the primary way out of the screen. */
-.cash-drawer__chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  height: 40px;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
-  border: 2px solid var(--color-inverse-surface);
-  background: transparent;
-  color: var(--color-on-surface);
-  font-family: var(--font-family);
-  font-size: var(--font-body-sm-size);
-  line-height: var(--font-body-sm-line);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.cash-drawer__chip.is-primary {
-  border-color: transparent;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
 .cash-drawer__activity {
   gap: var(--space-lg);
 }
@@ -215,6 +313,18 @@
   gap: var(--space-md);
 }
 
+/* A row that opens its order is a button, but it keeps the shape of the rows around it — the
+   chevron is what marks it, not a box of its own. */
+.cash-drawer__entry.is-tappable {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .cash-drawer__entry-text {
   display: flex;
   flex-direction: column;
@@ -222,36 +332,25 @@
   min-width: 0;
 }
 
-/* Second line: the timestamp, then either a plain note or the order it was recorded against. */
-.cash-drawer__entry-meta {
-  margin: 0;
-  font-family: var(--font-family);
-  font-size: var(--font-body-sm-size);
-  line-height: var(--font-body-sm-line);
-  color: var(--color-on-surface-variant-highest);
-}
-
-.cash-drawer__entry-link {
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  color: var(--color-primary);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.cash-drawer__entry-amount {
+/* The amount and the chevron travel together at the end of the row. */
+.cash-drawer__entry-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   flex: none;
-  font-family: var(--font-family);
-  font-size: var(--font-body-md-size);
-  line-height: var(--font-body-lg-size);
-  font-weight: 400;
-  color: var(--color-on-surface);
 }
 
-.cash-drawer__entry-amount.is-positive {
-  color: var(--color-success);
+/* Fixed width whether or not there's a glyph in it, so the amounts line up down the log. */
+.cash-drawer__entry-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--icon-small);
+  height: var(--icon-small);
+  /* Muted like the row's second line — it marks the row as tappable without competing with
+     the amount beside it. Same weight as the chevron on a Past sessions row. */
+  color: var(--color-on-surface-variant-highest);
 }
 
 /* Starting session (2011:1496) — fixed 248px so the pane doesn't jump when the spinner is
@@ -263,21 +362,11 @@
 }
 
 /* ---- Past sessions (2011:1572) ---- */
+/* The card's own padding around a 32 + 4 + 24 stack comes to the design's 92pt, unpinned. */
 .cash-drawer__session {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  width: 100%;
-  height: 92px;
-  box-sizing: border-box;
-  padding: var(--space-md);
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-surface-container-lowest);
-  box-shadow: var(--pos-shadow-medium);
-  color: var(--color-on-surface);
-  text-align: left;
-  cursor: pointer;
 }
 
 .cash-drawer__session-text {
@@ -286,17 +375,4 @@
   gap: var(--space-xs);
   flex: 1;
   min-width: 0;
-}
-
-/* Bare glyph button for the header's trailing slot (the date filter). */
-.cash-drawer__icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  padding: 4px;
-  border: none;
-  background: none;
-  color: var(--color-on-surface);
-  cursor: pointer;
 }

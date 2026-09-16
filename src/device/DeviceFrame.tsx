@@ -14,14 +14,17 @@ interface DeviceSpec {
   bezel: number;
   radius: number;
   notch: boolean;
+  /**
+   * How much of the available stage the fitted device takes, so it reads as a preview on a
+   * canvas rather than a full-bleed screen. Per device: the tablet is the register's real
+   * working surface and where most flows are reviewed, so it sits larger than the phone.
+   */
+  fit: number;
 }
 
-/** Shrinks the fitted device so it reads as a preview on a canvas, not a full-bleed screen. */
-const FIT_RATIO = 0.81;
-
 const SPECS: Record<DeviceId, DeviceSpec> = {
-  tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false },
-  phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 46, notch: true },
+  tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false, fit: 0.93 },
+  phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 46, notch: true, fit: 0.81 },
 };
 
 const DRAG_THRESHOLD = 5;
@@ -48,8 +51,8 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
-  // Scale the frame to fit the available stage area, never upscaling past 1:1, then hold it
-  // at 90% so the device sits inside the canvas rather than filling it edge to edge.
+  // Scale the frame to fit the available stage area, never upscaling past 1:1, then hold it at
+  // the device's own fit ratio so it sits inside the canvas rather than filling it edge to edge.
   useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -57,13 +60,13 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
       const pad = 32;
       const availW = stage.clientWidth - pad;
       const availH = stage.clientHeight - pad;
-      setScale(Math.min(1, availW / outerW, availH / outerH) * FIT_RATIO);
+      setScale(Math.min(1, availW / outerW, availH / outerH) * spec.fit);
     };
     recompute();
     const ro = new ResizeObserver(recompute);
     ro.observe(stage);
     return () => ro.disconnect();
-  }, [outerW, outerH]);
+  }, [outerW, outerH, spec.fit]);
 
   return (
     <div className="device-stage" ref={stageRef}>

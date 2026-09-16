@@ -82,3 +82,27 @@
 .kb-key--return {
   flex: 2;
 }
+
+/* The decimal pad (.decimalPad / .numberPad): a centred keypad rather than a full-width
+   keyboard, filling the same keyboard area. Narrower than the screen, the way the pad sits on
+   a tablet; on a phone the device is narrow enough that it fills the width anyway. */
+.kb-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  flex: 1;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.kb-pad .kb-key {
+  font-size: 24px;
+}
+
+/* The pad's delete key is the same width as a digit — it's one cell of the grid, not a
+   modifier stretched across a row. */
+.kb-pad .kb-key--mod {
+  flex: none;
+  font-size: 20px;
+}

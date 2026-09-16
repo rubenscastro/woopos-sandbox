@@ -1,3 +1,4 @@
+import './PosGhostBar.css';
 import './PosGhostOrderRow.css';
 
 /**

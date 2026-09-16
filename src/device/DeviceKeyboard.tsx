@@ -10,6 +10,20 @@ import './DeviceKeyboard.css';
  */
 type Field = HTMLInputElement | HTMLTextAreaElement;
 
+/**
+ * Which layout is up, chosen from the focused field the way the OS chooses from its
+ * `keyboardType`. `numeric` is the decimal pad — a keypad, with no way back to letters,
+ * because `.decimalPad` has none.
+ */
+type KeyboardMode = 'letters' | 'symbols' | 'numeric';
+
+/** The decimal pad's grid, reading like a calculator. */
+const PAD = [
+  ['1', '2', '3'],
+  ['4', '5', '6'],
+  ['7', '8', '9'],
+];
+
 const LETTERS = [
   ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
   ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
@@ -31,7 +45,7 @@ function setNativeValue(el: Field, value: string) {
 export function DeviceKeyboard() {
   const { device } = useDevice();
   const [visible, setVisible] = useState(false);
-  const [mode, setMode] = useState<'letters' | 'symbols'>('letters');
+  const [mode, setMode] = useState<KeyboardMode>('letters');
   const [shift, setShift] = useState(false);
   const fieldRef = useRef<Field | null>(null);
 
@@ -50,9 +64,11 @@ export function DeviceKeyboard() {
       if (isDeviceField(e.target)) {
         const el = e.target as Field;
         fieldRef.current = el;
-        // Numeric fields (e.g. cash amount) open straight to the number/symbols layout.
+        // A field that only takes numbers gets the decimal pad, not the full keyboard — the
+        // app's own cash fields declare `.decimalPad` / `.numberPad`
+        // (POSCashAmountTextField, AddCustomAmountView), and that's a keypad, not QWERTY.
         const numeric = el instanceof HTMLInputElement && (el.inputMode === 'decimal' || el.inputMode === 'numeric' || el.type === 'number' || el.type === 'tel');
-        setMode(numeric ? 'symbols' : 'letters');
+        setMode(numeric ? 'numeric' : 'letters');
         setVisible(true);
       }
     };
@@ -116,6 +132,38 @@ export function DeviceKeyboard() {
     e.preventDefault();
     fn();
   };
+
+  // The decimal pad: digits in a grid, a decimal separator and a delete. No letters, no
+  // return — the pad has neither.
+  if (mode === 'numeric') {
+    return (
+      <div
+        className="device-keyboard woopos-slide-up"
+        style={device === 'tablet' ? { minHeight: '40%' } : undefined}
+        onMouseDown={(e) => e.preventDefault()}
+        onPointerDown={(e) => e.preventDefault()}
+      >
+        <div className="kb-pad">
+          {PAD.flat().map((ch) => (
+            <button key={ch} className="kb-key" onPointerDown={hold(() => insert(ch))}>
+              {ch}
+            </button>
+          ))}
+          {/* The separator is on the pad even where the field ignores it — an ATM-style
+              amount shifts digits in from the right — because the real pad shows it. */}
+          <button className="kb-key" onPointerDown={hold(() => insert('.'))}>
+            .
+          </button>
+          <button className="kb-key" onPointerDown={hold(() => insert('0'))}>
+            0
+          </button>
+          <button className="kb-key kb-key--mod" onPointerDown={hold(backspace)} aria-label="Backspace">
+            ⌫
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

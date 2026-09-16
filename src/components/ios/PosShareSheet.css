@@ -1,0 +1,256 @@
+/*
+ * A simulation of the system share sheet (`UIActivityViewController`).
+ *
+ * Like the date picker, this is NOT a WooPOS component: the real one is drawn by the OS, its
+ * targets come from whatever the merchant has installed, and an app can only hand it an item.
+ * DESIGN.md has no entry for it, so everything here is the system's own metrics — 17pt rows,
+ * 60pt app tiles, 44pt row height, hairline separators inset to the label — rather than the
+ * POS scale. Only the surface colours come from the app, so it sits in both themes.
+ */
+@keyframes pos-share-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pos-share-scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* The slide keeps the horizontal centring, so it animates as one composed transform. */
+@keyframes pos-share-in {
+  from {
+    transform: translateX(-50%) translateY(100%);
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes pos-share-out {
+  from {
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    transform: translateX(-50%) translateY(100%);
+  }
+}
+
+.pos-share__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 42;
+  background: color-mix(in srgb, #000 40%, transparent);
+  animation: pos-share-scrim-in 280ms ease-out both;
+}
+
+.pos-share__scrim.is-closing {
+  animation: pos-share-scrim-out 280ms ease-in both;
+}
+
+/* Bottom-anchored and centred, the way the sheet presents at this width — not edge to edge.
+   It stops short of the top; the sheet is never the whole screen. */
+.pos-share {
+  /* The system separator: a hairline at ~18% of the label colour, not an outline token. */
+  --share-separator: color-mix(in srgb, var(--color-on-surface) 18%, transparent);
+  /* `secondaryLabel`. */
+  --share-secondary: color-mix(in srgb, var(--color-on-surface) 60%, transparent);
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 43;
+  display: flex;
+  flex-direction: column;
+  width: min(540px, 100%);
+  max-height: calc(100% - var(--device-safe-top, 0px) - 24px);
+  box-sizing: border-box;
+  padding: 6px 16px 16px;
+  border-radius: 12px 12px 0 0;
+  /* The sheet is the grouped background and the rows are the cards on it, which is the pairing
+     the system uses: a grey sheet under white rows in light, and the reverse relationship in
+     dark. `surface-bright` would collapse into `surface-container-lowest` in light — both are
+     white — and the action list would vanish. */
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-family);
+  box-shadow: var(--shadow-normal-large);
+  animation: pos-share-in 280ms ease-out both;
+}
+
+.pos-share.is-closing {
+  animation: pos-share-out 280ms ease-in both;
+}
+
+.pos-share__grabber {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto 10px;
+  border-radius: 2.5px;
+  background: color-mix(in srgb, var(--color-on-surface) 18%, transparent);
+}
+
+/* ---- Item preview: what's being shared, and the way out ---- */
+.pos-share__preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 0 14px;
+}
+
+.pos-share__thumb {
+  flex: none;
+  width: 42px;
+  height: 54px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--share-separator);
+}
+
+.pos-share__preview-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.pos-share__title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.pos-share__subtitle {
+  font-size: 13px;
+  color: var(--share-secondary);
+}
+
+/* "Options ›" — the sheet's own control for what gets attached. */
+.pos-share__options {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 3px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* The grey circle xmark in the sheet's top-right. */
+.pos-share__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-on-surface) 10%, transparent);
+  color: var(--share-secondary);
+  cursor: pointer;
+}
+
+/* ---- Share targets, scrolling sideways past the sheet's edge ---- */
+.pos-share__targets {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 14px 0 18px;
+  border-top: 1px solid var(--share-separator);
+  scrollbar-width: none;
+}
+
+.pos-share__target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  width: 68px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  line-height: 13px;
+  text-align: center;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+/* 60pt app tiles. The radius approximates the icon grid's continuous corner. */
+.pos-share__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+}
+
+/* ---- Actions, as one grouped list ---- */
+.pos-share__actions {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  background: var(--color-surface-container-lowest);
+  overflow: hidden;
+}
+
+.pos-share__action {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 16px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 17px;
+  letter-spacing: -0.4px;
+  text-align: left;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+/* Separators start at the label, not at the card's edge — the grouped-list inset. */
+.pos-share__action + .pos-share__action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  height: 1px;
+  background: var(--share-separator);
+}
+
+.pos-share__action.is-tinted {
+  color: var(--color-primary);
+}
+
+.pos-share__action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--color-on-surface);
+}

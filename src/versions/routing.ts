@@ -2,7 +2,7 @@ import type { PlatformId } from '../device/PlatformContext';
 import { androidRouteDefs } from '../routes/androidRouteDefs';
 import { iosRouteDefs } from '../routes/iosRouteDefs';
 import { mergeRouteDefs } from '../routes/mergeRouteDefs';
-import { VERSIONS, type VersionId } from './registry';
+import { VERSIONS, pinnedPlatform, type VersionId } from './registry';
 import { versionOverrides } from './overrides';
 
 /** `main` is unprefixed (`/android/*`, `/ios/*`); every other version routes under `/versions/<id>`. */
@@ -17,8 +17,11 @@ export function versionBasePath(version: VersionId): string {
  */
 export function resolvePath(version: VersionId, platform: PlatformId, to: string): string {
   const base = versionBasePath(version);
-  if (to === '/flows' || to === '/') return `${base}/${platform}`;
-  return `${base}/${platform}${to}`;
+  // A version built for one platform routes there whatever the platform context says, so a
+  // reviewer arriving from the other one can't land on a tree that was never generated.
+  const on = pinnedPlatform(version) ?? platform;
+  if (to === '/flows' || to === '/') return `${base}/${on}`;
+  return `${base}/${on}${to}`;
 }
 
 /** Parses a routed pathname (main or versioned tree) back into its parts. */
@@ -58,10 +61,13 @@ export interface RouteMapResult {
  *  the current slug — a `main`-only edge case, since proposals always inherit `main`'s
  *  screens for anything they haven't forked. */
 export function mapVersion(to: VersionId, platform: PlatformId, pathname: string): RouteMapResult {
+  // Switching into a single-platform version switches platform with it, so the slug is looked
+  // up against the tree it will actually land in.
+  const on = pinnedPlatform(to) ?? platform;
   const { slug } = parseRoutedPath(pathname);
-  if (!slug) return { path: resolvePath(to, platform, '/'), available: true };
-  const exists = routeDefsFor(to, platform).some((r) => r.path === slug);
+  if (!slug) return { path: resolvePath(to, on, '/'), available: true };
+  const exists = routeDefsFor(to, on).some((r) => r.path === slug);
   return exists
-    ? { path: resolvePath(to, platform, `/${slug}`), available: true }
-    : { path: resolvePath(to, platform, '/products'), available: false };
+    ? { path: resolvePath(to, on, `/${slug}`), available: true }
+    : { path: resolvePath(to, on, '/products'), available: false };
 }

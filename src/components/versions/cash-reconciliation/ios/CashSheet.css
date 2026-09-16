@@ -1,0 +1,204 @@
+/*
+ * The full-page sheet the cash flows ask their questions in — Record Pay in/out
+ * (2013:2634 → 2013:2755) and Close session (2020:4526 → 2020:4727). Same shape either way:
+ * a header, one big value being typed, and the action that commits it.
+ *
+ * Three bands, and each claims its height differently (2020:4724): the header hugs its
+ * content, the action hugs its own, and the middle takes everything else. Nothing here is
+ * spaced by a fixed gap — the question sits in the middle of whatever room the other two
+ * leave, so it stays centred as the keyboard changes size under it and as the step grows or
+ * drops a line.
+ *
+ * Keyframes rather than a state-driven transition, for the same reason OrderSheet uses them:
+ * a transform flipped one frame after mount depends on the browser painting the off-screen
+ * position first, which isn't reliably true.
+ */
+@keyframes cash-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes cash-sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Full page, not a partial sheet — it covers the drawer entirely and slides back off it. No
+   scrim: there's nothing left visible behind to dim. */
+.cash-sheet {
+  /* The size of the value being typed: larger than --font-heading-size, the biggest type in
+     the system, because on these screens the value *is* the screen. DESIGN.md has no token
+     for it, so it's declared once here rather than repeated. CashSheetValue reads this and
+     shrinks from it — the floor it shrinks to is a scale factor, over there. */
+  --cash-sheet-value-size: 56px;
+
+  position: absolute;
+  /* Full page means the whole app, not the whole device: it starts below the OS status bar,
+     which stays put. Starting at the safe-top edge rather than padding down from 0 also keeps
+     the sheet from sliding up *through* the status strip. */
+  top: var(--device-safe-top, 0px);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  /* The soft keyboard covers the bottom of the screen; the sheet ends where it begins, which
+     is what puts the action just above it. */
+  padding-bottom: var(--device-keyboard-height, 0px);
+  box-sizing: border-box;
+  /* A plain decelerating slide up from the bottom edge. The iOS sheet curve
+     (cubic-bezier(0.32, 0.72, 0, 1)) brakes hard enough at the end to read as a snap on a
+     full-page panel, where there's no smaller card to sell the spring. */
+  animation: cash-sheet-in 280ms ease-out both;
+}
+
+/* Once it has arrived, the bottom edge travels rather than snaps: swapping the decimal pad for
+   the letter keyboard between steps changes the keyboard's height, and the action rides that
+   change instead of jumping to its new place. Held back until the slide-in is over — see the
+   note on `settled` in CashSheet.tsx. */
+.cash-sheet.is-settled {
+  transition: padding-bottom 280ms ease-out;
+}
+
+.cash-sheet.is-closing {
+  animation: cash-sheet-out 280ms ease-in both;
+}
+
+/* 32pt all round, against the 16pt the drawer's own headers use — this is a page of its own. */
+.cash-sheet__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex: none;
+  padding: var(--space-xl);
+}
+
+/* With a description the header is two lines tall and its controls sit at the top of it, level
+   with the title, rather than centred against the pair (2013:2756). */
+.cash-sheet__header.has-description {
+  align-items: flex-start;
+}
+
+.cash-sheet__heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cash-sheet__header-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The question, in the room the header and the action leave: it takes the remainder of the
+   page and centres what it holds in it (2020:4570 — a 194pt band of a 402pt sheet, its block
+   centred). Growing the block by a line re-centres it here instead of pushing the action down
+   into the keyboard. */
+.cash-sheet__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--space-md);
+  overflow: hidden;
+}
+
+/* Hugs its own height, 16pt clear of the keyboard the sheet ends against. */
+.cash-sheet__action {
+  flex: none;
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+/* The value and whatever the flow says about it, centred as one block (2020:4572). No gap:
+   the lines carry their own spacing inside .cash-sheet__reveal, so one that isn't being shown
+   takes up nothing at all — a gap would leave its space behind. */
+.cash-sheet__value-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Centres the lines themselves, not just the block: each one sits inside its own collapsible
+     wrapper, so the column's own centring reaches the wrapper and stops there. */
+  text-align: center;
+}
+
+/* A line the step only sometimes has to say. Collapsed to nothing rather than unmounted, so it
+   opens and closes over a transition and the block re-centres across it — the alternative is
+   the value jumping half a line the instant a discrepancy appears. */
+.cash-sheet__reveal {
+  width: 100%;
+  overflow: hidden;
+  opacity: 0;
+}
+
+/* The height itself is set inline by CashSheetReveal, which measures the line — see the note
+   there on why this isn't the `0fr`/`1fr` grid trick. `is-ready` holds the transition back for
+   the first frame, so a line the step opens with is simply there rather than growing in. */
+.cash-sheet__reveal.is-ready {
+  transition:
+    height 220ms ease-out,
+    opacity 220ms ease-out;
+}
+
+.cash-sheet__reveal.is-shown {
+  opacity: 1;
+}
+
+/* Carries the line's spacing above it, inside the height being animated, so the gap closes
+   with the line instead of surviving it. */
+.cash-sheet__reveal-line {
+  padding-top: var(--space-md);
+}
+
+/* The value being typed — this screen is the value and nothing else. The size is set inline by
+   CashSheetValue once it knows how much of it fits; the transition is what keeps the shrink
+   from reading as a flicker per keystroke. */
+.cash-sheet__value {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font-family: var(--font-family);
+  font-size: var(--cash-sheet-value-size);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--color-on-surface);
+  caret-color: var(--color-primary);
+  transition: font-size 140ms ease-out;
+}
+
+/* Nothing entered yet: the figure is a prompt, not an amount. */
+.cash-sheet__value.is-empty {
+  opacity: 0.2;
+}
+
+.cash-sheet__value::placeholder {
+  color: var(--color-on-surface);
+  opacity: 0.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cash-sheet,
+  .cash-sheet.is-closing {
+    animation: none;
+  }
+
+  .cash-sheet.is-settled,
+  .cash-sheet__reveal.is-ready,
+  .cash-sheet__value {
+    transition: none;
+  }
+}

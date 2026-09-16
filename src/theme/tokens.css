@@ -287,3 +287,18 @@
   --shadow-normal-medium: 0 1px 4px rgba(0, 0, 0, 0.24);
   --shadow-normal-large: 0 2px 16px rgba(0, 0, 0, 0.24);
 }
+
+/* ---- iOS type deltas ----
+   Sizes match Android across the ramp, but `bodyMedium`'s line height does not: iOS sets 24
+   against Android's 32 (Figma "Font/Line Height/Body Medium" = 24 on both cash-drawer frames,
+   2011:1366 and 2012:1773). It's the line height of the busiest row type in the app — a log
+   entry's title, a card's subtitle — so the 8px shows up as every two-line row running taller
+   than the design.
+
+   Declared after the ramp and paired with the `[data-device]` form for the same reason the
+   dark deltas above are: the ramp re-declares itself on the device screen, and a token set
+   only on <html> never reaches inside it. */
+[data-platform='ios'],
+[data-platform='ios'] [data-device] {
+  --font-body-md-line: max(var(--font-floor), calc(24px * var(--font-scale)));
+}

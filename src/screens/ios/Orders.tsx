@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
-import { Close, ChevronLeft, DotsHorizontal, ErrorX } from '../../components/ios/IosIcons';
+import { Close, ChevronLeft, ErrorX } from '../../components/ios/IosIcons';
+import { PosOverflowMenu } from '../../components/ios/PosOverflowMenu';
 import { useVersion } from '../../versions/VersionContext';
 import { PosNavFloatingLauncher } from '../../components/versions/cash-reconciliation/ios/PosNavLauncher';
 import { PosGhostOrderList } from '../../components/ios/PosGhostOrderRow';
@@ -11,7 +12,6 @@ import { PosButton } from '../../components/ios/PosButton';
 import { ProductImage } from '../../components/android/ProductImage';
 import { SuccessCheckmark } from '../../components/android/SuccessCheckmark';
 import { useIsPhone } from '../../hooks/useBreakpoint';
-import { useClickOutside } from '../../hooks/useClickOutside';
 import { useNav } from '../../device/platformNav';
 import { formatUsd } from '../../lib/currency';
 import { orders, STATUS_COLORS, type MockOrder } from '../../mocks/android/orders';
@@ -238,48 +238,11 @@ export function OrderDetail({
  *  "Issue refund" filled button (POSButtonStyle .extraSmall) + an "..." menu with
  *  Email receipt. */
 function OrderDetailActions({ onIssueRefund, onEmail }: { onIssueRefund: () => void; onEmail: () => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const ref = useClickOutside<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flex: 'none' }}>
-      <button
-        type="button"
-        onClick={onIssueRefund}
-        style={{
-          border: 'none',
-          borderRadius: 'var(--radius-md)',
-          background: 'var(--color-primary)',
-          color: 'var(--color-on-primary)',
-          font: 'inherit',
-          fontWeight: 600,
-          fontSize: 'var(--font-body-md-size)',
-          padding: 'var(--space-sm) var(--space-md)',
-          cursor: 'pointer',
-        }}
-      >
-        Issue refund
-      </button>
-      <div ref={ref} style={{ position: 'relative' }}>
-        <button
-          type="button"
-          aria-label="More actions"
-          onClick={() => setMenuOpen((o) => !o)}
-          style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 'var(--space-sm)', cursor: 'pointer' }}
-        >
-          <DotsHorizontal size="var(--icon-medium)" />
-        </button>
-        {menuOpen && (
-          <div className="woopos-liquid-glass" style={{ position: 'absolute', top: 'calc(100% + var(--space-xs))', right: 0, minWidth: 200, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden', zIndex: 30 }}>
-            <button
-              type="button"
-              onClick={() => { setMenuOpen(false); onEmail(); }}
-              style={{ display: 'flex', alignItems: 'center', width: '100%', padding: 'var(--space-sm) var(--space-lg)', border: 'none', background: 'transparent', color: 'var(--color-on-surface)', cursor: 'pointer' }}
-            >
-              <PosText variant="bodyMedium">Email receipt</PosText>
-            </button>
-          </div>
-        )}
-      </div>
+      {/* POSButtonStyle .extraSmall — the header size, the same one Close session uses. */}
+      <PosButton label="Issue refund" size="extraSmall" onClick={onIssueRefund} />
+      <PosOverflowMenu items={[{ label: 'Email receipt', onSelect: onEmail }]} />
     </div>
   );
 }

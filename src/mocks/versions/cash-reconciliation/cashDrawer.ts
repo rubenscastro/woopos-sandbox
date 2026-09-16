@@ -42,19 +42,20 @@ export interface CashEntry {
   /** Signed, in dollars. Positive renders in the success colour with a leading `+`. */
   amount: number;
   kind: CashEntryKind;
+  /** Who recorded it. The open and close rows are where the session detail reads its
+      Started / Closed operator from. */
+  by?: string;
 }
 
 export interface CashSession {
   id: string;
   /** Store-side session number, shown in the Past sessions list. */
   number: string;
-  /** As the Past sessions list shows it. */
+  /** The day it ran, as the Started / Closed rows show it. */
   date: string;
-  /** Which register this was — the design's `[Device name]`. */
+  /** Which register this was — the design's `[Device name]`. Not on screen at the moment: the
+      Past sessions rows are just the session number. */
   device: string;
-  startedAt: string;
-  /** Absent while the session is still open. */
-  closedAt?: string;
   startingCash: number;
   /** What was physically counted at close. Absent while the session is open. */
   countedCash?: number;
@@ -63,6 +64,9 @@ export interface CashSession {
 }
 
 const STORE = 'My WooCommerce Store';
+/** The signed-in operator, matching `POS_OPERATOR` in the floating control. Written out here
+    rather than imported, so this data file pulls in no components. */
+const OPERATOR = 'Thomas';
 
 /** Sums the entries of one kind. */
 function sumOf(session: CashSession, ...kinds: CashEntryKind[]): number {
@@ -86,13 +90,91 @@ export function difference(session: CashSession): number | null {
   return Number((session.countedCash - expectedInDrawer(session)).toFixed(2));
 }
 
+/** `08:45` -> `08:45 AM`. The log reads on a 24-hour clock; the Opened / Closed cards don't. */
+function to12Hour(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const suffix = h < 12 ? 'AM' : 'PM';
+  return `${String(h % 12 === 0 ? 12 : h % 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${suffix}`;
+}
+
+/** `09/14/2026` -> `September 14, 2026` — the long form the Opened / Closed cards use. */
+function toLongDate(date: string): string {
+  const [m, d, y] = date.split('/').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/** Who was on the register for one end of the session, and when. */
+export interface SessionStamp {
+  by: string;
+  date: string;
+  time: string;
+}
+
+function stampOf(session: CashSession, kind: CashEntryKind): SessionStamp | null {
+  const e = session.entries.find((x) => x.kind === kind);
+  if (!e?.by) return null;
+  return { by: e.by, date: toLongDate(session.date), time: to12Hour(e.time) };
+}
+
+/** Who opened the session and when. */
+export const sessionOpened = (s: CashSession) => stampOf(s, 'session-started');
+
+/** Who closed it and when — `null` while it's still running. */
+export const sessionClosed = (s: CashSession) => stampOf(s, 'session-closed');
+
+
+/** What the Record Pay in/out sheet collects, before it becomes a log row. */
+export interface CashMovement {
+  kind: 'pay-in' | 'pay-out';
+  /** Unsigned dollars — `kind` is what says which way it went. */
+  amount: number;
+  /** The description step is optional, so this can be empty. */
+  note: string;
+}
+
+/**
+ * Adds a recorded pay in/out to a session, returning the updated one. It goes on the end
+ * because the log is authored chronologically; the UI reverses it, so it reads at the top.
+ * Stamped with the clock, so a movement recorded now sits after everything already there.
+ */
+export function withMovement(session: CashSession, movement: CashMovement): CashSession {
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const by = OPERATOR;
+  const e =
+    movement.kind === 'pay-in'
+      ? payIn(time, by, movement.note, movement.amount)
+      : payOut(time, by, movement.note, movement.amount);
+  return { ...session, entries: [...session.entries, e] };
+}
+
+/**
+ * Closes a session: records what was counted and the row saying so. The note the merchant left
+ * rides on that row, because the row is where anyone reviewing the day will be looking when
+ * they wonder about the gap.
+ */
+export function withClose(session: CashSession, counted: number, note: string): CashSession {
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const e = closed(time, OPERATOR, counted);
+  return {
+    ...session,
+    countedCash: counted,
+    entries: [...session.entries, note ? { ...e, note: `${e.note} • ${note}` } : e],
+  };
+}
+
 let nextId = 1;
 const entry = (
   time: string,
   kind: CashEntryKind,
   title: string,
   amount: number,
-  extra: Partial<Pick<CashEntry, 'note' | 'orderLink' | 'order'>> = {},
+  extra: Partial<Pick<CashEntry, 'note' | 'orderLink' | 'order' | 'by'>> = {},
 ): CashEntry => ({ id: nextId++, time, kind, title, amount, ...extra });
 
 /**
@@ -144,41 +226,60 @@ const refund = (time: string, order: number, picks: CatalogPick[]) => {
 };
 
 const payIn = (time: string, by: string, note: string, amount: number) =>
-  entry(time, 'pay-in', `Pay in recorded by ${by}`, amount, { note });
+  entry(time, 'pay-in', `Pay in recorded by ${by}`, amount, { note: note || undefined, by });
 
 const payOut = (time: string, by: string, note: string, amount: number) =>
-  entry(time, 'pay-out', `Pay out recorded by ${by}`, -amount, { note });
+  entry(time, 'pay-out', `Pay out recorded by ${by}`, -amount, { note: note || undefined, by });
 
 const opened = (time: string, by: string, float: number) =>
-  entry(time, 'session-started', 'Session started', float, { note: `By ${by} at ${STORE}` });
+  entry(time, 'session-started', 'Session started', float, { note: `By ${by} at ${STORE}`, by });
 
 const closed = (time: string, by: string, counted: number) =>
-  entry(time, 'session-closed', 'Session closed', counted, { note: `Counted by ${by}` });
+  entry(time, 'session-closed', 'Session closed', counted, { note: `Counted by ${by}`, by });
 
 /**
- * Today, still open. A normal Monday: steady cash sales, a float top-up when the drawer ran
- * low on change, a courier paid out of the till, and one refund.
+ * Today's session, in the two states the drawer shows it in: just opened, and after a day's
+ * trade. Both are the *same* session — same number, same day, same register — so switching
+ * between them reads as time passing rather than as two different sessions.
+ *
+ * The float is whatever the merchant typed on Start session, and it's the only number either
+ * state is given: every figure on screen is summed back out of the entries.
  */
-export const CURRENT_SESSION: CashSession = {
-  id: 'current',
-  number: '1681895',
-  date: '09/15/2026',
-  device: 'Register 1 · iPad Pro',
-  startedAt: 'Started 09/15/26, 9:00 AM',
-  startingCash: 150,
-  entries: [
-    opened('09:00', 'Thomas', 150),
-    sale('09:24', 1489, [[1, 1]]),
-    sale('10:02', 1491, [[11, 1]]),
-    payIn('10:47', 'Thomas', 'Float top-up from safe', 50),
-    sale('11:15', 1494, [[4, 1]]),
-    refund('11:58', 1496, [[3, 1]]),
-    sale('12:30', 1499, [[8, 1]]),
-    payOut('13:10', 'Maria', 'Courier delivery fee', 25),
-    sale('14:05', 1503, [[7, 1]]),
-    sale('15:22', 1508, [[2, 1]]),
-  ],
-};
+const TODAY = { id: 'current', number: '1681895', date: '09/15/2026', device: 'Register 1 · iPad Pro' };
+
+/**
+ * Just opened: the float, and nothing recorded against it yet. Expected in drawer is the
+ * float, the three stats are zero, and the log is one row.
+ *
+ * Stamped 09:00 rather than the wall clock, so the day's trade below still reads in order
+ * when the session fills in.
+ */
+export function freshSession(startingCash: number): CashSession {
+  return { ...TODAY, startingCash, entries: [opened('09:00', OPERATOR, startingCash)] };
+}
+
+/**
+ * The same session at the end of the day. A normal Monday: steady cash sales, a float top-up
+ * when the drawer ran low on change, a courier paid out of the till, and one refund.
+ */
+export function endOfDaySession(startingCash: number): CashSession {
+  const open = freshSession(startingCash);
+  return {
+    ...open,
+    entries: [
+      ...open.entries,
+      sale('09:24', 1489, [[1, 1]]),
+      sale('10:02', 1491, [[11, 1]]),
+      payIn('10:47', OPERATOR, 'Float top-up from safe', 50),
+      sale('11:15', 1494, [[4, 1]]),
+      refund('11:58', 1496, [[3, 1]]),
+      sale('12:30', 1499, [[8, 1]]),
+      payOut('13:10', 'Maria', 'Courier delivery fee', 25),
+      sale('14:05', 1503, [[7, 1]]),
+      sale('15:22', 1508, [[2, 1]]),
+    ],
+  };
+}
 
 /** Yesterday. Busy, and came up $5 short at close — the kind of day worth reviewing. */
 const SESSION_0914: CashSession = {
@@ -186,8 +287,6 @@ const SESSION_0914: CashSession = {
   number: '1681891',
   date: '09/14/2026',
   device: 'Register 1 · iPad Pro',
-  startedAt: 'Started 09/14/26, 8:45 AM',
-  closedAt: 'Closed 09/14/26, 6:12 PM',
   startingCash: 200,
   countedCash: 523.5,
   entries: [
@@ -214,8 +313,6 @@ const SESSION_0913: CashSession = {
   number: '1681884',
   date: '09/13/2026',
   device: 'Register 2 · iPad',
-  startedAt: 'Started 09/13/26, 10:00 AM',
-  closedAt: 'Closed 09/13/26, 3:00 PM',
   startingCash: 100,
   countedCash: 178,
   entries: [
@@ -233,8 +330,6 @@ const SESSION_0912: CashSession = {
   number: '1681877',
   date: '09/12/2026',
   device: 'Register 1 · iPad Pro',
-  startedAt: 'Started 09/12/26, 8:30 AM',
-  closedAt: 'Closed 09/12/26, 7:04 PM',
   startingCash: 250,
   countedCash: 758,
   entries: [
@@ -262,8 +357,6 @@ const SESSION_0911: CashSession = {
   number: '1681869',
   date: '09/11/2026',
   device: 'Register 2 · iPad',
-  startedAt: 'Started 09/11/26, 11:15 AM',
-  closedAt: 'Closed 09/11/26, 6:00 PM',
   startingCash: 80,
   countedCash: 275,
   entries: [

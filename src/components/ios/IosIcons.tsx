@@ -65,6 +65,58 @@ export function Close({ size, style, ...rest }: IconProps) {
   );
 }
 
+// clock
+export function Clock({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} style={{ ...base(size), ...style }} {...rest}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 6.8V12l3.4 2.2" />
+    </svg>
+  );
+}
+
+// person
+export function Person({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} style={{ ...base(size), ...style }} {...rest}>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.8 20.5a7.2 7.2 0 0 1 14.4 0" />
+    </svg>
+  );
+}
+
+// printer
+export function Printer({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} style={{ ...base(size), ...style }} {...rest}>
+      <path d="M7 9V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v5" />
+      <path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" />
+      <rect x="7" y="14" width="10" height="7" rx="1" />
+    </svg>
+  );
+}
+
+// square.and.arrow.down
+export function SquareAndArrowDown({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} style={{ ...base(size), ...style }} {...rest}>
+      <path d="M12 3v11" />
+      <polyline points="8 10 12 14 16 10" />
+      <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+    </svg>
+  );
+}
+
+// arrow.backward
+export function ArrowBackward({ size, style, ...rest }: IconProps) {
+  return (
+    <svg {...S} style={{ ...base(size), ...style }} {...rest}>
+      <path d="M20 12H4" />
+      <polyline points="10 6 4 12 10 18" />
+    </svg>
+  );
+}
+
 // chevron.left
 export function ChevronLeft({ size, style, ...rest }: IconProps) {
   return (

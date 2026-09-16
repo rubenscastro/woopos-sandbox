@@ -29,6 +29,10 @@ treat as its own fixed phone scale rather than a percentage).
 Differences from `DESIGN.md`:
 - **Font family:** SF Pro (`Font.system`, the OS default), not Roboto. This is the biggest
   real visual difference between platforms.
+- **`bodyMedium` line height is 24, not 32.** Sizes match Android across the whole ramp, but
+  this one line height doesn't. It's the busiest row type in the app — a log entry's title, a
+  card's subtitle — so the 8px compounds: every two-line row runs taller than the design.
+  Encoded as a `[data-platform='ios']` override of `--font-body-md-line` in `tokens.css`.
 - **Weight quirk:** `bodyXLargeRegular` renders as **semibold**, not regular (Android's
   `body-xl` is regular 400). Button/icon symbol text also defaults to semibold on iOS.
 - iOS respects **Dynamic Type** (the user's OS-level text-size setting) with a floor per
