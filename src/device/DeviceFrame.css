@@ -18,69 +18,37 @@
   flex: none;
 }
 
-/* The physical device shell (bezel). */
+/*
+ * The physical device shell (bezel), taken from the simulator's own chrome rather than drawn
+ * by eye: /Library/Developer/DeviceKit/Chrome/tablet5.devicechrome is what Simulator.app puts
+ * around an iPad Pro, and sampling its edge artwork across the bezel gives the cross-section
+ * below, outer edge inward —
+ *
+ *   ~0.5pt  #7E7E7E   the machined edge catching light — a hairline, not a sheen
+ *   ~2.5pt  #2C2C2C   the chamfer falling away from it
+ *   rest    #010101   the black bezel, flat all the way to the glass
+ *
+ * So there is no diagonal graphite gradient across the frame; the whole thing is black except
+ * for that rim. Drawn as stacked inset rings so it follows `border-radius` on all four sides
+ * and costs no layout.
+ *
+ * The rings are ~4× their measured thickness because the frame renders under a `scale()` of
+ * about 0.52 — at their true 0.5 and 2.5 they land on a third of a pixel and antialias away to
+ * nothing. Widened, they keep the 1:3 ratio between rim and chamfer and read as the hairline
+ * they are meant to be.
+ *
+ * Hardware, not app surface: identical in light and dark, the same way the phone's band is.
+ */
 .device-bezel {
   position: absolute;
   top: 0;
   left: 0;
-  background: #0e0f12;
+  background: #010101;
   box-sizing: border-box;
-  /* No drop shadow — the device sits flat on the canvas. The inset highlight and the
-     hairline ring are edge definition, not elevation. */
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 0 0 2px rgba(0, 0, 0, 0.25);
-}
-
-/* Dark-mode bezel surface. Flat #0e0f12 sits within a point of the app's own dark surface
-   (--color-surface #101517), so the frame visually dissolves into the screen it's holding.
-   Lifting it into a graphite lit from the left separates the two. The first two layers are
-   one continuous diagonal sheen across the whole frame, so the reflection carries through
-   every strip of the bezel — brightest on the left rail and the top-left, fading through the
-   middle, with a weak bounce returning at the bottom-right. */
-[data-theme='dark'] .device-bezel {
-  background:
-    linear-gradient(
-      115deg,
-      rgba(255, 255, 255, 0.038) 0%,
-      rgba(255, 255, 255, 0.021) 20%,
-      rgba(255, 255, 255, 0.007) 46%,
-      rgba(255, 255, 255, 0) 70%,
-      rgba(255, 255, 255, 0.012) 100%
-    ),
-    linear-gradient(150deg, #171b1f 0%, #131619 45%, #101215 100%);
-}
-
-/* Dark-mode rim light: a 1.5px gradient border that reads as the device edge catching light
-   from the top-left, dimming through the middle and picking up a weaker bounce at the
-   bottom-right. Drawn as a masked gradient ring (paint the full box, then punch out
-   everything inside the padding) rather than a border, so it follows `border-radius` exactly
-   and never affects layout. Slightly over 1px so it survives the frame's `scale()`. */
-[data-theme='dark'] .device-bezel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.16) 18%,
-    rgba(255, 255, 255, 0.03) 42%,
-    rgba(255, 255, 255, 0.03) 58%,
-    rgba(255, 255, 255, 0.14) 82%,
-    rgba(255, 255, 255, 0.34) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 3;
+    inset 0 0 0 2px #7e7e7e,
+    inset 0 0 0 6px #2c2c2c,
+    0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .device-notch {
@@ -215,20 +183,27 @@
   z-index: 4;
 }
 
-/* Inside the band, the surround stays black in both themes — it's the unlit part of the
-   glass, not a surface that follows the app's appearance. A hairline of shadow under the
-   band keeps the two from reading as one flat edge. */
-.device-bezel--phone,
-[data-theme='dark'] .device-bezel--phone {
+/*
+ * A Galaxy's border is half the iPad's, so the rings that describe its edge have to come down
+ * with it — at the iPad's widths the chamfer would be a quarter of the whole bezel instead of
+ * a tenth, and the frame would read as trim rather than as an edge. Same colours, same order,
+ * scaled to the border they sit in.
+ */
+.device-bezel--android {
+  box-shadow:
+    inset 0 0 0 2px #7e7e7e,
+    inset 0 0 0 4px #2c2c2c,
+    0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Inside the band, the surround stays black — it's the unlit part of the glass, not a surface
+   that follows the app's appearance. The phone draws its own edge with the band above, so it
+   drops the tablet's sampled rim rings entirely. */
+.device-bezel--phone {
   background: #05070a;
   box-shadow:
     0 0 0 0.5px rgba(0, 0, 0, 0.6),
     0 1px 1px rgba(255, 255, 255, 0.06) inset;
-}
-
-/* Dark mode's rim-light ring is for the tablet's graphite edge; the phone has the band. */
-[data-theme='dark'] .device-bezel--phone::before {
-  content: none;
 }
 
 /* The keys sit half-buried in the band, so only their outer half shows — the same trick the

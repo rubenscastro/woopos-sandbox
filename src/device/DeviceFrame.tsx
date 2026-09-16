@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useDevice, type DeviceId } from './DeviceContext';
+import { usePlatform, type PlatformId } from './PlatformContext';
 import { useCurrentPageBackground } from './PageBackground';
 import { StatusBar } from './StatusBar';
 import './DeviceFrame.css';
@@ -22,11 +23,36 @@ interface DeviceSpec {
   fit: number;
 }
 
-const SPECS: Record<DeviceId, DeviceSpec> = {
-  tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false, fit: 0.93 },
-  // The phone's corners are rounder than the tablet's, as they are on the real hardware — the
-  // display radius (radius − bezel) lands at 44, which is what an iPhone's screen actually is.
-  phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 58, notch: true, fit: 0.81 },
+const SPECS: Record<PlatformId, Record<DeviceId, DeviceSpec>> = {
+  ios: {
+    /* iPad Pro 11-inch (M4), from the simulator's own device profile and chrome: a 1668 × 2420
+       @2x screen is 1210 × 834 points, its framebuffer mask rounds the display at 30, and
+       tablet5.devicechrome puts a 45pt bezel around it with a 75 outer corner — which is the
+       same 30 back again once the bezel is taken off. */
+    tablet: { content: { w: 1210, h: 834 }, bezel: 45, radius: 75, notch: false, fit: 0.93 },
+    // The phone's corners are rounder than the tablet's, as they are on the real hardware — the
+    // display radius (radius − bezel) lands at 44, which is what an iPhone's screen actually is.
+    phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 58, notch: true, fit: 0.81 },
+  },
+  /*
+   * Android is a Galaxy, and a Galaxy is not an iPad with different software — its borders are
+   * a third of the iPad's and its corners far less round, which is most of why the two read as
+   * different hardware at a glance.
+   *
+   * The bezel checks out against the Tab S11 Ultra's published dimensions: a 14.6" 16:10 panel
+   * inside a 326.3 × 208.5 mm body leaves ~5.9 mm of border, or 1.8% of the body's width. 22 on
+   * a 1238-wide frame is 1.78% — the same border, in the units this file works in.
+   *
+   * Screen sizes stay as they were: the Android layouts were built against them, and moving to
+   * the Tab's real 16:10 would reflow every screen. Worth doing, but not as part of the frame.
+   */
+  android: {
+    tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false, fit: 0.93 },
+    // Galaxy S26 Ultra: a 6.9" 3120 × 1440 panel in a 163.6 × 78.1 mm body leaves ~2.3 mm of
+    // border — 13 of the 412 × 891 dp the phone reports. Corners scale from the tablet's rather
+    // than being invented: no published radius exists for either device.
+    phone: { content: { w: 412, h: 891 }, bezel: 13, radius: 30, notch: false, fit: 0.81 },
+  },
 };
 
 const DRAG_THRESHOLD = 5;
@@ -46,7 +72,8 @@ function scrollableUnder(node: HTMLElement | null, stop: HTMLElement | null): HT
 
 export function DeviceFrame({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
   const { device, theme } = useDevice();
-  const spec = SPECS[device];
+  const { platform } = usePlatform();
+  const spec = SPECS[platform][device];
   const outerW = spec.content.w + spec.bezel * 2;
   const outerH = spec.content.h + spec.bezel * 2;
 
@@ -77,7 +104,7 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
         style={{ width: outerW * scale, height: outerH * scale }}
       >
         <div
-          className={`device-bezel device-bezel--${device}`}
+          className={`device-bezel device-bezel--${device} device-bezel--${platform}`}
           style={{
             width: outerW,
             height: outerH,
