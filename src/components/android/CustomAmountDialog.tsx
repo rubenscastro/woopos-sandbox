@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text } from './Text';
 import { Button } from './Button';
-import { Close } from './icons';
+import { Toolbar } from './Toolbar';
 
 /**
  * WooPosCustomAmountDialog — add a non-catalog line item: amount (large heading input),
@@ -32,16 +32,10 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
         flexDirection: 'column',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-md)' }}>
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Close"
-          style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)' }}
-        >
-          <Close size="var(--icon-medium)" />
-        </button>
-      </div>
+      {/* The form takes over the items pane, and the items toolbar goes into back-navigation
+          mode over it — a back arrow and the form's own title, not a bare ✕ floating in the
+          corner. Same shape as iOS, which puts a chevron and "Custom amount" here too. */}
+      <Toolbar title="Custom amount" onBack={onDismiss} />
 
       <div style={{ flex: 1, overflow: 'auto', padding: '0 var(--space-lg)' }}>
         {/* Rules sit *between* the three sections, one hairline each, the way the form's own
