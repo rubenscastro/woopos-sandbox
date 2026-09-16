@@ -84,10 +84,13 @@ export function Settings({ initialCategory = 'store' }: { initialCategory?: Cate
 
   return (
     <div className="woopos-fills-safe-top" style={{ display: 'flex' }}>
-      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0 }}>
+      {/* The list is the bright pane and the detail is the dim one — surfaceBright on the 0.3
+          side, surface on the 0.7 side (WooPosSettingsScreen). These were the other way round,
+          which put the white where the app has grey and the grey where it has white. */}
+      <div className="woopos-safe-pane" style={{ flex: '0 0 34%', minWidth: 0, background: 'var(--color-surface-bright)' }}>
         {categoryList}
       </div>
-      <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-bright)' }}>
+      <div className="woopos-safe-pane" style={{ flex: 1, minWidth: 0, background: 'var(--color-surface)' }}>
         {detail}
       </div>
     </div>
