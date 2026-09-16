@@ -250,19 +250,22 @@ function CartLineRow({
   }
 
   if (line.kind === 'custom') {
+    // The same row a product and a coupon get: a tile flush to the card's edges, the text
+    // beside it. It was a rounded tile of initials floating inside a padded card — a third
+    // taller than the lines above and below it, and the only thing in the cart that didn't
+    // look like the rest of the cart. The glyph is the one iOS uses, where a custom amount
+    // and a coupon share a tile.
     return (
-      <Card padding="0" className="woopos-cart-item">
-        <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-sm)', gap: 'var(--space-sm)' }}>
-          <IconTile color="var(--color-secondary)">
-            <Text variant="bodySmall" bold color="var(--color-on-secondary)">
-              {initials(line.name)}
-            </Text>
-          </IconTile>
-          <div style={{ flex: 1, minWidth: 0 }}>
+      <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
+          <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Tag size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
             <Text variant="bodySmall" bold style={ELLIPSIS}>
               {line.name}
             </Text>
-            <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)">
+            <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
               {formatUsd(line.amount)}
               {line.taxable ? ' · Tax included' : ''}
             </Text>
@@ -274,7 +277,11 @@ function CartLineRow({
               </Text>
             )}
           </div>
-          {!hideRemove && <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />}
+          {!hideRemove && (
+            <div style={{ display: 'flex', alignItems: 'center', paddingRight: 'var(--space-sm)' }}>
+              <RemoveButton onClick={() => removeLine(line.key)} label={line.name} />
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -325,25 +332,6 @@ function RemoveButton({ onClick, label }: { onClick: () => void; label: string }
   );
 }
 
-function IconTile({ color, children }: { color: string; children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        width: 'var(--size-medium)',
-        height: 'var(--size-medium)',
-        background: color,
-        borderRadius: 'var(--radius-md)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 'none',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function EmptyCart({ onScanBarcode }: { onScanBarcode?: () => void }) {
   return (
     <div
@@ -391,10 +379,3 @@ const ELLIPSIS = {
   display: 'block' as const,
 };
 
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('');
-}
