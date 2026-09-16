@@ -28,7 +28,9 @@ export type ConnectionState =
   | 'bluetoothOff'
   | 'scanning'
   | 'found'
+  | 'foundMultiple'
   | 'localNetworkPermission'
+  | 'locationRequired'
   | 'connecting'
   | 'connected'
   | 'failed';
@@ -36,6 +38,12 @@ export type ConnectionState =
 export const SAMPLE_READER_NAME = 'STRM261380012691';
 /** Phone-as-reader name, matching the upstream @Preview (MissingLocalNetworkPermission, "Pixel 9"). */
 export const SAMPLE_PHONE_READER_NAME = 'Pixel 9';
+/**
+ * What discovery turns up when more than one reader answers — Stripe's simulated readers, the
+ * names a developer actually sees on this screen. Three of them, so the list is plainly a list
+ * rather than a pair.
+ */
+export const SAMPLE_MULTIPLE_READER_IDS = ['CHB20SIMULATOR2', 'WPC32SIMULATOR1', 'STRM2SIMULATOR1'];
 
 interface CardReaderValue {
   connected: boolean;
@@ -48,6 +56,19 @@ interface CardReaderValue {
   setLocalNetworkGranted: (v: boolean) => void;
   grantLocalNetworkPermission: () => void;
   cancelLocalNetworkPermission: () => void;
+  /*
+   * Location services (iOS): the Terminal SDK refuses to connect without them, so the connect
+   * flow stops at ConnectingFailedLocationRequired rather than failing silently. Granted by
+   * default (happy path); revoked from the Card reader tool to induce the state.
+   */
+  locationGranted: boolean;
+  setLocationGranted: (v: boolean) => void;
+  /** Stands in for the merchant granting it in the Settings app — grants and resumes. */
+  openLocationSettings: () => void;
+  /** The readers discovery turned up when more than one answered. */
+  foundReaderIDs: string[];
+  readersFound: () => void;
+  connectToReaderID: (id: string) => void;
   // Connect flow
   startConnecting: () => void;
   readerFound: () => void;
@@ -73,6 +94,8 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(true);
   const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
   const [localNetworkGranted, setLocalNetworkGranted] = useState(true);
+  const [locationGranted, setLocationGranted] = useState(true);
+  const [foundReaderIDs, setFoundReaderIDs] = useState<string[]>([]);
   // Captured at discovery time so the name doesn't flip back to the Bluetooth reader when
   // the permission is granted mid-connect (the discovered device is still the phone).
   const [readerName, setReaderName] = useState(SAMPLE_READER_NAME);
@@ -97,8 +120,27 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
   // Tapping Connect on a discovered phone reader checks the local network permission first
   // (WooPosCardReaderConnectionViewModel.onPhoneConnectClicked) — Bluetooth readers are unaffected.
   const connectReader = useCallback(() => {
+    if (!locationGranted) return setConnectionState('locationRequired');
     setConnectionState(localNetworkGranted ? 'connecting' : 'localNetworkPermission');
-  }, [localNetworkGranted]);
+  }, [localNetworkGranted, locationGranted]);
+
+  /** Discovery answering with more than one reader — the list state, not the single-reader one. */
+  const readersFound = useCallback(() => {
+    setFoundReaderIDs(SAMPLE_MULTIPLE_READER_IDS);
+    setConnectionState('foundMultiple');
+  }, []);
+
+  /** Connect from a row of that list: the chosen reader becomes *the* reader from here on. */
+  const connectToReaderID = useCallback((id: string) => {
+    setReaderName(id);
+    if (!locationGranted) return setConnectionState('locationRequired');
+    setConnectionState(localNetworkGranted ? 'connecting' : 'localNetworkPermission');
+  }, [localNetworkGranted, locationGranted]);
+
+  const openLocationSettings = useCallback(() => {
+    setLocationGranted(true);
+    setConnectionState('connecting');
+  }, []);
   const keepSearching = useCallback(() => setConnectionState('scanning'), []);
   const failConnection = useCallback(() => setConnectionState('failed'), []);
   const retryConnection = useCallback(() => setConnectionState('scanning'), []);
@@ -139,6 +181,14 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
     }
   }, [localNetworkGranted, connectionState]);
 
+  // Same for location: the app re-checks as soon as it's active again, so granting it in the
+  // Settings app — or here in the tool — picks the connect back up where it stopped.
+  useEffect(() => {
+    if (locationGranted && connectionState === 'locationRequired') {
+      setConnectionState('connecting');
+    }
+  }, [locationGranted, connectionState]);
+
   const value = useMemo<CardReaderValue>(
     () => ({
       connected,
@@ -149,6 +199,12 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
       setLocalNetworkGranted,
       grantLocalNetworkPermission,
       cancelLocalNetworkPermission,
+      locationGranted,
+      setLocationGranted,
+      openLocationSettings,
+      foundReaderIDs,
+      readersFound,
+      connectToReaderID,
       startConnecting,
       readerFound,
       connectReader,
@@ -168,6 +224,11 @@ export function CardReaderProvider({ children }: { children: ReactNode }) {
       localNetworkGranted,
       grantLocalNetworkPermission,
       cancelLocalNetworkPermission,
+      locationGranted,
+      openLocationSettings,
+      foundReaderIDs,
+      readersFound,
+      connectToReaderID,
       canProcess,
       process,
       registerHandler,

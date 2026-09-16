@@ -5,6 +5,7 @@ import { CardReaderIllustration } from '../components/android/CardReaderIllustra
 import { useCardReader } from './CardReaderContext';
 import { useConnectivity } from './ConnectivityContext';
 import { usePlatform } from '../device/PlatformContext';
+import { PosCardReaderDialog } from '../components/ios/PosCardReaderDialog';
 
 /**
  * The card-reader connection dialog (WooPosCardReaderConnectionDialog). Renders the
@@ -24,6 +25,11 @@ export function CardReaderConnectionHost() {
   const s = cr.connectionState;
   if (s === 'idle') return null;
 
+  /* iOS has its own alerts — different illustration, different copy on nearly every state, a
+     fixed frame rather than a share of the screen. This dialog is Android's, and rendering it
+     on iOS showed merchants a screen neither app has. */
+  if (platform === 'ios') return <PosCardReaderDialog />;
+
   const dismissable = s === 'bluetoothOff' || s === 'scanning' || s === 'found' || s === 'failed';
 
   return (
@@ -35,7 +41,7 @@ export function CardReaderConnectionHost() {
       maxWidth={520}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', textAlign: 'center' }}>
-        {s === 'bluetoothOff' && platform === 'android' && (
+        {s === 'bluetoothOff' && (
           <>
             <Text variant="heading" bold align="center">
               Bluetooth is off
@@ -47,22 +53,6 @@ export function CardReaderConnectionHost() {
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
               <Button text="Enable Bluetooth" fullWidth onClick={connectivity.openQuickEnable} />
               <OutlinedButton text="Cancel" fullWidth onClick={cr.cancelConnecting} />
-            </div>
-          </>
-        )}
-
-        {s === 'bluetoothOff' && platform === 'ios' && (
-          <>
-            <Text variant="heading" bold align="center">
-              Bluetooth permission required
-            </Text>
-            <CardReaderIllustration variant="error" size="var(--size-xlarge)" />
-            <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
-              Please enable Bluetooth in Settings to connect to a card reader.
-            </Text>
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-              <Button text="Open Device Settings" fullWidth onClick={connectivity.openSettings} />
-              <OutlinedButton text="Dismiss" fullWidth onClick={cr.cancelConnecting} />
             </div>
           </>
         )}

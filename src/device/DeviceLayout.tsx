@@ -405,6 +405,25 @@ function CardReaderSection({ close }: { close: () => void }) {
             </button>
           )}
 
+          {/* Location services (iOS): the Terminal SDK refuses to connect without them. Turning
+              this OFF stops the next connect on the location alert instead of proceeding;
+              granting it — here or by the alert's "Open Device Settings" — resumes the connect
+              that was waiting on it, the way the app re-checks when it becomes active again. */}
+          {platform === 'ios' && (
+            <button
+              type="button"
+              className="chrome-reader__toggle"
+              role="switch"
+              aria-checked={cr.locationGranted}
+              onClick={() => cr.setLocationGranted(!cr.locationGranted)}
+            >
+              <span>Location services</span>
+              <span className={`chrome-switch${cr.locationGranted ? ' is-on' : ''}`} aria-hidden>
+                <span className="chrome-switch__knob" />
+              </span>
+            </button>
+          )}
+
           <div className="chrome-reader__divider" />
 
           {/* ---- Connection ---- */}
@@ -414,14 +433,21 @@ function CardReaderSection({ close }: { close: () => void }) {
           {cr.connected && s === 'idle' && (
             <ReaderItem label="Disconnect reader" onClick={() => { close(); cr.setConnected(false); }} />
           )}
-          {s === 'scanning' && <ReaderItem label="Reader found" onClick={cr.readerFound} />}
+          {s === 'scanning' && (
+            <>
+              <ReaderItem label="Reader found" onClick={cr.readerFound} />
+              {/* Discovery answering with more than one reader — the merchant picks from a list
+                  rather than being offered a single one to accept. */}
+              <ReaderItem label="Several readers found" onClick={cr.readersFound} />
+            </>
+          )}
           {s === 'connecting' && (
             <>
               <ReaderItem label="Complete connection" onClick={cr.completeConnection} />
               <ReaderItem label="Fail connection" onClick={cr.failConnection} />
             </>
           )}
-          {(s === 'found' || s === 'connected' || s === 'failed') && (
+          {(s === 'found' || s === 'foundMultiple' || s === 'connected' || s === 'failed' || s === 'locationRequired') && (
             <div className="chrome-reader__hint">Follow the on-screen dialog…</div>
           )}
 

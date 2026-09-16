@@ -1,0 +1,172 @@
+/*
+ * iOS card reader connection modal. Sizing and spacing come from the app's own constants:
+ * POSModalSizing pins the card to 640 × 656 at default text size and only shrinks it to fit
+ * the screen, and PointOfSaleReaderConnectionModalLayout sets the padding (xxLarge) and the
+ * gaps between art, text and buttons (large / medium / large).
+ */
+.pos-reader-modal-root {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.pos-reader-modal-scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-surface-dim) 80%, transparent);
+  animation: pos-reader-modal-scrim-in 0.3s ease;
+}
+
+.pos-reader-modal {
+  position: relative;
+  /* The fixed frame, capped so it still fits a phone. */
+  width: 640px;
+  height: 656px;
+  max-width: 100%;
+  max-height: 90%;
+  box-sizing: border-box;
+  padding: var(--space-xxl);
+  /* surfaceBright, not surface (POSModalViewModifier). In dark the two are far apart — surface
+     is the near-black page behind the modal, so using it made the card disappear into its own
+     scrim instead of lifting off it. */
+  background: var(--color-surface-bright);
+  color: var(--color-on-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-normal-large);
+  animation: pos-reader-modal-in 0.3s ease;
+}
+
+/* Sits over the content rather than taking a row of its own, so the art and heading stay
+   centred in the card whether or not the state has a cancel. */
+.pos-reader-modal__close {
+  position: absolute;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  z-index: 1;
+  border: none;
+  background: none;
+  display: flex;
+  padding: var(--space-xs);
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+/* Content takes the room the buttons leave and centres itself in it — the buttons hold the
+   bottom, so they don't move as states swap between one line of text and three. */
+.pos-reader-modal__layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pos-reader-modal__content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.pos-reader-modal__art {
+  width: var(--size-xlarge);
+  height: var(--size-xlarge);
+  object-fit: contain;
+  flex: none;
+}
+
+.pos-reader-modal__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.pos-reader-modal__actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-top: var(--space-lg);
+}
+
+/* The several-readers state: heading, the scan still running, the readers themselves, and
+   Cancel. The list is what grows, so it takes the slack. */
+.pos-reader-modal__list-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.pos-reader-modal__scanning-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  flex: none;
+}
+
+/* POSProgressViewStyle(size: 20, lineWidth: 4) — a ring with one quarter drawn in the accent,
+   turning. */
+.pos-reader-modal__spinner {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  border: 4px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  border-top-color: var(--color-primary);
+  animation: pos-reader-spin 0.9s linear infinite;
+}
+
+.pos-reader-modal__readers {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pos-reader-modal__reader-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-xs) 0;
+}
+
+@keyframes pos-reader-modal-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pos-reader-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12%);
+  }
+}
+
+@keyframes pos-reader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-reader-modal,
+  .pos-reader-modal-scrim {
+    animation: none;
+  }
+
+  .pos-reader-modal__spinner {
+    animation-duration: 2.4s;
+  }
+}
