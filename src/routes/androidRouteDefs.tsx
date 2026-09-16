@@ -39,7 +39,8 @@ export const androidRouteDefs: RouteDef[] = [
   { path: 'order-history', element: <OrderHistory /> },
   { path: 'barcode-setup', element: <BarcodeSetupLaunch /> },
   { path: 'settings', element: <Settings initialCategory="store" /> },
-  { path: 'settings-payments', element: <Settings initialCategory="payments" /> },
+  // `settings-payments` belongs to the Multi Payment Methods proposal, not Trunk — see
+  // src/versions/overrides.tsx.
   { path: 'settings-hardware', element: <Settings initialCategory="hardware" /> },
   { path: 'settings-catalog', element: <Settings initialCategory="catalog" /> },
   { path: 'support', element: <Support /> },

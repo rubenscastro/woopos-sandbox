@@ -10,7 +10,7 @@
 import type { FlagId } from '../state/flags';
 import type { PlatformId } from '../device/PlatformContext';
 
-export type VersionId = 'main' | 'scaling-pos-experience' | 'cash-reconciliation';
+export type VersionId = 'main' | 'scaling-pos-experience' | 'cash-reconciliation' | 'multi-payment-methods';
 
 export interface VersionEntry {
   id: VersionId;
@@ -57,6 +57,15 @@ export const VERSIONS: VersionEntry[] = [
     flagDefaults: { roles: true },
     // Explored on iOS only — the cash drawer flows are built against the iOS designs.
     platforms: ['ios'],
+  },
+  {
+    id: 'multi-payment-methods',
+    label: 'Multi Payment Methods',
+    description:
+      'Proposal giving a store control over which payment methods it accepts at checkout — Settings gains a Payments section. Screens not forked here fall back to Trunk.',
+    // Android only: the Payments settings screen this proposal is about is an Android screen,
+    // and iOS Settings has no counterpart to fork.
+    platforms: ['android'],
   },
 ];
 

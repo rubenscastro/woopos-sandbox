@@ -22,6 +22,7 @@ export const VERSIONS: VersionEntry[] = [
   { id: 'main', label: 'Trunk', description: '...' },
   { id: 'scaling-pos-experience', label: 'Scaling POS experience', description: '...' },
   { id: 'cash-reconciliation', label: 'Cash reconciliation', description: '...' },
+  { id: 'multi-payment-methods', label: 'Multi Payment Methods', description: '...' },
 ];
 ```
 

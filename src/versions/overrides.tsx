@@ -1,6 +1,7 @@
 import type { RouteDef } from '../routes/androidRouteDefs';
 import { ItemSelection as ScalingItemSelection } from '../screens/versions/scaling-pos-experience/android/ItemSelection';
 import { CashDrawer } from '../screens/versions/cash-reconciliation/ios/CashDrawer';
+import { Settings as MultiPaymentSettings } from '../screens/versions/multi-payment-methods/android/Settings';
 
 export interface VersionOverrides {
   android?: RouteDef[];
@@ -26,5 +27,17 @@ export const versionOverrides: Partial<Record<string, VersionOverrides>> = {
     // `cash-drawer` is new to this proposal — a route Trunk has no counterpart for, which is
     // exactly what an override list is for. Everything else still falls through to Trunk.
     ios: [{ path: 'cash-drawer', element: <CashDrawer /> }],
+  },
+  'multi-payment-methods': {
+    // Settings is forked to add the Payments category; `settings-payments` opens straight on
+    // it, and is a route only this proposal has — Trunk's Settings has no Payments to deep
+    // link to. Every other screen falls through to Trunk.
+    android: [
+      { path: 'settings', element: <MultiPaymentSettings initialCategory="store" /> },
+      { path: 'settings-payments', element: <MultiPaymentSettings initialCategory="payments" /> },
+      { path: 'settings-hardware', element: <MultiPaymentSettings initialCategory="hardware" /> },
+      { path: 'settings-catalog', element: <MultiPaymentSettings initialCategory="catalog" /> },
+    ],
+    ios: [],
   },
 };

@@ -16,7 +16,8 @@ import { parseRoutedPath, resolvePath, type RouteMapResult } from '../versions/r
  *
  * Deliberately absent (verified in source but not built on one side, so they fall through
  * to home with `available: false`): `eligibility`, `mark-complete`, `scan-to-pay`,
- * `add-coupon`, `settings-payments`, `settings-catalog`.
+ * `add-coupon`, `settings-catalog`. `settings-payments` is absent for a different reason: it
+ * belongs to the Multi Payment Methods proposal rather than to Trunk.
  */
 const EQUIV: Partial<Record<PlatformId, string>>[] = [
   // Canonical pairs — keep first for each iOS slug.
