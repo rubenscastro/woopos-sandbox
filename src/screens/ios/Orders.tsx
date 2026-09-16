@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PosText } from '../../components/ios/PosText';
-import { Close, ChevronLeft, ErrorX } from '../../components/ios/IosIcons';
+import { Close, ChevronLeft, ErrorX, Search } from '../../components/ios/IosIcons';
 import { PosOverflowMenu } from '../../components/ios/PosOverflowMenu';
 import { useVersion } from '../../versions/VersionContext';
 import { PosNavFloatingLauncher } from '../../components/versions/cash-reconciliation/ios/PosNavLauncher';
@@ -53,6 +53,12 @@ export function Orders() {
    * under the orders already on screen, not a full sheet.
    */
   const [loadingMode, setLoadingMode] = useState<'auto' | 'none' | 'list' | 'page'>('auto');
+  /* Search takes over the header rather than sitting under it: the title, and the control that
+     leaves Orders, both give way to the field (POSOrderListView: `items: isSearching ? [] : …`,
+     `backButtonConfiguration: isSearching ? nil : …`). Leaving search keeps the term, the way
+     source does — it's the item search that clears on the way out, not this one. */
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
   const [arriving, setArriving] = useState(true);
 
   useEffect(() => {
@@ -76,26 +82,55 @@ export function Orders() {
     onSelect: (id) => setLoadingMode(id as 'auto' | 'none' | 'list' | 'page'),
   });
 
+  /* Matched on the order number and the customer on it — what a merchant has to hand when
+     they go looking for one. */
+  const term = query.trim().toLowerCase();
+  const shownOrders = searching && term
+    ? orders.filter((o) => `${o.number} ${o.customerEmail ?? ''}`.toLowerCase().includes(term))
+    : orders;
+
   const list = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
-        {/* Cash reconciliation drops the close button: the floating menu is always on screen,
-            and leaving is what picking another destination in it already does. */}
-        {!isCashRecon && (
-          <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
-            <Close size="var(--icon-medium)" />
-          </button>
+        {searching ? (
+          <>
+            <button type="button" aria-label="Back" onClick={() => setSearching(false)} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface)', padding: '4px 8px 4px 0', cursor: 'pointer' }}>
+              <ChevronLeft size="30px" />
+            </button>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', background: 'var(--color-surface-bright)', border: '2px solid var(--color-primary)', borderRadius: 'var(--radius-md)', padding: '0 var(--space-md)', minHeight: 'var(--size-xsmall)' }}>
+              <Search size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+              <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search orders" aria-label="Search orders" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-on-surface)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-body-md-size)' }} />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Cash reconciliation drops the close button: the floating menu is always on screen,
+                and leaving is what picking another destination in it already does. */}
+            {!isCashRecon && (
+              <button type="button" aria-label="Close" onClick={() => nav('/products')} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+                <Close size="var(--icon-medium)" />
+              </button>
+            )}
+            <PosText variant="heading" bold style={{ flex: 1 }}>Orders</PosText>
+            {/* Offered only when there is a list to search — source gates it on the orders
+                being non-empty, so an empty Orders never shows a way to search it. */}
+            {orders.length > 0 && (
+              <button type="button" aria-label="Search orders" onClick={() => setSearching(true)} style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface)', padding: 4, cursor: 'pointer' }}>
+                <Search size="var(--icon-small)" />
+              </button>
+            )}
+          </>
         )}
-        <PosText variant="heading" bold>Orders</PosText>
       </div>
       {/* The floating menu button overlays the bottom-left of the screen in this proposal, so the
           list reserves its height plus a gap — otherwise the last order sits underneath it at
           the end of the scroll. Trunk has no such button here and keeps its normal padding. */}
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: `0 var(--space-lg) ${isCashRecon ? 'calc(var(--space-lg) + var(--size-small) + var(--space-md))' : 'var(--space-xxl)'}` }}>
         {loading !== 'list' &&
-          orders.map((o) => (
+          shownOrders.map((o) => (
             <OrderRow key={o.id} order={o} selected={!isPhone && o.id === selectedId} onClick={() => { setSelectedId(o.id); if (isPhone) setShowDetailOnPhone(true); }} />
           ))}
+        {loading !== 'list' && searching && shownOrders.length === 0 && <NoOrdersFound />}
         {loading === 'list' && <PosGhostOrderList />}
         {loading === 'page' && <PosGhostOrderList rows={1} />}
       </div>
@@ -127,6 +162,19 @@ export function Orders() {
       <div className="woopos-safe-pane" style={{ flex: '1 1 38%', minWidth: 0, background: 'var(--color-surface-bright)' }}>{list}</div>
       <div className="woopos-safe-pane" style={{ flex: '1 1 62%', minWidth: 0, background: 'var(--color-surface)' }}>{detail}</div>
       {isCashRecon && <PosNavFloatingLauncher />}
+    </div>
+  );
+}
+
+/** Search came back with nothing (POSOrderListEmptyViewModel, isSearching). Its own copy —
+ *  an empty Orders and an empty search are different situations and say different things. */
+function NoOrdersFound() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)', textAlign: 'center', padding: 'var(--space-xxl) var(--space-lg)' }}>
+      <PosText variant="bodyLarge" bold align="center">No orders found</PosText>
+      <PosText variant="bodyMedium" align="center" color="var(--color-on-surface-variant-highest)">
+        We couldn't find any orders with that name. Try adjusting your search term.
+      </PosText>
     </div>
   );
 }
