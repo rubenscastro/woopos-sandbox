@@ -44,6 +44,9 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: '0 var(--space-lg)' }}>
+        {/* Rules sit *between* the three sections, one hairline each, the way the form's own
+            HorizontalDividers do — not as a 2px underline beneath every field, which drew one
+            line too many and drew each at twice the weight. */}
         <Section label="Amount">
           <input
             value={amountText}
@@ -53,7 +56,6 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
             autoFocus
             style={{
               border: 'none',
-              borderBottom: '2px solid var(--color-outline-variant)',
               outline: 'none',
               background: 'transparent',
               width: '100%',
@@ -72,6 +74,7 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: 'var(--space-md) 0',
+            borderTop: '1px solid var(--color-outline-variant)',
             borderBottom: '1px solid var(--color-outline-variant)',
           }}
         >
@@ -86,7 +89,6 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
             placeholder="Custom amount"
             style={{
               border: 'none',
-              borderBottom: '2px solid var(--color-outline-variant)',
               outline: 'none',
               background: 'transparent',
               width: '100%',

@@ -193,7 +193,9 @@ export function ItemSelection() {
 
       {/* Rendered outside the sliding row so the menu + System Events stay pinned bottom-left
           across both the items and checkout panes. */}
-      <FloatingToolbar statusSlot={<SystemEventsFloating />} />
+      {/* Hidden over the custom amount form, which owns the pane down to its own submit
+          button (WooPosHomeScreen: `itemsState !is CustomAmountForm`). */}
+      {!customOpen && <FloatingToolbar statusSlot={<SystemEventsFloating />} />}
     </div>
   );
 }

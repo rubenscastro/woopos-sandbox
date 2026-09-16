@@ -175,8 +175,10 @@ export function ItemSelection() {
       </div>
 
       {/* Rendered outside the sliding row so the menu + card-reader stay pinned bottom-left
-          across both the items and checkout panes. */}
-      <FloatingToolbar />
+          across both the items and checkout panes — except over the custom amount form, which
+          owns the whole pane down to its own submit button
+          (WooPosHomeScreen: `itemsState !is CustomAmountForm`). */}
+      {!customOpen && <FloatingToolbar />}
     </div>
   );
 }

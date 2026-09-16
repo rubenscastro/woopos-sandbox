@@ -9,7 +9,7 @@ import { PosPreSearch } from '../../components/ios/PosPreSearch';
 import { PosNotice } from '../../components/ios/PosNotice';
 import { PosFloatingControl, OperatorRow } from '../../components/ios/PosFloatingControl';
 import { Checkout } from './Checkout';
-import { Search, Plus, ChevronLeft, Tag, DotsHorizontal, Description, SettingsFilled, ExitToApp, InfoCircle } from '../../components/ios/IosIcons';
+import { Search, Plus, ChevronLeft, TagBadgePlus, DotsHorizontal, Description, SettingsFilled, ExitToApp, InfoCircle } from '../../components/ios/IosIcons';
 import { usePublishPreviewState } from '../../device/PreviewStateContext';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
@@ -269,7 +269,12 @@ export function ItemSelector({
           transition: 'transform 0.45s cubic-bezier(0.2, 0, 0, 1)',
         }}
       >
-        <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0 }}>{list}</div>
+        <div className="woopos-safe-pane" style={{ width: `${(65 / ROW) * 100}%`, minWidth: 0, position: 'relative' }}>
+          {list}
+          {/* The form takes the items pane, not the screen — the cart stays beside it, still
+              showing what's in the order while a one-off charge is being typed. */}
+          {customAmountForm}
+        </div>
         <div className="woopos-safe-pane" style={{ width: `${(35 / ROW) * 100}%`, minWidth: 0, background: 'var(--color-surface-bright)' }}>
           <PosCartPane
             onCheckout={() => setCheckout(true)}
@@ -283,9 +288,11 @@ export function ItemSelector({
           <Checkout onBack={() => setCheckout(false)} showBack={false} loading={checkout && !checkoutReady} />
         </div>
       </div>
-      <PosFloatingControl />
+      {/* Hidden while the custom amount form is up: the form owns the items pane down to its
+          own button, and the control sat on top of it. Android hides its equivalent for the
+          same state (WooPosHomeScreen: `itemsState !is CustomAmountForm`). */}
+      {!customAmountOpen && <PosFloatingControl />}
       {couponSheet}
-      {customAmountForm}
     </div>
   );
 }
@@ -304,11 +311,8 @@ function CustomAmountEntryRow({ onTap }: { onTap: () => void }) {
         textAlign: 'left', color: 'var(--color-on-surface)', font: 'inherit',
       }}
     >
-      <div style={{ width: 112, minHeight: 112, flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface)' }} />
-        <span style={{ position: 'absolute', right: 26, bottom: 26, width: 18, height: 18, borderRadius: '50%', background: 'var(--color-surface-container-low)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--color-surface-dim)' }}>
-          <Plus size="12px" style={{ color: 'var(--color-on-surface)' }} />
-        </span>
+      <div style={{ width: 112, minHeight: 112, flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <TagBadgePlus size="var(--icon-large)" style={{ color: 'var(--color-on-surface)' }} />
       </div>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'var(--space-xs)', padding: 'var(--space-sm) var(--space-md)' }}>
         <PosText variant="bodyLarge" bold>
