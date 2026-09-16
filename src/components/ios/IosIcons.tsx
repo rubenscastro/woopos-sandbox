@@ -173,36 +173,65 @@ export function Tag({ size, style, ...rest }: IconProps) {
 
 /**
  * The "Custom amount" entry tile's mark (CustomAmountEntryRow.swift). Two SF Symbols stacked,
- * not one glyph: a `tag` with a `plus.circle.fill` badge hung off its bottom-trailing corner,
- * offset 8 right and 6 down so it deliberately overhangs.
+ * not one glyph: `tag` at semibold with `plus.circle.fill` at bold hung off its bottom-trailing
+ * corner, offset 8 right and 6 down so it overhangs.
  *
- * The badge is two-tone, and that is the whole trick: its filled circle is surfaceContainerLow
- * — the same colour as the surfaceDim square it sits on in dark, near it in light — so painting
- * it over the tag knocks a ring out of the tag's outline rather than reading as a coloured
- * disc. The plus on top is onSurface. Drawn in that order, no masking needed.
+ * Geometry is measured off the real symbols rendered at 24pt, not guessed: the tag inks
+ * 26.38 × 27.12 and the badge 24.75 across — the badge is nearly as big as the tag, which is
+ * the proportion that makes this read correctly. The tag is the diagonal one, point at the
+ * bottom-left and punch hole at the top-right; drawing it as a horizontal left-pointing label
+ * was what kept it looking wrong.
  *
- * Geometry is the spec's, in points: the tag fills a 24×24 box, the badge is 16 across with its
- * bottom-right at (32, 30), which is what sets the 32×30 viewBox.
+ * The badge is two-tone, and that is the trick: painting its circle in the colour of whatever
+ * the mark sits on knocks a ring out of the tag's outline instead of reading as a disc. The
+ * plus is onSurface, and in the real symbol it is a hole through the disc rather than a mark
+ * on top of it.
  *
- * SF Symbols can't ship on the web, so these are equivalent paths matched to the same target.
+ * That circle takes surfaceDim — the tile's own colour — rather than the surfaceContainerLow
+ * the palette nominally names. The two are the same in dark, but in light surfaceContainerLow
+ * is white against a #F6F7F7 tile, which shows up as a pale disc instead of disappearing. The
+ * knockout is the point, so the colour follows the surface. `--pos-icon-knockout` overrides it
+ * wherever the mark is put on something else.
+ *
+ * SF Symbols can't ship on the web, so these are equivalent paths matched to that target.
  */
-export function TagBadgePlus({ size = '32px', style, ...rest }: IconProps) {
+export function TagBadgePlus({ size = '27px', style, ...rest }: IconProps) {
+  /*
+   * The badge is about half the tag across and sits *on* its lower-right edge — that edge is a
+   * diagonal, so anchoring to the corner of the tag's bounding box (which is where the symbol's
+   * own bottom-trailing alignment puts it) leaves the plus floating in empty space below and to
+   * the right of the tag, detached from it.
+   *
+   * Sizing it to the symbol's measurements — where a 24pt `plus.circle.fill` inks nearly as wide
+   * as a 24pt `tag` — bites most of the tag's bottom corner away, and the mark stops reading as
+   * a tag with a plus on it.
+   */
+  /* The lower-right boundary is the diagonal running (14.75, 22.64) → (24.2, 13.2); the badge
+     straddles it, a shade to the outside so it overhangs rather than sitting in the tag. */
+  const badge = { cx: 21, cy: 17.5, r: 6.2 };
   return (
     <svg
       {...S}
-      viewBox="0 0 32 30"
+      viewBox="2.1 1.2 26.1 23.5"
       style={{ width: size, height: 'auto', verticalAlign: 'middle', flex: 'none', display: 'inline-block', ...style }}
       {...rest}
     >
-      {/* The tag: a left-pointing label with a rounded tip and its punch hole near the point.
-          Semibold, so heavier than the 1.5 stroke the rest of these icons use. */}
-      <g strokeWidth={2}>
-        <path d="M10.4 4h7.1A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-7.1a2 2 0 0 1-1.4-.6l-5.6-6a2 2 0 0 1 0-2.8l5.6-6A2 2 0 0 1 10.4 4Z" />
-        <circle cx="8.2" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      {/* Mirrored so the square corner and its hole sit top-right and the point falls to the
+          bottom-left, the way the symbol draws it. Stroke is pre-scale, so 1.7 here lands just
+          under 1.9 once the group is scaled. */}
+      <g transform="translate(26.4 0) scale(-1 1) scale(1.1)" strokeWidth={1.7}>
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+        <circle cx="7" cy="7" r="1.4" fill="currentColor" stroke="none" />
       </g>
-      {/* The knockout circle, then the plus over it. */}
-      <circle cx="24" cy="22" r="8" fill="var(--color-surface-container-low)" stroke="none" />
-      <path d="M24 18v8M20 22h8" stroke="var(--color-on-surface)" strokeWidth={2.4} strokeLinecap="round" />
+      <circle cx={badge.cx} cy={badge.cy} r={badge.r} fill="var(--pos-icon-knockout, var(--color-surface-dim))" stroke="none" />
+      {/* Keeps the airier proportion within the badge — the plus spans about two thirds of the
+          disc, rather than the short, fat one the symbol measures. */}
+      <path
+        d={`M${badge.cx} ${badge.cy - 3.1}V${badge.cy + 3.1}M${badge.cx - 3.1} ${badge.cy}H${badge.cx + 3.1}`}
+        stroke="var(--color-on-surface)"
+        strokeWidth={1.7}
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
