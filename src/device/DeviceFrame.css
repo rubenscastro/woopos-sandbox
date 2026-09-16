@@ -169,3 +169,106 @@
   padding-top: var(--device-safe-top);
   padding-bottom: var(--device-safe-bottom);
 }
+
+/* ---------------------------------------------------------------------------------------
+ * The phone's chassis.
+ *
+ * A real handset is a black display surround held in a polished metal band, and the band is
+ * the part that reads as hardware: it never sits at one value, because it's curved, so the
+ * light runs round it — bright on two opposite shoulders, dropping away on the other two.
+ * A flat border can't do that, so this is a conic sweep masked into a ring, which follows
+ * `border-radius` exactly and costs no layout.
+ *
+ * The tablet keeps its existing edge treatment: it's shown much larger, where a bright band
+ * would compete with the screen it frames.
+ * ------------------------------------------------------------------------------------- */
+.device-bezel--phone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(
+    from 216deg,
+    #fbfcfd 0%,
+    #b6bbc2 9%,
+    #7b8087 19%,
+    #5d6167 27%,
+    #aeb3ba 36%,
+    #f7f8fa 46%,
+    #c4c9cf 54%,
+    #85898f 64%,
+    #62666c 73%,
+    #a9aeb5 83%,
+    #e9ebee 92%,
+    #fbfcfd 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Inside the band, the surround stays black in both themes — it's the unlit part of the
+   glass, not a surface that follows the app's appearance. A hairline of shadow under the
+   band keeps the two from reading as one flat edge. */
+.device-bezel--phone,
+[data-theme='dark'] .device-bezel--phone {
+  background: #05070a;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.6),
+    0 1px 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+/* Dark mode's rim-light ring is for the tablet's graphite edge; the phone has the band. */
+[data-theme='dark'] .device-bezel--phone::before {
+  content: none;
+}
+
+/* The keys sit half-buried in the band, so only their outer half shows — the same trick the
+   band uses, a gradient along their length rather than a flat fill, so they catch the light
+   with it. */
+.device-key {
+  position: absolute;
+  z-index: 5;
+  border-radius: 2px;
+  pointer-events: none;
+  background: linear-gradient(180deg, #d7dbe0 0%, #9aa0a7 40%, #6d7278 100%);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.45);
+}
+
+.device-key--silent,
+.device-key--volume-up,
+.device-key--volume-down {
+  left: -2px;
+  width: 3px;
+}
+
+.device-key--silent {
+  top: 112px;
+  height: 30px;
+}
+
+.device-key--volume-up {
+  top: 164px;
+  height: 62px;
+}
+
+.device-key--volume-down {
+  top: 240px;
+  height: 62px;
+}
+
+.device-key--power {
+  right: -2px;
+  top: 190px;
+  width: 3px;
+  height: 100px;
+  background: linear-gradient(180deg, #d7dbe0 0%, #9aa0a7 40%, #6d7278 100%);
+}

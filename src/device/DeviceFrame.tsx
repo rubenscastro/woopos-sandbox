@@ -24,7 +24,9 @@ interface DeviceSpec {
 
 const SPECS: Record<DeviceId, DeviceSpec> = {
   tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false, fit: 0.93 },
-  phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 46, notch: true, fit: 0.81 },
+  // The phone's corners are rounder than the tablet's, as they are on the real hardware — the
+  // display radius (radius − bezel) lands at 44, which is what an iPhone's screen actually is.
+  phone: { content: { w: 390, h: 844 }, bezel: 14, radius: 58, notch: true, fit: 0.81 },
 };
 
 const DRAG_THRESHOLD = 5;
@@ -89,6 +91,16 @@ export function DeviceFrame({ children, overlay }: { children: ReactNode; overla
           } as React.CSSProperties}
         >
           {spec.notch && <div className="device-notch" />}
+          {/* The hardware keys. Purely scenery — they do nothing — but their absence is what
+              made the phone read as a rounded rectangle rather than a device. */}
+          {device === 'phone' && (
+            <>
+              <span className="device-key device-key--silent" aria-hidden />
+              <span className="device-key device-key--volume-up" aria-hidden />
+              <span className="device-key device-key--volume-down" aria-hidden />
+              <span className="device-key device-key--power" aria-hidden />
+            </>
+          )}
           <DeviceScreen
             device={device}
             theme={theme}
