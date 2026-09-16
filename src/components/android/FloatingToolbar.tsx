@@ -49,7 +49,11 @@ export function FloatingToolbar({ statusSlot }: { statusSlot?: React.ReactNode }
               background: 'var(--color-surface-container-low)',
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-normal-large)',
-              padding: 'var(--space-xs)',
+              /* Medium above and below the rows and nothing at the sides — the rows carry their
+                 own 16 (WooPosToolbarPopUpMenu: a Medium spacer top and bottom of the column,
+                 and Medium spacers either side of each item). This was 4 all round, which left
+                 the list cramped against the top and bottom of the card. */
+              padding: 'var(--space-md) 0',
             }}
           >
             <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setMenuOpen(false); navigate('/order-history'); }} />
