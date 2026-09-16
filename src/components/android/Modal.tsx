@@ -5,8 +5,12 @@ import './Modal.css';
 
 /**
  * WooPosDialogWrapper — a centered modal card over a dismissible scrim. surfaceBright,
- * Large radius, slide+fade in, width 0.75 (0.95 on phone, capped at 90% height), optional
- * close button top-right. Rendered absolutely within the device screen.
+ * Large radius, slide+fade in, optional close button top-right. Rendered absolutely within
+ * the device screen.
+ *
+ * Width is a fraction of the screen, never a pixel cap: tablets take `widthFraction`, phones
+ * always 0.95. Only the phone caps height (0.9); on a tablet the card is as tall as its
+ * content, which is why a dialog with little in it reads wide and short rather than square.
  */
 interface ModalProps {
   open: boolean;
@@ -17,16 +21,13 @@ interface ModalProps {
   /** Optional cap on the card width (e.g. for compact dialogs). */
   maxWidth?: number | string;
   /**
-   * A fixed card size in px, instead of a share of the screen. iOS sizes its POS modals this
-   * way — POSModalSizing pins them to 640 × 656 at default text size and only shrinks to fit
-   * the screen — where Android's dialog takes 0.75 of the width and is as tall as it needs.
-   * Both still cap at 90% of the height.
+   * Share of the screen width on tablet — WooPosDialogWrapper's own parameter. Defaults to its
+   * DEFAULT_WIDTH_FRACTION; the card reader connection dialog passes 0.55.
    */
-  width?: number;
-  height?: number;
+  widthFraction?: number;
 }
 
-export function Modal({ open, onDismiss, onClose, children, backgroundLabel = 'Dismiss dialog', maxWidth, width, height }: ModalProps) {
+export function Modal({ open, onDismiss, onClose, children, backgroundLabel = 'Dismiss dialog', maxWidth, widthFraction = 0.75 }: ModalProps) {
   const isPhone = useIsPhone();
   if (!open) return null;
 
@@ -41,10 +42,9 @@ export function Modal({ open, onDismiss, onClose, children, backgroundLabel = 'D
       <div
         className="woopos-modal-card"
         style={{
-          width: width ?? (isPhone ? '95%' : '75%'),
-          maxWidth: width === undefined ? maxWidth : '100%',
-          height,
-          maxHeight: '90%',
+          width: isPhone ? '95%' : `${widthFraction * 100}%`,
+          maxWidth: maxWidth ?? 'calc(100% - var(--space-lg) * 2)',
+          maxHeight: isPhone ? '90%' : undefined,
         }}
         role="dialog"
         aria-modal="true"

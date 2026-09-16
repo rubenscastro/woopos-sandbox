@@ -38,7 +38,10 @@ export function CardReaderConnectionHost() {
       onDismiss={dismissable ? cr.cancelConnecting : () => {}}
       onClose={dismissable ? cr.cancelConnecting : undefined}
       backgroundLabel="Card reader connection dialog"
-      maxWidth={520}
+      /* WooPosCardReaderConnectionDialogContent passes widthFraction = 0.55f. It was capped at
+         520px here, which on a tablet is far narrower than 55% — the card came out square and
+         cramped where the real one is wide and short. There is no pixel cap in the app. */
+      widthFraction={0.55}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-lg)', textAlign: 'center' }}>
         {s === 'bluetoothOff' && (
@@ -53,6 +56,7 @@ export function CardReaderConnectionHost() {
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
               <Button text="Enable Bluetooth" fullWidth onClick={connectivity.openQuickEnable} />
               <OutlinedButton text="Cancel" fullWidth onClick={cr.cancelConnecting} />
+              <RemoteReaderHint />
             </div>
           </>
         )}
@@ -66,6 +70,7 @@ export function CardReaderConnectionHost() {
             <Text variant="bodyLarge" align="center" color="var(--color-on-surface)">
               Make sure your reader is charged and turned on
             </Text>
+            <RemoteReaderHint />
           </>
         )}
 
@@ -99,13 +104,7 @@ export function CardReaderConnectionHost() {
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
               <Button text="Grant permission" fullWidth onClick={cr.grantLocalNetworkPermission} />
               <OutlinedButton text="Cancel" fullWidth onClick={cr.cancelLocalNetworkPermission} />
-              {/* WooPosRemoteReaderHintStrip — underlined link-style strip; entry point not mocked. */}
-              <button
-                type="button"
-                style={{ border: 'none', background: 'none', padding: 'var(--space-sm) var(--space-lg)', color: 'var(--color-primary)', textDecoration: 'underline', font: 'inherit', fontSize: 'var(--font-body-md-size)', cursor: 'pointer' }}
-              >
-                Use an Android phone as a card reader
-              </button>
+              <RemoteReaderHint />
             </div>
           </>
         )}
@@ -151,5 +150,30 @@ export function CardReaderConnectionHost() {
         )}
       </div>
     </Modal>
+  );
+}
+
+/**
+ * WooPosRemoteReaderHintStrip — the way into using a phone as the reader. Source shows it on
+ * Scanning, BluetoothDisabled and MissingPermission, and only above the phone breakpoint; the
+ * destination it links to isn't mocked here.
+ */
+function RemoteReaderHint() {
+  return (
+    <button
+      type="button"
+      style={{
+        border: 'none',
+        background: 'none',
+        padding: 'var(--space-sm) var(--space-lg)',
+        color: 'var(--color-primary)',
+        textDecoration: 'underline',
+        font: 'inherit',
+        fontSize: 'var(--font-body-md-size)',
+        cursor: 'pointer',
+      }}
+    >
+      Use an Android phone as a card reader
+    </button>
   );
 }

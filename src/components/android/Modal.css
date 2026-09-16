@@ -1,3 +1,6 @@
+/* No horizontal padding: the card's width is a fraction of the *screen* (WooPosDialogWrapper's
+   fillMaxWidth), and padding here would quietly shrink it below the fraction asked for. The
+   card keeps itself off the edges with its own max-width instead. */
 .woopos-modal-root {
   position: absolute;
   inset: 0;
@@ -5,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-lg);
+  padding: var(--space-lg) 0;
 }
 
 .woopos-modal-scrim {
