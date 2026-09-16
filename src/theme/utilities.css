@@ -23,6 +23,27 @@
   width: 100%;
 }
 
+/* A pair of actions sharing one row (PaymentsActionButtons: Email receipt / Print receipt).
+   Each needs its share of the row handed to it: a `fullWidth` button is width:100% and holds
+   that width, so two of them side by side run off the end of the row rather than splitting
+   it. What gets sized is a slot per action, not the button — the button sets `flex` inline,
+   which no rule here can reach — so wrap each one in a plain element. On phone they stack,
+   and each is full width again. */
+.woopos-action-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+.woopos-action-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+[data-device='phone'] .woopos-action-row {
+  flex-direction: column;
+}
+[data-device='phone'] .woopos-action-row > * {
+  flex: none;
+}
+
 /*
  * Two-pane screens (Settings, Orders) whose panes have their own backgrounds fill the top
  * safe-area with those backgrounds instead of leaving a strip above them: pull the screen up

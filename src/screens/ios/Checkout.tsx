@@ -9,7 +9,6 @@ import { CardReaderNotConnected } from '../../components/android/illustrations';
 import { ErrorX, ChevronLeft } from '../../components/ios/IosIcons';
 import readyForPaymentImg from '../../assets/ios/pos-ready-for-payment.png';
 import { useNav } from '../../device/platformNav';
-import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useCart } from '../../state/CartContext';
 import { useCardReader, useCardTransaction } from '../../tools/CardReaderContext';
 import { usePrinter } from '../../state/PrinterContext';
@@ -38,7 +37,6 @@ export function Checkout({
   loading?: boolean;
 }) {
   const nav = useNav();
-  const isPhone = useIsPhone();
   const back = onBack ?? (() => nav('/products'));
   const { subtotal, discountTotal, taxTotal, total, clear } = useCart();
   const { connected, startConnecting } = useCardReader();
@@ -123,12 +121,18 @@ export function Checkout({
         <PosText variant="bodyLarge" align="center" color="var(--color-on-surface-variant-highest)">
           A payment of {formatUsd(total || 0)} was successfully made.
         </PosText>
-        <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
+        {/* Half the screen on tablet, all of it on phone — wooPosFullScreenActionButton(), the
+            same width Android's success screen gives its actions. */}
+        <div className="woopos-fullscreen-action" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
           <PosButton label="New order" fullWidth onClick={newOrder} />
           {/* Email + Print sit side by side on tablet, stacked on phone (PaymentsActionButtons). */}
-          <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: 'var(--space-sm)' }}>
-            <PosButton label="Email receipt" variant="outlined" fullWidth onClick={() => setState('email')} />
-            <PosButton label={printing ? 'Printing…' : 'Print receipt'} variant="outlined" fullWidth disabled={printing} onClick={() => { if (printer.connected) { triggerPrint(); } else { setPrintPending(true); printer.openSetup(); } }} />
+          <div className="woopos-action-row">
+            <div>
+              <PosButton label="Email receipt" variant="outlined" fullWidth onClick={() => setState('email')} />
+            </div>
+            <div>
+              <PosButton label={printing ? 'Printing…' : 'Print receipt'} variant="outlined" fullWidth disabled={printing} onClick={() => { if (printer.connected) { triggerPrint(); } else { setPrintPending(true); printer.openSetup(); } }} />
+            </div>
           </div>
         </div>
       </FullScreen>
