@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
 import { PosText } from './PosText';
 import { PosButton } from './PosButton';
 import { ProductImage } from '../android/ProductImage';
 import { DragScroll } from '../android/DragScroll';
 import { Trash, Barcode, Tag, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
+import { useIsDark } from '../../hooks/useIsDark';
 import { formatUsd } from '../../lib/currency';
 import lightBagsImg from '../../assets/ios/shopping-bags-light.png';
+import darkBagsImg from '../../assets/ios/shopping-bags-dark.png';
 
 /**
  * iOS cart pane (CartView.swift). Header "Cart" + item count with a trailing "Clear cart"
@@ -125,37 +126,19 @@ export function PosCartPane({
   );
 }
 
-function useIsDark() {
-  const [isDark, setIsDark] = useState(
-    () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
-  );
-  useEffect(() => {
-    const obs = new MutationObserver(() => {
-      setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
-    });
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => obs.disconnect();
-  }, []);
-  return isDark;
-}
 
-/** iOS empty-cart illustration: the WooFoundation shopping-bags asset.
- *  Both PDFs render with a white background; blend modes remove the seam:
- *  light mode — multiply (white × white surface = invisible bg, grey bags visible)
- *  dark mode — invert(1) + screen (white→black blends into dark surface, inverted bags visible) */
+/** iOS empty-cart illustration — `pos-shopping-bags` from the app's own asset catalogue, which
+ *  ships a drawn-for-purpose variant per appearance (the dark one is not the light one
+ *  inverted: its fills lighten while its outlines darken). Taking both means no blend-mode
+ *  trickery to hide a background, which is what the single light asset used to need. */
 function ShoppingBags() {
   const isDark = useIsDark();
   return (
     <img
-      src={lightBagsImg}
+      src={isDark ? darkBagsImg : lightBagsImg}
       alt=""
       aria-hidden
-      style={{
-        width: 112, height: 104, objectFit: 'contain',
-        ...(isDark
-          ? { filter: 'invert(1)', mixBlendMode: 'screen' as const }
-          : { mixBlendMode: 'multiply' as const }),
-      }}
+      style={{ width: 112, height: 104, objectFit: 'contain' }}
     />
   );
 }

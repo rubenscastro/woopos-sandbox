@@ -183,6 +183,11 @@
   --color-on-success: #101517;
 
   --color-outline: #8c8f94;
+  /* Gray70. Light mode's #dcdcde is a hairline against white; left undefined here it carried
+     straight into dark, where every divider, field underline and off-toggle came out near
+     white. Dark needs the same relationship inverted — a step off the surface, not a line
+     drawn across it. */
+  --color-outline-variant: #3c434a;
   --color-disabled-container: #50575e;
   --color-tertiary-icon: #720eec;
   --color-pos-link: #64b5f6;
