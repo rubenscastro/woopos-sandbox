@@ -60,9 +60,9 @@ export function DeviceKeyboard() {
           Boolean((t as HTMLElement).closest('.device-screen'))
         : false;
 
-    const onFocusIn = (e: FocusEvent) => {
-      if (isDeviceField(e.target)) {
-        const el = e.target as Field;
+    const attach = (t: EventTarget | null) => {
+      if (isDeviceField(t)) {
+        const el = t as Field;
         fieldRef.current = el;
         // A field that only takes numbers gets the decimal pad, not the full keyboard — the
         // app's own cash fields declare `.decimalPad` / `.numberPad`
@@ -72,6 +72,20 @@ export function DeviceKeyboard() {
         setVisible(true);
       }
     };
+    const onFocusIn = (e: FocusEvent) => attach(e.target);
+    // A field that mounts already focused (`autoFocus`) can take focus before it is attached
+    // inside the device screen, so no focusin we can use ever fires — and a focused field that
+    // unmounts never blurs. Re-check the active element whenever the DOM changes.
+    const observer = new MutationObserver(() => {
+      const active = document.activeElement;
+      if (isDeviceField(active)) {
+        if (fieldRef.current !== active) attach(active);
+      } else if (fieldRef.current && !fieldRef.current.isConnected) {
+        fieldRef.current = null;
+        setVisible(false);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
     const onFocusOut = () => {
       // Delay so tapping a key (which briefly moves focus) doesn't dismiss the keyboard.
       window.setTimeout(() => {
@@ -84,6 +98,7 @@ export function DeviceKeyboard() {
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
     return () => {
+      observer.disconnect();
       document.removeEventListener('focusin', onFocusIn);
       document.removeEventListener('focusout', onFocusOut);
     };

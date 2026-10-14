@@ -10,7 +10,7 @@
 import type { FlagId } from '../state/flags';
 import type { PlatformId } from '../device/PlatformContext';
 
-export type VersionId = 'main' | 'scaling-pos-experience' | 'cash-reconciliation' | 'multi-payment-methods';
+export type VersionId = 'main' | 'scaling-pos-experience' | 'cash-reconciliation' | 'multi-payment-methods' | 'custom-amounts';
 
 export interface VersionEntry {
   id: VersionId;
@@ -66,6 +66,13 @@ export const VERSIONS: VersionEntry[] = [
     // Android only: the Payments settings screen this proposal is about is an Android screen,
     // and iOS Settings has no counterpart to fork.
     platforms: ['android'],
+  },
+  {
+    id: 'custom-amounts',
+    label: 'Custom amounts',
+    description:
+      'Proposal reworking custom amounts on Android and iOS: on tablet the form becomes a full-screen flow (like Cash payment), taxable amounts say "Plus taxes" in the cart, and the cart row swaps its delete button for a More menu with Edit and Delete.',
+    flagDefaults: { customAmounts: true },
   },
 ];
 

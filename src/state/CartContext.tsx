@@ -64,6 +64,8 @@ interface CartContextValue {
   /** Add a product as if scanned: shows a loading row briefly, then resolves to the item. */
   scanProduct: (p: AddableProduct) => void;
   addCustomAmount: (name: string, amount: number, taxable: boolean) => void;
+  /** Edit an existing custom-amount line in place (keeps its position in the cart). */
+  updateCustomAmount: (key: string, name: string, amount: number, taxable: boolean) => void;
   addCoupon: (code: string, summary: string, discount: number) => void;
   removeLine: (key: string) => void;
   setQuantity: (key: string, quantity: number) => void;
@@ -110,6 +112,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       { key: nextKey('c'), kind: 'custom', name: name || 'Custom amount', amount, taxable },
       ...prev,
     ]);
+  }, []);
+
+  const updateCustomAmount = useCallback((key: string, name: string, amount: number, taxable: boolean) => {
+    setLines((prev) =>
+      prev.map((l) =>
+        l.key === key && l.kind === 'custom' ? { ...l, name: name || 'Custom amount', amount, taxable } : l,
+      ),
+    );
   }, []);
 
   const addCoupon = useCallback((code: string, summary: string, discount: number) => {
@@ -175,12 +185,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addProduct,
       scanProduct,
       addCustomAmount,
+      updateCustomAmount,
       addCoupon,
       removeLine,
       setQuantity,
       clear,
     };
-  }, [lines, sortedLines, pendingScans, addProduct, scanProduct, addCustomAmount, addCoupon, removeLine, setQuantity, clear]);
+  }, [lines, sortedLines, pendingScans, addProduct, scanProduct, addCustomAmount, updateCustomAmount, addCoupon, removeLine, setQuantity, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

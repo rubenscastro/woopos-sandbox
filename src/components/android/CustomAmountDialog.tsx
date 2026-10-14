@@ -11,12 +11,18 @@ import { Toolbar } from './Toolbar';
 interface CustomAmountDialogProps {
   onSubmit: (name: string, amount: number, taxable: boolean) => void;
   onDismiss: () => void;
+  /** Custom amounts proposal: editing an existing line prefills the form. */
+  initial?: { name: string; amount: number; taxable: boolean };
+  title?: string;
+  submitText?: string;
+  /** Custom amounts proposal: full-screen on tablet — keep the form a readable width. */
+  centered?: boolean;
 }
 
-export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogProps) {
-  const [amountText, setAmountText] = useState('');
-  const [name, setName] = useState('');
-  const [taxable, setTaxable] = useState(false);
+export function CustomAmountDialog({ onSubmit, onDismiss, initial, title = 'Custom amount', submitText = 'Add custom amount', centered }: CustomAmountDialogProps) {
+  const [amountText, setAmountText] = useState(initial ? String(initial.amount) : '');
+  const [name, setName] = useState(initial && initial.name !== 'Custom amount' ? initial.name : '');
+  const [taxable, setTaxable] = useState(initial?.taxable ?? false);
 
   const amount = parseFloat(amountText) || 0;
   const valid = amount > 0;
@@ -35,9 +41,9 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
       {/* The form takes over the items pane, and the items toolbar goes into back-navigation
           mode over it — a back arrow and the form's own title, not a bare ✕ floating in the
           corner. Same shape as iOS, which puts a chevron and "Custom amount" here too. */}
-      <Toolbar title="Custom amount" onBack={onDismiss} />
+      <Toolbar title={title} onBack={onDismiss} />
 
-      <div style={{ flex: 1, overflow: 'auto', padding: '0 var(--space-lg)' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: '0 var(--space-lg)', width: '100%', maxWidth: centered ? 640 + 2 * 24 : undefined, alignSelf: 'center', boxSizing: 'border-box' }}>
         {/* Rules sit *between* the three sections, one hairline each, the way the form's own
             HorizontalDividers do — not as a 2px underline beneath every field, which drew one
             line too many and drew each at twice the weight. */}
@@ -95,9 +101,9 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
         </Section>
       </div>
 
-      <div style={{ padding: 'var(--space-md)' }}>
+      <div style={{ padding: 'var(--space-md)', paddingInline: centered ? 'var(--space-lg)' : undefined, paddingBottom: 'calc(var(--space-md) + var(--device-keyboard-height, 0px))', width: '100%', maxWidth: centered ? 640 + 2 * 24 : undefined, alignSelf: 'center', boxSizing: 'border-box' }}>
         <Button
-          text="Add custom amount"
+          text={submitText}
           fullWidth
           state={valid ? 'enabled' : 'disabled'}
           onClick={() => onSubmit(name, amount, taxable)}
@@ -109,12 +115,13 @@ export function CustomAmountDialog({ onSubmit, onDismiss }: CustomAmountDialogPr
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ padding: 'var(--space-md) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+    // A <label>, so tapping anywhere in the section (not just on the text line) focuses its field.
+    <label style={{ padding: 'var(--space-md) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', cursor: 'text' }}>
       <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)">
         {label}
       </Text>
       {children}
-    </div>
+    </label>
   );
 }
 

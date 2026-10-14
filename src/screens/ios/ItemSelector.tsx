@@ -9,7 +9,7 @@ import { PosPreSearch } from '../../components/ios/PosPreSearch';
 import { PosNotice } from '../../components/ios/PosNotice';
 import { PosFloatingControl, OperatorRow } from '../../components/ios/PosFloatingControl';
 import { Checkout } from './Checkout';
-import { Search, Plus, ChevronLeft, TagBadgePlus, DotsHorizontal, Description, SettingsFilled, ExitToApp, InfoCircle } from '../../components/ios/IosIcons';
+import { Search, Plus, ChevronLeft, TagBadgePlus, SquareAndPencil, DotsHorizontal, Description, SettingsFilled, ExitToApp, InfoCircle } from '../../components/ios/IosIcons';
 import { usePublishPreviewState } from '../../device/PreviewStateContext';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useNav } from '../../device/platformNav';
@@ -42,6 +42,8 @@ export function ItemSelector({
   const isPhone = useIsPhone();
   const cart = useCart();
   const nav = useNav();
+  // Custom amounts proposal: the flow is a full-screen modal route, not an items-pane overlay.
+  const customFullScreen = useFlags().flags.customAmounts;
   const { openSetup } = useBarcodeSetup();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -184,7 +186,7 @@ export function ItemSelector({
           <>
         {tab === 'products'
           ? <>
-              {!searchOpen && <CustomAmountEntryRow onTap={() => setCustomAmountOpen(true)} />}
+              {!searchOpen && <CustomAmountEntryRow onTap={() => (customFullScreen ? nav('/custom-amount') : setCustomAmountOpen(true))} />}
               {shownProducts.map((p) => (
                 <PosItemCard
                   key={p.id}
@@ -300,6 +302,7 @@ export function ItemSelector({
 /** iOS custom-amount entry row (Custom Amount/CustomAmountEntryRow.swift): a product-list card
  *  with a tag + plus avatar, "Custom amount" / "Add a one-off charge." */
 function CustomAmountEntryRow({ onTap }: { onTap: () => void }) {
+  const { flags } = useFlags();
   return (
     <button
       type="button"
@@ -312,7 +315,9 @@ function CustomAmountEntryRow({ onTap }: { onTap: () => void }) {
       }}
     >
       <div style={{ width: 112, minHeight: 112, flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <TagBadgePlus size="var(--icon-large)" style={{ color: 'var(--color-on-surface)' }} />
+        {flags.customAmounts
+          ? <SquareAndPencil size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+          : <TagBadgePlus size="var(--icon-large)" style={{ color: 'var(--color-on-surface)' }} />}
       </div>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'var(--space-xs)', padding: 'var(--space-sm) var(--space-md)' }}>
         <PosText variant="bodyLarge" bold>

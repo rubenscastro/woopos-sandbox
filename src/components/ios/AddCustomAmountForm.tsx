@@ -12,13 +12,23 @@ import { ChevronLeft } from './IosIcons';
 export function AddCustomAmountForm({
   onDismiss,
   onSubmit,
+  initial,
+  title = 'Custom amount',
+  submitLabel = 'Add custom amount',
+  centered,
 }: {
   onDismiss: () => void;
   onSubmit: (name: string, amount: number, taxable: boolean) => void;
+  /** Custom amounts proposal: editing an existing line prefills the form. */
+  initial?: { name: string; amount: number; taxable: boolean };
+  title?: string;
+  submitLabel?: string;
+  /** Custom amounts proposal: full-screen on tablet — keep the form a readable width. */
+  centered?: boolean;
 }) {
-  const [amount, setAmount] = useState('');
-  const [name, setName] = useState('');
-  const [taxable, setTaxable] = useState(false);
+  const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
+  const [name, setName] = useState(initial && initial.name !== 'Custom amount' ? initial.name : '');
+  const [taxable, setTaxable] = useState(initial?.taxable ?? false);
   const amountNum = parseFloat(amount) || 0;
   const canAdd = amountNum > 0;
 
@@ -36,13 +46,13 @@ export function AddCustomAmountForm({
           <ChevronLeft size="30px" />
         </button>
         <PosText variant="heading" bold>
-          Custom amount
+          {title}
         </PosText>
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', padding: 'var(--space-xl) var(--space-lg)' }}>
+      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', padding: 'var(--space-xl) var(--space-lg)', ...(centered ? { width: '100%', maxWidth: 640 + 2 * 24, alignSelf: 'center', boxSizing: 'border-box' as const } : {}) }}>
         {/* Amount */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', cursor: 'text' }}>
           <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)">
             Amount
           </PosText>
@@ -57,7 +67,7 @@ export function AddCustomAmountForm({
               style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', color: amount ? 'var(--color-on-surface)' : 'var(--color-on-surface-variant-lowest)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-heading-size)', fontWeight: 700 }}
             />
           </div>
-        </div>
+        </label>
 
         <Divider />
 
@@ -70,7 +80,7 @@ export function AddCustomAmountForm({
         <Divider />
 
         {/* Name */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', cursor: 'text' }}>
           <PosText variant="bodyMedium" color="var(--color-on-surface-variant-lowest)">
             Name
           </PosText>
@@ -80,11 +90,11 @@ export function AddCustomAmountForm({
             placeholder="Custom amount"
             style={{ border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-on-surface)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-body-lg-size)', padding: 'var(--space-sm) 0' }}
           />
-        </div>
+        </label>
       </div>
 
-      <div style={{ padding: 'var(--space-md) var(--space-lg)', paddingBottom: 'calc(var(--space-md) + var(--device-safe-bottom, 0px))' }}>
-        <PosButton label="Add custom amount" fullWidth disabled={!canAdd} onClick={submit} />
+      <div style={{ padding: 'var(--space-md) var(--space-lg)', paddingBottom: 'calc(var(--space-md) + var(--device-safe-bottom, 0px))', ...(centered ? { width: '100%', maxWidth: 640 + 2 * 24, alignSelf: 'center', boxSizing: 'border-box' as const } : {}) }}>
+        <PosButton label={submitLabel} fullWidth disabled={!canAdd} onClick={submit} />
       </div>
     </div>
   );

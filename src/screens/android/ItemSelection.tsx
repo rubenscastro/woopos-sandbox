@@ -13,11 +13,12 @@ import { CouponCreationDialog } from '../../components/android/CouponCreationDia
 import { DragScroll } from '../../components/android/DragScroll';
 import { FloatingToolbar } from '../../components/android/FloatingToolbar';
 import { Toolbar } from '../../components/android/Toolbar';
-import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ArrowBack, Plus } from '../../components/android/icons';
+import { Search, Inventory, Tag, DotsVertical, Description, SettingsFilled, ExitToApp, ArrowBack, Plus, EditSquare } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useCart } from '../../state/CartContext';
+import { useFlags } from '../../state/FlagsContext';
 import { useCheckoutPane } from '../../state/useCheckoutPane';
 import { formatUsd } from '../../lib/currency';
 import { products, variations, type MockProduct } from '../../mocks/android/products';
@@ -35,6 +36,9 @@ export function ItemSelection() {
   const isPhone = useIsPhone();
   const cart = useCart();
   const { openSetup } = useBarcodeSetup();
+  const navigate = useNav();
+  // Custom amounts proposal: the flow is a full-screen modal route, not an items-pane overlay.
+  const customFullScreen = useFlags().flags.customAmounts;
 
   const [tab, setTab] = useState<Tab>('products');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -92,7 +96,7 @@ export function ItemSelection() {
               <ProductsList
                 query={query}
                 searchOpen={searchOpen}
-                onOpenCustom={() => setCustomOpen(true)}
+                onOpenCustom={() => (customFullScreen ? navigate('/custom-amount') : setCustomOpen(true))}
                 onSelect={(p) => {
                   if (p.variable) setVariationOf(p);
                   else cart.addProduct({ id: p.id, name: p.name, price: p.price });
@@ -353,6 +357,7 @@ function ProductsList({
   onOpenCustom: () => void;
   onSelect: (p: MockProduct) => void;
 }) {
+  const { flags } = useFlags();
   const q = query.trim().toLowerCase();
   const filtered = useMemo(() => (q ? products.filter((p) => p.name.toLowerCase().includes(q)) : products), [q]);
 
@@ -406,7 +411,9 @@ function ProductsList({
                   flex: 'none',
                 }}
               >
-                <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+                {flags.customAmounts
+                  ? <EditSquare size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+                  : <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />}
               </div>
               <div style={{ padding: '0 var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
                 <Text variant="bodyLarge" bold>

@@ -2,10 +2,12 @@ import { PosText } from './PosText';
 import { PosButton } from './PosButton';
 import { ProductImage } from '../android/ProductImage';
 import { DragScroll } from '../android/DragScroll';
-import { Trash, Barcode, Tag, ChevronLeft } from './IosIcons';
+import { Trash, Barcode, Tag, SquareAndPencil, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { useIsDark } from '../../hooks/useIsDark';
 import { formatUsd } from '../../lib/currency';
+import { useFlags } from '../../state/FlagsContext';
+import { useNav } from '../../device/platformNav';
 import lightBagsImg from '../../assets/ios/shopping-bags-light.png';
 import darkBagsImg from '../../assets/ios/shopping-bags-dark.png';
 
@@ -169,6 +171,11 @@ function PosCartRow({
   hideRemove?: boolean;
   showDiscountNotAppliedNote?: boolean;
 }) {
+  // Custom amounts proposal (src/versions/registry.ts): Plus taxes line; tapping the card
+  // opens Review (the trash stays, and doesn't open it).
+  const { flags } = useFlags();
+  const navigate = useNav();
+  const v2 = flags.customAmounts && line.kind === 'custom';
   const title = line.kind === 'coupon' ? line.code : line.name;
   const priceDetail =
     line.kind === 'custom'
@@ -185,14 +192,16 @@ function PosCartRow({
   const couponIconBg = isCheckout ? 'var(--color-success)' : 'var(--color-surface-dim)';
   const couponIconColor = isCheckout ? 'var(--color-on-success)' : 'var(--color-on-surface-variant-lowest)';
 
-  return (
-    <div className="woopos-cart-item" style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
+  const card = (
+    <div className="woopos-cart-item" onClick={v2 && !hideRemove ? () => navigate('/custom-amount', { state: { editKey: line.key } }) : undefined} style={{ cursor: v2 && !hideRemove ? 'pointer' : undefined, display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
       {/* Flush to the card's edges — no padding, no radius of its own; the outer card's
           overflow:hidden clips it into the rounded left corners (ItemRowView.swift: the
           image sits directly in the row with no inset, only the row itself is clipped). */}
       <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: line.kind === 'coupon' ? couponIconBg : 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {line.kind === 'product' ? (
           <ProductImage id={line.productId} />
+        ) : v2 ? (
+          <SquareAndPencil size="var(--icon-medium)" style={{ color: couponIconColor }} />
         ) : (
           <Tag size="var(--icon-medium)" style={{ color: couponIconColor }} />
         )}
@@ -217,6 +226,11 @@ function PosCartRow({
         ) : (
           <>
             <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)">{priceDetail}</PosText>
+            {v2 && line.kind === 'custom' && line.taxable && (
+              <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
+                Plus taxes
+              </PosText>
+            )}
             {/* CustomAmountRowView: a third line under the amount, in posAlert. */}
             {line.kind === 'custom' && showDiscountNotAppliedNote && (
               <PosText variant="bodySmall" color="var(--color-alert)" style={{ display: 'block' }}>
@@ -227,10 +241,11 @@ function PosCartRow({
         )}
       </div>
       {!hideRemove && (
-        <button type="button" aria-label={`Remove ${title}`} onClick={onRemove} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface-variant-highest)', padding: '0 var(--space-sm) 0 0', cursor: 'pointer', flex: 'none' }}>
+        <button type="button" aria-label={`Remove ${title}`} onClick={(e) => { e.stopPropagation(); onRemove(); }} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', color: 'var(--color-on-surface-variant-highest)', padding: '0 var(--space-sm) 0 0', cursor: 'pointer', flex: 'none' }}>
           <Trash size="var(--icon-small)" />
         </button>
       )}
     </div>
   );
+  return card;
 }

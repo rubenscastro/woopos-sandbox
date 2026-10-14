@@ -23,6 +23,7 @@ export const VERSIONS: VersionEntry[] = [
   { id: 'scaling-pos-experience', label: 'Scaling POS experience', description: '...' },
   { id: 'cash-reconciliation', label: 'Cash reconciliation', description: '...' },
   { id: 'multi-payment-methods', label: 'Multi Payment Methods', description: '...' },
+  { id: 'custom-amounts', label: 'Custom amounts', description: '...' },
 ];
 ```
 
@@ -102,3 +103,19 @@ Active version is persisted to `localStorage` and reflected as `data-version` on
 (same attribute-driven pattern as `[data-platform]` / `[data-theme]` / `[data-device]`), in
 case a proposal ever needs a CSS hook — none exists yet, since versions differ by screen
 content, not by design tokens.
+
+## Flag-driven proposals
+
+A proposal that tweaks small details across screens that are used in many places (the cart row,
+the item list) doesn't have to fork them: it can ride a feature flag that its `flagDefaults`
+turns on (flags are held per version, so Trunk is untouched). `custom-amounts` does this with
+the `customAmounts` flag — see `src/state/flags.ts`. It changes, on both platforms and both form factors:
+
+- **Flow:** tapping "Custom amount" opens a full-screen modal route (`custom-amount`, forked in
+  `overrides.tsx`), like Issue refund: Amount (Continue disabled until a value) → Review (Edit
+  amount / Edit name / Charge taxes / Add to cart) → Edit amount or Edit name → back to Review.
+  Figma: POS Playground, nodes 4262-25893 (amount), 4262-25699 (review), 4262-25837 (name).
+- **Icon:** SF Symbol `square.and.pencil` (iOS) / Material `edit_square` (Android) for the
+  Custom amount row and its cart tile.
+- **Cart row:** taxable custom amounts show "Plus taxes" under the amount. Tapping the card opens
+  Review for that line (Save changes / Cancel); the trash still deletes without opening it.

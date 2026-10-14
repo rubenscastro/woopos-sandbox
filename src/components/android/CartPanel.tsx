@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Text } from './Text';
 import { Card } from './Card';
 import { Button } from './Button';
-import { Tag, Trash, ArrowBack, AddShoppingCart } from './icons';
+import { Tag, EditSquare, Trash, ArrowBack, AddShoppingCart } from './icons';
 import { ProductImage } from './ProductImage';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
+import { useFlags } from '../../state/FlagsContext';
+import { useNav } from '../../device/platformNav';
+import { useCartSheet } from '../../device/CartSheet';
 
 /**
  * The cart pane (WooPosCartScreen). Header (title + count + clear) and a list of line items
@@ -212,6 +215,11 @@ function CartLineRow({
   showDiscountNotAppliedNote?: boolean;
 }) {
   const { removeLine } = useCart();
+  // Custom amounts proposal (src/versions/registry.ts): Plus taxes line; tapping the card
+  // opens Review (the trash stays, and doesn't open it).
+  const { flags } = useFlags();
+  const navigate = useNav();
+  const { closeCartSheet } = useCartSheet();
 
   if (line.kind === 'coupon') {
     // Matches POSCouponImageView.swift: a solid-fill tile, muted gray in the cart, solid
@@ -255,11 +263,15 @@ function CartLineRow({
     // taller than the lines above and below it, and the only thing in the cart that didn't
     // look like the rest of the cart. The glyph is the one iOS uses, where a custom amount
     // and a coupon share a tile.
-    return (
+    const v2 = flags.customAmounts;
+    const openReview = () => { closeCartSheet(); navigate('/custom-amount', { state: { editKey: line.key } }); };
+    const card = (
       <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
           <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Tag size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+            {v2
+              ? <EditSquare size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+              : <Tag size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />}
           </div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
             <Text variant="bodySmall" bold style={ELLIPSIS}>
@@ -267,8 +279,13 @@ function CartLineRow({
             </Text>
             <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
               {formatUsd(line.amount)}
-              {line.taxable ? ' · Tax included' : ''}
+              {!v2 && line.taxable ? ' · Tax included' : ''}
             </Text>
+            {v2 && line.taxable && (
+              <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
+                Plus taxes
+              </Text>
+            )}
             {/* WooPosCartScreen.CustomAmountItem: its own BodySmall line below the amount,
                 in the alert color — not a badge or an icon. */}
             {showDiscountNotAppliedNote && (
@@ -285,6 +302,9 @@ function CartLineRow({
         </div>
       </Card>
     );
+    if (!v2 || hideRemove) return card;
+    // A div rather than the Card's own onClick, which would render a button around the trash button.
+    return <div onClick={openReview} style={{ cursor: 'pointer' }}>{card}</div>;
   }
 
   // product — image flush to the card's edges, no padding/radius of its own; the card's
@@ -323,7 +343,7 @@ function RemoveButton({ onClick, label }: { onClick: () => void; label: string }
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
       aria-label={`Remove ${label} from cart`}
       style={{ border: 'none', background: 'none', display: 'flex', color: 'var(--color-on-surface-variant-highest)', padding: 6, flex: 'none' }}
     >
