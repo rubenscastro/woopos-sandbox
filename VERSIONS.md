@@ -111,11 +111,28 @@ the item list) doesn't have to fork them: it can ride a feature flag that its `f
 turns on (flags are held per version, so Trunk is untouched). `custom-amounts` does this with
 the `customAmounts` flag — see `src/state/flags.ts`. It changes, on both platforms and both form factors:
 
-- **Flow:** tapping "Custom amount" opens a full-screen modal route (`custom-amount`, forked in
-  `overrides.tsx`), like Issue refund: Amount (Continue disabled until a value) → Review (Edit
-  amount / Edit name / Charge taxes / Add to cart) → Edit amount or Edit name → back to Review.
-  Figma: POS Playground, nodes 4262-25893 (amount), 4262-25699 (review), 4262-25837 (name).
+- **Flow:** every add and edit path lands on one screen, "Custom amount details" (a full-screen
+  modal route, `custom-amount-details`, forked in `overrides.tsx`): a card each for Amount and Name
+  (the whole card opens its editor), Charge taxes, and the primary button. Add paths (the Custom
+  amount row, Option 3's + menu) open it blank with the value entry already up, and the button
+  reads Add to cart. Figma: POS Playground, node 4277-26096 (details); 4262-25893 (amount entry)
+  and 4262-25837 (name) for the editors. The earlier Review screen no longer exists.
 - **Icon:** SF Symbol `square.and.pencil` (iOS) / Material `edit_square` (Android) for the
   Custom amount row and its cart tile.
 - **Cart row:** taxable custom amounts show "Plus taxes" under the amount. Tapping the card opens
-  Review for that line (Save changes / Cancel); the trash still deletes without opening it.
+  "Custom amount details" for that line (Save); the trash still deletes without opening it.
+- **Settings → General:** a new first category, "General — General POS settings", with an
+  "Enable keypad" switch (the whole row toggles). Off hides the Custom amount row in the item
+  list. Figma: POS Playground, node 4281-26572. Stored in `src/state/generalSettings.ts`.
+- **Option 1 / Option 2:** the chrome toolbar has a "Custom amount" control in this version only
+  (`src/state/customAmountOption.ts`). Option 1 is everything above. **Option 2** swaps the
+  Custom amount row for a **Keypad** tab (first tab, the screen opens on it): a 3 × 4 keypad that
+  types in minor units, **C** discards the custom amount, **+** adds it to the cart and resets the
+  keypad, **Edit details** opens "Custom amount details" (amount, name, charge taxes, Save).
+  Figma: POS Playground, nodes 4277-25934 (keypad) and 4277-26096 (details). In Option 2
+  the General setting reads "Enable keypad" (with its description) and hides the Keypad tab; in
+  Option 1 it reads "Enable custom amounts" (no description) and hides the Custom amount row.
+- **Option 3:** no Keypad tab and no Settings → General. The Products tab gets a **+** button left
+  of search that opens a menu with **Add custom amount**; the row in the item list goes away. It
+  opens "Custom amount details" blank with the value entry already up over it (Continue disabled
+  until there is a value); Continue lands on the details, whose button reads **Add to cart**.

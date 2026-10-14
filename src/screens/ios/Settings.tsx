@@ -8,6 +8,9 @@ import { useNav } from '../../device/platformNav';
 import { useCardReader } from '../../tools/CardReaderContext';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { usePrinter } from '../../state/PrinterContext';
+import { useFlags } from '../../state/FlagsContext';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { GeneralPane } from '../../components/versions/custom-amounts/ios/GeneralPane';
 
 /**
  * iOS Settings (Settings/POSSettingsView + POSSettingsCard + detail views). Master/detail:
@@ -16,13 +19,15 @@ import { usePrinter } from '../../state/PrinterContext';
  * Barcode scanners) per POSSettingsHardwareDetailView, each its own POSItemCard, wired to the
  * shared Card reader + Barcode tools.
  */
-type Category = 'store' | 'hardware' | 'help';
+type Category = 'general' | 'store' | 'hardware' | 'help';
 const CATS: { id: Category; title: string; subtitle: string }[] = [
   // iOS POS Settings sidebar: Store + Hardware (Product catalog is gated on local-catalog
   // eligibility in the real app, so it's not a default entry). Help lives at the bottom.
   { id: 'store', title: 'Store', subtitle: 'Store configuration and settings' },
   { id: 'hardware', title: 'Hardware', subtitle: 'Manage hardware connections' },
 ];
+// Custom amounts proposal adds General first (see src/versions/registry.ts).
+const GENERAL_CAT = { id: 'general' as Category, title: 'General', subtitle: 'General POS settings' };
 const BLOCKS: Record<'store' | 'help', { title: string; rows: [string, string][] }[]> = {
   store: [
     { title: 'General', rows: [['Store name', 'My WooCommerce Store'], ['Address', '123 Main Street, City, State 12345, US']] },
@@ -32,13 +37,18 @@ const BLOCKS: Record<'store' | 'help', { title: string; rows: [string, string][]
     { title: '', rows: [['Where are my products?', 'Which products are supported in POS'], ['Documentation', 'Guides and tutorials'], ['Get support', 'Contact our support team']] },
   ],
 };
-const TITLES: Record<Category, string> = { store: 'Store', hardware: 'Hardware', help: 'Get help and support' };
+const TITLES: Record<Category, string> = { general: 'General', store: 'Store', hardware: 'Hardware', help: 'Get help and support' };
 
 export function Settings() {
   const isPhone = useIsPhone();
   const nav = useNav();
   const isCashRecon = useVersion().version === 'cash-reconciliation';
-  const [cat, setCat] = useState<Category>('store');
+  const { flags } = useFlags();
+  const { option } = useCustomAmountOption();
+  // Option 3 has no General page (no Keypad / custom amounts switch).
+  const withGeneral = flags.customAmounts && option !== 'option3';
+  const cats = withGeneral ? [GENERAL_CAT, ...CATS] : CATS;
+  const [cat, setCat] = useState<Category>(withGeneral ? 'general' : 'store');
   const [showDetailOnPhone, setShowDetailOnPhone] = useState(false);
   const pick = (c: Category) => { setCat(c); if (isPhone) setShowDetailOnPhone(true); };
 
@@ -56,7 +66,7 @@ export function Settings() {
       </div>
       {/* Same clearance as Orders: the floating menu button sits over the bottom-left. */}
       <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: `0 var(--space-lg) ${isCashRecon ? 'calc(var(--space-lg) + var(--size-small) + var(--space-md))' : '0'}` }}>
-        {CATS.map((c) => (
+        {cats.map((c) => (
           <SettingRow key={c.id} title={c.title} subtitle={c.subtitle} selected={!isPhone && cat === c.id} onClick={() => pick(c.id)} />
         ))}
         {isCashRecon && (
@@ -117,7 +127,7 @@ function SettingsDetail({ cat, onBack }: { cat: Category; onBack?: () => void })
         <PosText variant="heading" bold>{title}</PosText>
       </div>
       <div key={`${cat}-${hw}`} className="woopos-page-anim woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '0 var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: cat === 'hardware' ? 'var(--space-sm)' : 'var(--space-md)' }}>
-        {cat === 'hardware' ? <HardwarePane sub={hw} onNavigate={setHw} /> : (
+        {cat === 'general' ? <GeneralPane /> : cat === 'hardware' ? <HardwarePane sub={hw} onNavigate={setHw} /> : (
           BLOCKS[cat].map((block, bi) => (
             <div key={bi} style={{ background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--pos-shadow-medium)', padding: 'var(--space-md)' }}>
               {block.title && <div style={{ padding: 'var(--space-xs) 0' }}><PosText variant="bodyLarge" bold>{block.title}</PosText></div>}

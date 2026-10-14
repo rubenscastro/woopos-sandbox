@@ -19,12 +19,16 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useCart } from '../../state/CartContext';
 import { useFlags } from '../../state/FlagsContext';
+import { useGeneralSettings } from '../../state/generalSettings';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { AddMenu } from '../../components/versions/custom-amounts/android/AddMenu';
+import { KeypadPane } from '../../components/versions/custom-amounts/android/KeypadPane';
 import { useCheckoutPane } from '../../state/useCheckoutPane';
 import { formatUsd } from '../../lib/currency';
 import { products, variations, type MockProduct } from '../../mocks/android/products';
 import { coupons, type MockCoupon } from '../../mocks/android/coupons';
 
-type Tab = 'products' | 'coupons';
+type Tab = 'keypad' | 'products' | 'coupons';
 
 /**
  * Flow 2–6 — Item selection (WooPosItemsScreen) with the cart alongside it. On tablet the
@@ -40,7 +44,13 @@ export function ItemSelection() {
   // Custom amounts proposal: the flow is a full-screen modal route, not an items-pane overlay.
   const customFullScreen = useFlags().flags.customAmounts;
 
-  const [tab, setTab] = useState<Tab>('products');
+  const [tabState, setTab] = useState<Tab>('products');
+  // Custom amounts proposal, Option 2: a Keypad tab, first, and the screen opens on it.
+  const { option } = useCustomAmountOption();
+  const { keypadEnabled } = useGeneralSettings();
+  const keypadAvailable = useFlags().flags.customAmounts && option === 'option2' && keypadEnabled;
+  const tab: Tab = tabState === 'keypad' && !keypadAvailable ? 'products' : tabState;
+  useEffect(() => { setTab(keypadAvailable ? 'keypad' : 'products'); }, [keypadAvailable]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
@@ -72,18 +82,22 @@ export function ItemSelection() {
       ) : (
         <>
           <ItemsToolbar
+            keypadAvailable={keypadAvailable}
+            addMenu={useFlags().flags.customAmounts && option === 'option3'}
+            onAddCustomAmount={() => navigate('/custom-amount-details', { state: { fresh: true } })}
             tab={tab}
             onTab={setTab}
             searchOpen={searchOpen}
             query={query}
             onQuery={setQuery}
             onToggleSearch={() => {
+              if (tab === 'keypad') setTab('products');
               setSearchOpen((o) => !o);
               setQuery('');
             }}
             onAddCoupon={() => setCouponCreateOpen(true)}
           />
-          <DragScroll
+          {tab === 'keypad' ? <KeypadPane clearBottom={!isPhone} /> : <DragScroll
             style={{
               flex: 1,
               // Tablet clears the bottom-left floating toolbar; phone has none, so just a small pad.
@@ -96,7 +110,7 @@ export function ItemSelection() {
               <ProductsList
                 query={query}
                 searchOpen={searchOpen}
-                onOpenCustom={() => (customFullScreen ? navigate('/custom-amount') : setCustomOpen(true))}
+                onOpenCustom={() => (customFullScreen ? navigate('/custom-amount-details', { state: { fresh: true } }) : setCustomOpen(true))}
                 onSelect={(p) => {
                   if (p.variable) setVariationOf(p);
                   else cart.addProduct({ id: p.id, name: p.name, price: p.price });
@@ -109,7 +123,7 @@ export function ItemSelection() {
                 onSelect={(c) => cart.addCoupon(c.code, c.summary, c.discount)}
               />
             )}
-          </DragScroll>
+          </DragScroll>}
         </>
       )}
 
@@ -188,6 +202,9 @@ export function ItemSelection() {
 }
 
 function ItemsToolbar({
+  keypadAvailable,
+  addMenu,
+  onAddCustomAmount,
   tab,
   onTab,
   searchOpen,
@@ -196,6 +213,10 @@ function ItemsToolbar({
   onToggleSearch,
   onAddCoupon,
 }: {
+  keypadAvailable?: boolean;
+  /** Option 3: a + menu left of search on the Products tab. */
+  addMenu?: boolean;
+  onAddCustomAmount: () => void;
   tab: Tab;
   onTab: (t: Tab) => void;
   searchOpen: boolean;
@@ -228,6 +249,7 @@ function ItemsToolbar({
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+          {keypadAvailable && <TabButton label="Keypad" active={tab === 'keypad'} onClick={() => onTab('keypad')} />}
           <TabButton label="Products" active={tab === 'products'} onClick={() => onTab('products')} />
           <TabButton label="Coupons" active={tab === 'coupons'} onClick={() => onTab('coupons')} />
           <div style={{ flex: 1 }} />
@@ -237,6 +259,7 @@ function ItemsToolbar({
                 <Plus size="var(--icon-small)" />
               </RoundIconButton>
             )}
+            {addMenu && tab === 'products' && <AddMenu onAddCustomAmount={onAddCustomAmount} />}
             <RoundIconButton ariaLabel="Search products" onClick={onToggleSearch}>
               <Search size="var(--icon-small)" />
             </RoundIconButton>
@@ -358,6 +381,8 @@ function ProductsList({
   onSelect: (p: MockProduct) => void;
 }) {
   const { flags } = useFlags();
+  const { keypadEnabled } = useGeneralSettings();
+  const { option } = useCustomAmountOption();
   const q = query.trim().toLowerCase();
   const filtered = useMemo(() => (q ? products.filter((p) => p.name.toLowerCase().includes(q)) : products), [q]);
 
@@ -396,7 +421,7 @@ function ProductsList({
         </Text>
       )}
       <List>
-        {!searchOpen && (
+        {!searchOpen && !(flags.customAmounts && (!keypadEnabled || option !== 'option1')) && (
           <Card onClick={onOpenCustom} padding="0">
             <div style={{ display: 'flex', alignItems: 'center', minHeight: 'var(--size-large)' }}>
               <div

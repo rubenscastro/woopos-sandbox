@@ -2,7 +2,7 @@ import { PosText } from './PosText';
 import { PosButton } from './PosButton';
 import { ProductImage } from '../android/ProductImage';
 import { DragScroll } from '../android/DragScroll';
-import { Trash, Barcode, Tag, SquareAndPencil, ChevronLeft } from './IosIcons';
+import { Trash, Barcode, Tag, CartBadgePlus, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { useIsDark } from '../../hooks/useIsDark';
 import { formatUsd } from '../../lib/currency';
@@ -193,7 +193,7 @@ function PosCartRow({
   const couponIconColor = isCheckout ? 'var(--color-on-success)' : 'var(--color-on-surface-variant-lowest)';
 
   const card = (
-    <div className="woopos-cart-item" onClick={v2 && !hideRemove ? () => navigate('/custom-amount', { state: { editKey: line.key } }) : undefined} style={{ cursor: v2 && !hideRemove ? 'pointer' : undefined, display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
+    <div className="woopos-cart-item" onClick={v2 && !hideRemove ? () => navigate('/custom-amount-details', { state: { editKey: line.key } }) : undefined} style={{ cursor: v2 && !hideRemove ? 'pointer' : undefined, display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
       {/* Flush to the card's edges — no padding, no radius of its own; the outer card's
           overflow:hidden clips it into the rounded left corners (ItemRowView.swift: the
           image sits directly in the row with no inset, only the row itself is clipped). */}
@@ -201,7 +201,7 @@ function PosCartRow({
         {line.kind === 'product' ? (
           <ProductImage id={line.productId} />
         ) : v2 ? (
-          <SquareAndPencil size="var(--icon-medium)" style={{ color: couponIconColor }} />
+          <CartBadgePlus size="var(--icon-medium)" style={{ color: couponIconColor }} />
         ) : (
           <Tag size="var(--icon-medium)" style={{ color: couponIconColor }} />
         )}

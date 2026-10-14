@@ -1,8 +1,8 @@
 import type { RouteDef } from '../routes/androidRouteDefs';
 import { ItemSelection as ScalingItemSelection } from '../screens/versions/scaling-pos-experience/android/ItemSelection';
 import { CashDrawer } from '../screens/versions/cash-reconciliation/ios/CashDrawer';
-import { CustomAmount as AndroidCustomAmount } from '../screens/versions/custom-amounts/android/CustomAmount';
-import { CustomAmount as IosCustomAmount } from '../screens/versions/custom-amounts/ios/CustomAmount';
+import { CustomAmountDetailsScreen as AndroidCustomAmountDetails } from '../screens/versions/custom-amounts/android/CustomAmountDetails';
+import { CustomAmountDetailsScreen as IosCustomAmountDetails } from '../screens/versions/custom-amounts/ios/CustomAmountDetails';
 import { Settings as MultiPaymentSettings } from '../screens/versions/multi-payment-methods/android/Settings';
 
 export interface VersionOverrides {
@@ -43,10 +43,10 @@ export const versionOverrides: Partial<Record<string, VersionOverrides>> = {
     ios: [],
   },
   'custom-amounts': {
-    // `custom-amount` is new to this proposal: the form as its own full-screen route (tablet
-    // add, and Edit on both form factors). The cart/item tweaks are flag-driven
-    // (`customAmounts`, on by default for this version) rather than forked screens.
-    android: [{ path: 'custom-amount', element: <AndroidCustomAmount /> }],
-    ios: [{ path: 'custom-amount', element: <IosCustomAmount /> }],
+    // `custom-amount-details` is new to this proposal: the one custom amount screen, a
+    // full-screen modal route reached from every add and edit path. The cart/item tweaks are
+    // flag-driven (`customAmounts`, on by default for this version) rather than forked screens.
+    android: [{ path: 'custom-amount-details', element: <AndroidCustomAmountDetails /> }],
+    ios: [{ path: 'custom-amount-details', element: <IosCustomAmountDetails /> }],
   },
 };

@@ -9,6 +9,9 @@ import { HelpCircle } from '../../components/android/icons';
 import { useIsPhone } from '../../hooks/useBreakpoint';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useCardReader } from '../../tools/CardReaderContext';
+import { useFlags } from '../../state/FlagsContext';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { GeneralPane } from '../../components/versions/custom-amounts/android/GeneralPane';
 
 /**
  * Flows 16–19 — Settings (WooPosSettingsScreen). Two-pane master/detail: category list on
@@ -16,7 +19,10 @@ import { useCardReader } from '../../tools/CardReaderContext';
  * (→ card reader / barcode scanner), Product catalog, plus a Help entry. The "Where are my
  * products?" product-info dialog is reachable from Help.
  */
-type Category = 'store' | 'hardware' | 'catalog' | 'help';
+type Category = 'general' | 'store' | 'hardware' | 'catalog' | 'help';
+
+// Custom amounts proposal adds General first (see src/versions/registry.ts).
+const GENERAL_CATEGORY = { id: 'general' as Category, title: 'General', subtitle: 'General POS settings' };
 
 const CATEGORIES: { id: Category; title: string; subtitle: string }[] = [
   { id: 'store', title: 'Store', subtitle: 'Store configuration and settings' },
@@ -27,14 +33,19 @@ const CATEGORIES: { id: Category; title: string; subtitle: string }[] = [
 export function Settings({ initialCategory = 'store' }: { initialCategory?: Category }) {
   const navigate = useNav();
   const isPhone = useIsPhone();
-  const [category, setCategory] = useState<Category>(initialCategory);
+  const { flags } = useFlags();
+  const { option } = useCustomAmountOption();
+  // Option 3 has no General page (no Keypad / custom amounts switch).
+  const withGeneral = flags.customAmounts && option !== 'option3';
+  const categories = withGeneral ? [GENERAL_CATEGORY, ...CATEGORIES] : CATEGORIES;
+  const [category, setCategory] = useState<Category>(withGeneral && initialCategory === 'store' ? 'general' : initialCategory);
   const [showDetailOnPhone, setShowDetailOnPhone] = useState(false);
 
   const categoryList = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar title="Settings" onBack={() => navigate('/products')} />
       <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', padding: 'var(--space-sm) var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <MenuItem
             key={c.id}
             title={c.title}
@@ -117,7 +128,9 @@ function SettingsDetail({ category, onBack }: { category: Category; onBack?: () 
     }
   } else {
     title =
-      category === 'store'
+      category === 'general'
+        ? 'General'
+        : category === 'store'
         ? 'Store'
         : category === 'catalog'
           ? 'Product catalog'
@@ -132,6 +145,7 @@ function SettingsDetail({ category, onBack }: { category: Category; onBack?: () 
         className="woopos-page-anim woopos-no-scrollbar"
         style={{ flex: 1, overflow: 'auto', padding: 'var(--space-md) var(--space-lg) var(--space-xxl)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
       >
+        {category === 'general' && <GeneralPane />}
         {category === 'store' && <StorePane />}
         {category === 'hardware' && <HardwarePane sub={hw} onNavigate={setHw} />}
         {category === 'catalog' && <CatalogPane />}

@@ -16,6 +16,10 @@ import { useNav } from '../../device/platformNav';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useFlags } from '../../state/FlagsContext';
+import { useGeneralSettings } from '../../state/generalSettings';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { AddMenu } from '../../components/versions/custom-amounts/ios/AddMenu';
+import { KeypadPane } from '../../components/versions/custom-amounts/ios/KeypadPane';
 import { useCart } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
 // Catalog sample data is the same store on both platforms; copy differences live in the UI.
@@ -29,7 +33,7 @@ import { coupons } from '../../mocks/android/coupons';
  * opens the cart as a sheet. Header carries Products / Coupons tabs, a search toggle, and (on the
  * Coupons tab) a "+" that opens Create coupon. Uses the shared cart state.
  */
-type Tab = 'products' | 'coupons';
+type Tab = 'keypad' | 'products' | 'coupons';
 
 export function ItemSelector({
   initialTab = 'products',
@@ -42,10 +46,17 @@ export function ItemSelector({
   const isPhone = useIsPhone();
   const cart = useCart();
   const nav = useNav();
+  const [tabState, setTab] = useState<Tab>(initialTab);
   // Custom amounts proposal: the flow is a full-screen modal route, not an items-pane overlay.
-  const customFullScreen = useFlags().flags.customAmounts;
+  const { flags } = useFlags();
+  const { keypadEnabled } = useGeneralSettings();
+  const customFullScreen = flags.customAmounts;
+  // Custom amounts proposal, Option 2: a Keypad tab, first, and the screen opens on it.
+  const { option } = useCustomAmountOption();
+  const keypadAvailable = flags.customAmounts && option === 'option2' && keypadEnabled;
+  const tab: Tab = tabState === 'keypad' && !keypadAvailable ? 'products' : tabState;
+  useEffect(() => { setTab(keypadAvailable ? 'keypad' : initialTab); }, [keypadAvailable, initialTab]);
   const { openSetup } = useBarcodeSetup();
-  const [tab, setTab] = useState<Tab>(initialTab);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
@@ -132,6 +143,7 @@ export function ItemSelector({
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+            {keypadAvailable && <TabTitle label="Keypad" active={tab === 'keypad'} onClick={() => setTab('keypad')} />}
             <TabTitle label="Products" active={tab === 'products'} onClick={() => setTab('products')} />
             <TabTitle label="Coupons" active={tab === 'coupons'} onClick={() => setTab('coupons')} />
             <div style={{ flex: 1 }} />
@@ -141,7 +153,8 @@ export function ItemSelector({
                   <Plus size="var(--icon-small)" />
                 </button>
               )}
-              <button type="button" aria-label="Search" onClick={() => setSearchOpen(true)} style={iconBtn}>
+              {flags.customAmounts && option === 'option3' && tab === 'products' && <AddMenu onAddCustomAmount={() => nav('/custom-amount-details', { state: { fresh: true } })} />}
+              <button type="button" aria-label="Search" onClick={() => { if (tab === 'keypad') setTab('products'); setSearchOpen(true); }} style={iconBtn}>
                 <Search size="var(--icon-small)" />
               </button>
               {/* Phone: the main menu lives top-right next to search (tablet uses the floating control).
@@ -175,10 +188,11 @@ export function ItemSelector({
       )}
 
       {/* Extra bottom padding on tablet so the last product clears the floating menu / reader pill. */}
+      {tab === 'keypad' ? <KeypadPane clearBottom={!isPhone} /> : (
       <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: `0 var(--space-lg) ${isPhone ? 'var(--space-md)' : 'calc(var(--size-small) + var(--space-xl))'}` }}>
         {searchOpen && !q ? (
           <PosPreSearch
-            tab={tab}
+            tab={tab === 'coupons' ? 'coupons' : 'products'}
             onPick={(t) => setQuery(t)}
             onSelectProduct={(id, name, price) => cart.addProduct({ id, name, price })}
           />
@@ -186,7 +200,7 @@ export function ItemSelector({
           <>
         {tab === 'products'
           ? <>
-              {!searchOpen && <CustomAmountEntryRow onTap={() => (customFullScreen ? nav('/custom-amount') : setCustomAmountOpen(true))} />}
+              {!searchOpen && !(flags.customAmounts && (!keypadEnabled || option !== 'option1')) && <CustomAmountEntryRow onTap={() => (customFullScreen ? nav('/custom-amount-details', { state: { fresh: true } }) : setCustomAmountOpen(true))} />}
               {shownProducts.map((p) => (
                 <PosItemCard
                   key={p.id}
@@ -218,6 +232,7 @@ export function ItemSelector({
           </>
         )}
       </div>
+      )}
 
       {isPhone && (
         <div className={cartBumping ? 'woopos-cart-bump' : undefined} style={{ padding: 'var(--space-md) var(--space-lg)' }}>

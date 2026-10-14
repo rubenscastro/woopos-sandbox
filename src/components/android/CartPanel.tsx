@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Text } from './Text';
 import { Card } from './Card';
 import { Button } from './Button';
-import { Tag, EditSquare, Trash, ArrowBack, AddShoppingCart } from './icons';
+import { Tag, CartBadgePlus, Trash, ArrowBack, AddShoppingCart } from './icons';
 import { ProductImage } from './ProductImage';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCart, type CartLine } from '../../state/CartContext';
@@ -264,13 +264,13 @@ function CartLineRow({
     // look like the rest of the cart. The glyph is the one iOS uses, where a custom amount
     // and a coupon share a tile.
     const v2 = flags.customAmounts;
-    const openReview = () => { closeCartSheet(); navigate('/custom-amount', { state: { editKey: line.key } }); };
+    const openReview = () => { closeCartSheet(); navigate('/custom-amount-details', { state: { editKey: line.key } }); };
     const card = (
       <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
           <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {v2
-              ? <EditSquare size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+              ? <CartBadgePlus size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
               : <Tag size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />}
           </div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>

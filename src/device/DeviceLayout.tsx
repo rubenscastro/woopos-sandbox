@@ -24,6 +24,7 @@ import { useConnectivity } from '../tools/ConnectivityContext';
 import { useOptionalSystemEvents } from '../components/versions/scaling-pos-experience/android/systemEvents/SystemEventsContext';
 import { ConnectivityOsHost } from '../tools/ConnectivityOsHost';
 import { useFlags, FLAG_DEFS } from '../state/FlagsContext';
+import { useCustomAmountOption, CUSTOM_AMOUNT_OPTIONS } from '../state/customAmountOption';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
 import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { PhonePersistentButtonHost } from '../components/android/PhonePersistentButton';
@@ -91,6 +92,7 @@ export function DeviceLayout() {
                 Events surface — hidden everywhere else since there's nothing to trigger. */}
             <CatalogSyncMenu />
             <PreviewStateMenu />
+            <CustomAmountOptionMenu />
             <FlagsMenu />
           </div>
           <div className="chrome-right">
@@ -593,6 +595,42 @@ function PrinterChromeIcon() {
       <rect x="3" y="9" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
       <rect x="6" y="14" width="12" height="6" rx="1" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/**
+ * Custom amounts proposal only — switches between its two designs. Option 1 is the Custom
+ * amount row → Amount / Review flow; Option 2 adds a Keypad tab. Hidden in every other version.
+ */
+function CustomAmountOptionMenu() {
+  const { version } = useVersion();
+  const { option, setOption } = useCustomAmountOption();
+  const [open, setOpen] = useState(false);
+  const menuRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
+  if (version !== 'custom-amounts') return null;
+  const active = CUSTOM_AMOUNT_OPTIONS.find((o) => o.id === option);
+  return (
+    <div className="chrome-menu chrome-menu--state" ref={menuRef}>
+      <span className="chrome-menu__label">Custom amount</span>
+      <button type="button" className="chrome-menu__trigger" onClick={() => setOpen((o) => !o)}>
+        {active?.label}
+        <ChevronRight size="14px" className="chrome-menu__caret" />
+      </button>
+      {open && (
+        <div className="chrome-menu__dropdown">
+          {CUSTOM_AMOUNT_OPTIONS.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              className={`chrome-menu__item ${o.id === option ? 'is-active' : ''}`}
+              onClick={() => { setOpen(false); setOption(o.id); }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

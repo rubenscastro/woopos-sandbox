@@ -1,0 +1,66 @@
+/* Custom amounts proposal — the edit amount / edit name screens push in from the right over
+   Review, the way a navigation push does. */
+.ca-push-in {
+  animation: ca-push-in 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes ca-push-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+.ca-push-out {
+  animation: ca-push-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes ca-push-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-push-in,
+  .ca-push-out {
+    animation: none;
+  }
+}
+
+/* iOS: Edit amount / Edit name are full-screen covers — they rise from the bottom and drop
+   back down on dismiss (SwiftUI fullScreenCover). */
+.ca-cover-up {
+  animation: ca-cover-up 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ca-cover-down {
+  animation: ca-cover-down 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes ca-cover-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes ca-cover-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-cover-up,
+  .ca-cover-down {
+    animation: none;
+  }
+}
+
+/* Option 2 keypad keys — surfaceBright at rest, surface while pressed. */
+.ca-key {
+  background: var(--color-surface-bright);
+}
+
+.ca-key:active {
+  background: var(--color-surface);
+}
