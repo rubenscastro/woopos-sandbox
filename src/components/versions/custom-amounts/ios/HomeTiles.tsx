@@ -11,24 +11,19 @@ import { AddTilePage } from './AddTilePage';
 import { useIsPhone } from '../../../../hooks/useBreakpoint';
 import customAmountArt from '../../../../assets/shared/home-tab/custom-amount.svg';
 import applyCouponArt from '../../../../assets/shared/home-tab/apply-coupon.svg';
-import addStaffArt from '../../../../assets/shared/home-tab/add-staff.svg';
 import addTileArt from '../../../../assets/shared/home-tab/add-tile.svg';
 import customAmountArtDark from '../../../../assets/shared/home-tab/custom-amount-dark.svg';
 import applyCouponArtDark from '../../../../assets/shared/home-tab/apply-coupon-dark.svg';
-import addStaffArtDark from '../../../../assets/shared/home-tab/add-staff-dark.svg';
 import moneyDisabledArt from '../../../../assets/shared/home-tab/custom-amount-disabled.svg';
 import moneyDisabledArtDark from '../../../../assets/shared/home-tab/custom-amount-disabled-dark.svg';
 import couponDisabledArt from '../../../../assets/shared/home-tab/coupon-disabled.svg';
 import couponDisabledArtDark from '../../../../assets/shared/home-tab/coupon-disabled-dark.svg';
-import staffDisabledArt from '../../../../assets/shared/home-tab/add-staff-disabled.svg';
-import staffDisabledArtDark from '../../../../assets/shared/home-tab/add-staff-disabled-dark.svg';
 import addTileArtDark from '../../../../assets/shared/home-tab/add-tile-dark.svg';
 import { useIsDark } from '../../../../hooks/useIsDark';
 
 /**
  * Home tab proposal — iOS Home tab: a grid of action tiles (Figma: POS Playground, node
- * 4305-40836). Custom amount (the custom amount details) and Apply coupon (the Coupons tab) are wired; "Add staff to sale" and "Add tile" are
- * shown but not interactive — the design gives them no behavior. The tile square colors are
+ * 4305-40836). Custom amount (the custom amount details) and Apply coupon (the Coupons tab) are wired; "Add tile" opens the Add tile page. The tile square colors are
  * `surface-dim` (illustration square), `surface-container-lowest` (label area), `on-surface` (label)
  * and `outline-variant` (the dashed Add tile's border) — the same tokens as the coupon card in the
  * list, so both themes follow. The Add
@@ -64,7 +59,6 @@ export function HomeTiles({
   const units: { id: string; render: (index: number) => ReactNode }[] = [];
   if (!hidden.includes('custom-amount')) units.push({ id: 'custom-amount', render: (i) => <Tile key="custom-amount" id="custom-amount" index={i} editing={editing} hidden={hidden} label="Custom amount" bg="var(--color-surface-dim)" art={<TileArt id="custom-amount" />} onClick={onCustomAmount} /> });
   if (!hidden.includes('apply-coupon')) units.push({ id: 'apply-coupon', render: (i) => <Tile key="apply-coupon" id="apply-coupon" index={i} editing={editing} hidden={hidden} label="Apply coupon" bg="var(--color-surface-dim)" art={<TileArt id="apply-coupon" />} onClick={onApplyCoupon} /> });
-  if (!hidden.includes('add-staff')) units.push({ id: 'add-staff', render: (i) => <Tile key="add-staff" id="add-staff" index={i} editing={editing} hidden={hidden} label="Add staff to sale" bg="var(--color-surface-dim)" art={<TileArt id="add-staff" />} /> });
   // A product's variations are grouped into one tile: the same card as the Products tab, tapped the same way.
   groupProducts(productTiles.filter((k) => !k.startsWith('c:'))).forEach(({ product, keys }) =>
     units.push({ id: `g:${product.id}`, render: (i) => <Tile key={`g:${product.id}`} id="custom-amount" index={i} editing={editing} hidden={[]} label={product.name} bg="" art={null} onRemove={() => keys.forEach(removeProductTile)} card={CARD(product, () => onProduct(product))} /> }),
@@ -196,7 +190,6 @@ const HIT_INSET = 0.075;
 export const SYSTEM_TILES: { id: HomeTileId; label: string }[] = [
   { id: 'custom-amount', label: 'Custom amount' },
   { id: 'apply-coupon', label: 'Apply coupon' },
-  { id: 'add-staff', label: 'Add staff to sale' },
 ];
 
 /** A system tile's illustration, laid into its 60 × 60 box. The dark drawings are whole 60 × 60
@@ -204,16 +197,13 @@ export const SYSTEM_TILES: { id: HomeTileId; label: string }[] = [
 export function TileArt({ id, disabled }: { id: HomeTileId; disabled?: boolean }) {
   const isDark = useIsDark();
   const full = { left: 0, top: 0, w: 60, h: 60 };
-  // Disabled tiles (already on the home page) use the greyscale drawings, whole 60 × 60 artboards;
+  // Disabled tiles (already on the home page) use the greyscale drawings, whole 60 × 60 artboards.
   if (disabled && id === 'custom-amount') return <Art src={isDark ? moneyDisabledArtDark : moneyDisabledArt} {...full} />;
   if (disabled && id === 'apply-coupon') return <Art src={isDark ? couponDisabledArtDark : couponDisabledArt} {...full} />;
-  if (disabled && id === 'add-staff') return <Art src={isDark ? staffDisabledArtDark : staffDisabledArt} {...full} />;
   const art =
     id === 'custom-amount'
       ? isDark ? { src: customAmountArtDark, ...full } : { src: customAmountArt, left: 2.493, top: 2.493, w: 55.5634, h: 55.5124 }
-      : id === 'apply-coupon'
-        ? isDark ? { src: applyCouponArtDark, ...full } : { src: applyCouponArt, left: 2.727, top: 4.77, w: 54.5451, h: 50.4547 }
-        : isDark ? { src: addStaffArtDark, ...full } : { src: addStaffArt, left: 2.727, top: 2.727, w: 54.5461, h: 54.5457 };
+      : isDark ? { src: applyCouponArtDark, ...full } : { src: applyCouponArt, left: 2.727, top: 4.77, w: 54.5451, h: 50.4547 };
   return <Art {...art} />;
 }
 

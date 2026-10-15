@@ -25,9 +25,10 @@ export function ProductPicker({ selected, onChange, onHome }: { selected: string
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '12px 16px', background: '#fff', borderRadius: 'var(--radius-md)', flex: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '12px 16px', background: 'var(--color-surface-bright)', borderRadius: 'var(--radius-md)', flex: 'none' }}>
         <Search size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
         <input
+          className="ca-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search products"

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
  * Option 4 (Home tab) — the Home page's edit mode ("Edit home page"). While editing, tiles can be
  * removed with their red badge; Cancel throws those removals away, Save keeps them. In memory only.
  */
-export type HomeTileId = 'custom-amount' | 'apply-coupon' | 'add-staff';
+export type HomeTileId = 'custom-amount' | 'apply-coupon';
 
 interface HomeEditState {
   editing: boolean;

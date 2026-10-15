@@ -139,3 +139,9 @@
     animation: none;
   }
 }
+
+/* Add tile → Products search: the placeholder follows the theme like the icon beside it. */
+.ca-search::placeholder {
+  color: var(--color-on-surface-variant-lowest);
+  opacity: 1;
+}
