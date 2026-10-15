@@ -25,7 +25,21 @@ export const CUSTOM_AMOUNT_OPTIONS: { id: CustomAmountOption; label: string }[] 
 const KEY = 'woopos-custom-amount-option.v1';
 const listeners = new Set<() => void>();
 
+/** The `?option=` value for an option, and back: `1`, `2`, `2b`, `3`, `4` (`option4` is accepted too). */
+export const optionParam = (o: CustomAmountOption) => o.replace('option', '');
+export function parseOptionParam(v: string | null): CustomAmountOption | null {
+  const id = `option${(v ?? '').replace('option', '').toLowerCase()}` as CustomAmountOption;
+  return CUSTOM_AMOUNT_OPTIONS.some((o) => o.id === id) ? id : null;
+}
+
 function read(): CustomAmountOption {
+  // A link to a specific option (`?option=4`) wins over what was last chosen.
+  try {
+    const fromUrl = parseOptionParam(new URLSearchParams(window.location.search).get('option'));
+    if (fromUrl) return fromUrl;
+  } catch {
+    // No window (tests/SSR): fall through.
+  }
   try {
     const v = localStorage.getItem(KEY);
     return v === 'option2' || v === 'option2b' || v === 'option3' || v === 'option4' ? v : 'option1';

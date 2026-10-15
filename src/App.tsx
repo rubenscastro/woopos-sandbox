@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useCustomAmountOption, optionParam, parseOptionParam } from './state/customAmountOption';
 import { PlatformProvider, usePlatform } from './device/PlatformContext';
 import { DeviceProvider } from './device/DeviceContext';
 import { DeviceLayout } from './device/DeviceLayout';
@@ -54,6 +55,33 @@ function RouteContextSync() {
   return null;
 }
 
+/**
+ * Custom amounts versions are reachable by URL: `…/versions/custom-amounts/…?option=4` opens that
+ * option (1, 2, 2b, 3, 4), and the address bar follows the Option control so the link can be shared.
+ */
+function CustomAmountOptionUrlSync() {
+  const { pathname, search, hash } = useLocation();
+  const navigate = useNavigate();
+  const { option, setOption } = useCustomAmountOption();
+  const inVersion = pathname.startsWith('/versions/custom-amounts');
+  // Following a link (or the browser's back/forward) to a different option.
+  useEffect(() => {
+    const fromUrl = parseOptionParam(new URLSearchParams(search).get('option'));
+    if (inVersion && fromUrl && fromUrl !== option) setOption(fromUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  // The Option control, or navigating inside the prototype, keeps the param on the address.
+  useEffect(() => {
+    if (!inVersion) return;
+    const params = new URLSearchParams(search);
+    if (params.get('option') === optionParam(option)) return;
+    params.set('option', optionParam(option));
+    navigate({ pathname, search: `?${params}`, hash }, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [option, pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <PlatformProvider>
@@ -69,6 +97,7 @@ export default function App() {
         <CartProvider>
           <BrowserRouter>
             <RouteContextSync />
+            <CustomAmountOptionUrlSync />
             <Routes>
               {/* No landing gate — loading the prototype goes straight into the startup
                   path for the persisted platform (default iOS / tablet / dark). Platform,
