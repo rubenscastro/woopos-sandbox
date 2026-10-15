@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react';
 import { Text } from './Text';
 import { Card } from './Card';
 import { Button } from './Button';
-import { Tag, CartBadgePlus, Trash, ArrowBack, AddShoppingCart } from './icons';
+import { Tag, Trash, ArrowBack, AddShoppingCart } from './icons';
 import { ProductImage } from './ProductImage';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { formatUsd } from '../../lib/currency';
 import { useFlags } from '../../state/FlagsContext';
 import { useNav } from '../../device/platformNav';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { requestOpenHomeDetails } from '../../state/homeDetails';
+import { CouponArt } from '../versions/custom-amounts/android/CouponArt';
+import { CustomAmountCoin } from '../versions/custom-amounts/android/CustomAmountCoin';
 import { useCartSheet } from '../../device/CartSheet';
 
 /**
@@ -220,6 +224,7 @@ function CartLineRow({
   const { flags } = useFlags();
   const navigate = useNav();
   const { closeCartSheet } = useCartSheet();
+  const { option } = useCustomAmountOption();
 
   if (line.kind === 'coupon') {
     // Matches POSCouponImageView.swift: a solid-fill tile, muted gray in the cart, solid
@@ -232,7 +237,9 @@ function CartLineRow({
       <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
           <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: tileColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Tag size="var(--icon-small)" style={{ color: iconColor }} />
+            {flags.customAmounts && option === 'option4'
+              ? <CouponArt />
+              : <Tag size="var(--icon-small)" style={{ color: iconColor }} />}
           </div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
             <Text variant="bodySmall" bold style={ELLIPSIS}>
@@ -264,13 +271,18 @@ function CartLineRow({
     // look like the rest of the cart. The glyph is the one iOS uses, where a custom amount
     // and a coupon share a tile.
     const v2 = flags.customAmounts;
-    const openReview = () => { closeCartSheet(); navigate('/custom-amount-details', { state: { editKey: line.key } }); };
+    const openReview = () => {
+      closeCartSheet();
+      // Options 2B and 4 show the details in the home's content area; the other options push the route.
+      if (option === 'option2b' || option === 'option4') requestOpenHomeDetails(line.key);
+      else navigate('/custom-amount-details', { state: { editKey: line.key } });
+    };
     const card = (
       <Card padding="0" className="woopos-cart-item" style={{ overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
           <div style={{ width: 'var(--size-medium)', minHeight: 'var(--size-medium)', flex: 'none', background: 'var(--color-surface-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {v2
-              ? <CartBadgePlus size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+              ? <CustomAmountCoin />
               : <Tag size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />}
           </div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
@@ -281,7 +293,7 @@ function CartLineRow({
               {formatUsd(line.amount)}
               {!v2 && line.taxable ? ' · Tax included' : ''}
             </Text>
-            {v2 && line.taxable && (
+            {v2 && line.taxable && !hideRemove && (
               <Text variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
                 Plus taxes
               </Text>

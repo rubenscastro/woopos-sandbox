@@ -43,11 +43,12 @@ const SPECS: Record<PlatformId, Record<DeviceId, DeviceSpec>> = {
    * inside a 326.3 × 208.5 mm body leaves ~5.9 mm of border, or 1.8% of the body's width. 22 on
    * a 1238-wide frame is 1.78% — the same border, in the units this file works in.
    *
-   * Screen sizes stay as they were: the Android layouts were built against them, and moving to
-   * the Tab's real 16:10 would reflow every screen. Worth doing, but not as part of the frame.
+   * The tablet's screen is the iPad's, 1210 × 834, so a layout reads the same in both frames and
+   * only the border and corners differ. (The Tab's own 16:10 would reflow every screen; not as part
+   * of the frame.)
    */
   android: {
-    tablet: { content: { w: 1194, h: 834 }, bezel: 22, radius: 34, notch: false, fit: 0.93 },
+    tablet: { content: { w: 1210, h: 834 }, bezel: 22, radius: 34, notch: false, fit: 0.93 },
     // Galaxy S26 Ultra: a 6.9" 3120 × 1440 panel in a 163.6 × 78.1 mm body leaves ~2.3 mm of
     // border — 13 of the 412 × 891 dp the phone reports. Corners scale from the tablet's rather
     // than being invented: no published radius exists for either device.

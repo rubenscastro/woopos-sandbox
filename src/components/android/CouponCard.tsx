@@ -1,6 +1,9 @@
 import { Card } from './Card';
 import { Text } from './Text';
 import { Tag } from './icons';
+import { useFlags } from '../../state/FlagsContext';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { CouponArt } from '../versions/custom-amounts/android/CouponArt';
 
 /**
  * WooPosCouponCard — same row pattern as products but with a tag icon instead of an image.
@@ -13,8 +16,10 @@ export interface CouponRowData {
   expiredOn?: string; // formatted date if expired
 }
 
-export function CouponCard({ coupon, onClick }: { coupon: CouponRowData; onClick: () => void }) {
+export function CouponCard({ coupon, onClick, titleVariant = 'bodyLarge', detailVariant = 'bodyLarge' }: { coupon: CouponRowData; onClick: () => void; titleVariant?: 'bodyLarge' | 'bodyMedium'; detailVariant?: 'bodyLarge' | 'bodyMedium' | 'bodySmall' }) {
   const expired = Boolean(coupon.expiredOn);
+  // Option 4 (Home tab): the coupon illustration instead of the tag glyph.
+  const art = useFlags().flags.customAmounts && useCustomAmountOption().option === 'option4';
   const textColor = expired ? 'var(--color-on-disabled-container)' : 'var(--color-on-surface)';
   const subColor = expired
     ? 'var(--color-on-disabled-container)'
@@ -40,7 +45,9 @@ export function CouponCard({ coupon, onClick }: { coupon: CouponRowData; onClick
             flex: 'none',
           }}
         >
-          <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
+          {art
+            ? <CouponArt dim={expired} />
+            : <Tag size="var(--icon-large)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />}
         </div>
         <div
           style={{
@@ -53,10 +60,10 @@ export function CouponCard({ coupon, onClick }: { coupon: CouponRowData; onClick
             padding: '0 var(--space-md)',
           }}
         >
-          <Text variant="bodyLarge" bold color={textColor} style={ELLIPSIS}>
+          <Text variant={titleVariant} bold color={textColor} style={ELLIPSIS}>
             {coupon.code}
           </Text>
-          <Text variant="bodyLarge" color={subColor} style={ELLIPSIS}>
+          <Text variant={detailVariant} color={subColor} style={ELLIPSIS}>
             {coupon.summary}
           </Text>
           {coupon.expiredOn && (

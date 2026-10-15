@@ -1,3 +1,4 @@
+import { confirmIfDirty } from '../../state/unsavedGuard';
 import { useState } from 'react';
 import { PosText } from './PosText';
 import { Description, SettingsFilled, ExitToApp } from './IosIcons';
@@ -40,11 +41,11 @@ export function PosFloatingControl() {
           <div className="woopos-liquid-glass" style={{ position: 'absolute', bottom: 'calc(var(--size-small) + var(--space-sm))', left: 0, minWidth: 220, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-normal-large)', padding: 'var(--space-xs) 0', overflow: 'hidden' }}>
             {/* Signed-in operator (POSStaffMenuRow) — only when POS roles is enabled. */}
             {flags.roles && (<><OperatorRow /><MenuDivider /></>)}
-            <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); nav('/orders'); }} />
+            <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setOpen(false); confirmIfDirty(() => nav('/orders')); }} />
             <MenuDivider />
-            <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); nav('/settings'); }} />
+            <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setOpen(false); confirmIfDirty(() => nav('/settings')); }} />
             <MenuDivider />
-            <MenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); nav('/flows'); }} />
+            <MenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setOpen(false); confirmIfDirty(() => nav('/flows')); }} />
           </div>
         )}
         <button
@@ -63,7 +64,7 @@ export function PosFloatingControl() {
           so the border floats inside the pill rather than sitting on its edge. */}
       <button
         type="button"
-        onClick={() => (connected ? nav('/settings') : startConnecting())}
+        onClick={() => (connected ? confirmIfDirty(() => nav('/settings')) : startConnecting())}
         style={{ height: 'var(--size-small)', display: 'flex', alignItems: 'stretch', borderRadius: 'var(--radius-md)', border: 'none', background: 'var(--color-surface-container-low)', color: 'var(--color-on-surface)', cursor: 'pointer', boxShadow: 'var(--shadow-normal-medium)', padding: connected ? 0 : 'var(--space-sm)' }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: '0 var(--space-lg)', borderRadius: 'var(--radius-sm)', border: connected ? 'none' : '2px solid var(--color-primary)' }}>

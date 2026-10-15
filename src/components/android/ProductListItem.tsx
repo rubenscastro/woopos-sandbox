@@ -22,9 +22,13 @@ export interface ProductRowData {
 export function ProductListItem({
   product,
   onClick,
+  titleVariant = 'bodyLarge',
+  detailVariant = 'bodyLarge',
 }: {
   product: ProductRowData;
   onClick: () => void;
+  titleVariant?: 'bodyLarge' | 'bodyMedium';
+  detailVariant?: 'bodyLarge' | 'bodyMedium' | 'bodySmall';
 }) {
   const detail = product.variable ? 'Options available' : (product.detail ?? product.price ?? '');
   return (
@@ -53,11 +57,11 @@ export function ProductListItem({
             padding: '0 var(--space-md) 0 var(--space-lg)',
           }}
         >
-          <Text variant="bodyLarge" bold style={ELLIPSIS}>
+          <Text variant={titleVariant} bold style={ELLIPSIS}>
             {product.name}
           </Text>
           {detail && (
-            <Text variant="bodyLarge" color="var(--color-on-surface-variant-highest)" style={ELLIPSIS}>
+            <Text variant={detailVariant} color="var(--color-on-surface-variant-highest)" style={ELLIPSIS}>
               {detail}
             </Text>
           )}

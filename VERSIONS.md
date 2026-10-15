@@ -136,3 +136,15 @@ the `customAmounts` flag — see `src/state/flags.ts`. It changes, on both platf
   of search that opens a menu with **Add custom amount**; the row in the item list goes away. It
   opens "Custom amount details" blank with the value entry already up over it (Continue disabled
   until there is a value); Continue lands on the details, whose button reads **Add to cart**.
+- **Option 2B:** Option 2's Keypad, but "Edit details" (and tapping a custom amount in the cart)
+  opens "Custom amount details" **in the home's content area**, in place of the Keypad / Products /
+  Coupons tabs and their content, with the action (Add to cart / Save) as a small secondary button in
+  the title row instead of a primary button at the foot. Edit amount and Edit name still cover the
+  whole screen, above the cart. In Option 2 the details are a full-screen modal with the primary button.
+- **Option 4 · Home tab:** a **Home** tab ahead of Products and Coupons, and
+  the item screen opens on it. Figma: POS Playground, node 4305-40836. A 2-column grid (1 column on
+  phone) of tiles — Custom amount, Apply coupon, Add staff to sale, and a dashed Add tile — with the
+  Figma illustrations (`src/assets/shared/home-tab/`). **Wired:** Custom amount opens "Custom amount
+  details" blank with the value entry up; Apply coupon switches to the Coupons tab. **Add staff to
+  sale** and **Add tile** are shown but do nothing — the design gives them no behavior. The Custom
+  amount row at the top of Products goes away (the tile replaces it); no Keypad. Settings → General has one switch, **Custom amounts are taxable by default** ("You can still change this for each custom amount."): on, new custom amounts start with Charge taxes on.

@@ -2,12 +2,16 @@ import { PosText } from './PosText';
 import { PosButton } from './PosButton';
 import { ProductImage } from '../android/ProductImage';
 import { DragScroll } from '../android/DragScroll';
-import { Trash, Barcode, Tag, CartBadgePlus, ChevronLeft } from './IosIcons';
+import { Trash, Barcode, Tag, ChevronLeft } from './IosIcons';
 import { useCart, type CartLine } from '../../state/CartContext';
 import { useIsDark } from '../../hooks/useIsDark';
 import { formatUsd } from '../../lib/currency';
 import { useFlags } from '../../state/FlagsContext';
 import { useNav } from '../../device/platformNav';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { requestOpenHomeDetails } from '../../state/homeDetails';
+import { CouponArt } from '../versions/custom-amounts/ios/CouponArt';
+import { CustomAmountCoin } from '../versions/custom-amounts/ios/CustomAmountCoin';
 import lightBagsImg from '../../assets/ios/shopping-bags-light.png';
 import darkBagsImg from '../../assets/ios/shopping-bags-dark.png';
 
@@ -175,6 +179,7 @@ function PosCartRow({
   // opens Review (the trash stays, and doesn't open it).
   const { flags } = useFlags();
   const navigate = useNav();
+  const { option } = useCustomAmountOption();
   const v2 = flags.customAmounts && line.kind === 'custom';
   const title = line.kind === 'coupon' ? line.code : line.name;
   const priceDetail =
@@ -193,7 +198,7 @@ function PosCartRow({
   const couponIconColor = isCheckout ? 'var(--color-on-success)' : 'var(--color-on-surface-variant-lowest)';
 
   const card = (
-    <div className="woopos-cart-item" onClick={v2 && !hideRemove ? () => navigate('/custom-amount-details', { state: { editKey: line.key } }) : undefined} style={{ cursor: v2 && !hideRemove ? 'pointer' : undefined, display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
+    <div className="woopos-cart-item" onClick={v2 && !hideRemove ? () => (option === 'option2b' || option === 'option4' ? requestOpenHomeDetails(line.key) : navigate('/custom-amount-details', { state: { editKey: line.key } })) : undefined} style={{ cursor: v2 && !hideRemove ? 'pointer' : undefined, display: 'flex', alignItems: 'stretch', gap: 'var(--space-sm)', background: 'var(--color-surface-container-lowest)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-soft-medium)' }}>
       {/* Flush to the card's edges — no padding, no radius of its own; the outer card's
           overflow:hidden clips it into the rounded left corners (ItemRowView.swift: the
           image sits directly in the row with no inset, only the row itself is clipped). */}
@@ -201,9 +206,11 @@ function PosCartRow({
         {line.kind === 'product' ? (
           <ProductImage id={line.productId} />
         ) : v2 ? (
-          <CartBadgePlus size="var(--icon-medium)" style={{ color: couponIconColor }} />
+          <CustomAmountCoin />
         ) : (
-          <Tag size="var(--icon-medium)" style={{ color: couponIconColor }} />
+          line.kind === 'coupon' && flags.customAmounts && option === 'option4'
+            ? <CouponArt />
+            : <Tag size="var(--icon-medium)" style={{ color: couponIconColor }} />
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'var(--space-sm) 0' }}>
@@ -226,7 +233,7 @@ function PosCartRow({
         ) : (
           <>
             <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)">{priceDetail}</PosText>
-            {v2 && line.kind === 'custom' && line.taxable && (
+            {v2 && line.kind === 'custom' && line.taxable && !hideRemove && (
               <PosText variant="bodySmall" color="var(--color-on-surface-variant-highest)" style={{ display: 'block' }}>
                 Plus taxes
               </PosText>

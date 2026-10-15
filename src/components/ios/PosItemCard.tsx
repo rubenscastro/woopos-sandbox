@@ -1,6 +1,9 @@
 import { PosText } from './PosText';
 import { ProductImage } from '../android/ProductImage';
 import { ChevronRight, Tag, Check } from './IosIcons';
+import { useFlags } from '../../state/FlagsContext';
+import { useCustomAmountOption } from '../../state/customAmountOption';
+import { CouponArt } from '../versions/custom-amounts/ios/CouponArt';
 
 /**
  * iOS product/coupon card (Item Selector/SimpleProductCardView.swift + card constants). A
@@ -25,7 +28,7 @@ export interface PosItemCardData {
   accessibilityValue?: string;
 }
 
-export function PosItemCard({ item, onClick }: { item: PosItemCardData; onClick: () => void }) {
+export function PosItemCard({ item, onClick, titleVariant = 'bodyLarge', detailVariant = 'bodyLarge' }: { item: PosItemCardData; onClick: () => void; titleVariant?: 'bodyLarge' | 'bodyMedium'; detailVariant?: 'bodyLarge' | 'bodyMedium' | 'bodySmall' }) {
   const cardBg = item.expired ? 'var(--color-disabled-container)' : 'var(--color-surface-container-lowest)';
   const textColor = item.expired ? 'var(--color-on-disabled-container)' : 'var(--color-on-surface)';
   const detailColor = item.expired ? 'var(--color-on-disabled-container)' : 'var(--color-on-surface-variant-highest)';
@@ -59,10 +62,10 @@ export function PosItemCard({ item, onClick }: { item: PosItemCardData; onClick:
         {item.thumbnail ?? <ProductImage id={item.id} />}
       </div>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'var(--space-xs)', padding: 'var(--space-sm) var(--space-md)' }}>
-        <PosText variant="bodyLarge" bold color={textColor} style={ELLIPSIS_2}>
+        <PosText variant={titleVariant} bold color={textColor} style={ELLIPSIS_2}>
           {item.name}
         </PosText>
-        <PosText variant="bodyLarge" color={detailColor} style={ELLIPSIS_1}>
+        <PosText variant={detailVariant} color={detailColor} style={ELLIPSIS_1}>
           {item.detail}
         </PosText>
       </div>
@@ -91,9 +94,11 @@ export function CouponThumbnail({ expired = false, applied = false }: { expired?
       ? 'var(--color-on-success)'
       : 'var(--color-on-surface-variant-lowest)';
   const Glyph = !expired && applied ? Check : Tag;
+  // Option 4 (Home tab): the coupon illustration instead of the tag glyph (the applied check stays).
+  const art = useFlags().flags.customAmounts && useCustomAmountOption().option === 'option4' && (expired || !applied);
   return (
     <div style={{ width: '100%', height: '100%', minHeight: 112, background: tileColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Glyph size="var(--icon-medium)" style={{ color: iconColor }} />
+      {art ? <CouponArt dim={expired} /> : <Glyph size="var(--icon-medium)" style={{ color: iconColor }} />}
     </div>
   );
 }

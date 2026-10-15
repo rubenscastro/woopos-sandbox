@@ -8,6 +8,8 @@ import { useSyncExternalStore } from 'react';
  */
 interface GeneralSettings {
   keypadEnabled: boolean;
+  /** Option 4: new custom amounts start out with "Charge taxes" on. */
+  taxableByDefault: boolean;
 }
 
 const KEY = 'woopos-general-settings.v1';
@@ -16,9 +18,9 @@ const listeners = new Set<() => void>();
 function read(): GeneralSettings {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
-    return { keypadEnabled: raw.keypadEnabled !== false };
+    return { keypadEnabled: raw.keypadEnabled !== false, taxableByDefault: raw.taxableByDefault === true };
   } catch {
-    return { keypadEnabled: true };
+    return { keypadEnabled: true, taxableByDefault: false };
   }
 }
 
@@ -42,5 +44,5 @@ export function useGeneralSettings() {
     },
     () => state,
   );
-  return { ...settings, setKeypadEnabled: (v: boolean) => set({ ...state, keypadEnabled: v }) };
+  return { ...settings, setKeypadEnabled: (v: boolean) => set({ ...state, keypadEnabled: v }), setTaxableByDefault: (v: boolean) => set({ ...state, taxableByDefault: v }) };
 }

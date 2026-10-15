@@ -64,3 +64,78 @@
 .ca-key:active {
   background: var(--color-surface);
 }
+
+/* Option 2B — the home content (tabs + their content) moves left as the details slide in over it,
+   and back as they slide out. */
+.ca-home-shift {
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ca-home-shift[data-away='true'] {
+  transform: translateX(-30%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-home-shift {
+    transition: none;
+  }
+}
+
+/* Tab switching on the item screen slides sideways. */
+.ca-tab-in-right {
+  animation: ca-tab-in-right 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.ca-tab-in-left {
+  animation: ca-tab-in-left 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.ca-tab-out-left {
+  animation: ca-tab-out-left 0.3s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+.ca-tab-out-right {
+  animation: ca-tab-out-right 0.3s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+@keyframes ca-tab-in-right {
+  from { transform: translateX(100%); }
+}
+@keyframes ca-tab-in-left {
+  from { transform: translateX(-100%); }
+}
+@keyframes ca-tab-out-left {
+  to { transform: translateX(-100%); }
+}
+@keyframes ca-tab-out-right {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-tab-in-right,
+  .ca-tab-in-left,
+  .ca-tab-out-left,
+  .ca-tab-out-right {
+    animation: none;
+  }
+}
+
+/* Option 4 — Home page edit mode: the tiles jiggle, as icons do on the iPhone home screen. Each tile
+   sets its own duration and (negative) delay so they never move in step. */
+.ca-jiggle {
+  transform-origin: 50% 50%;
+  animation: ca-jiggle 0.26s ease-in-out infinite;
+}
+
+@keyframes ca-jiggle {
+  0%,
+  100% {
+    transform: rotate(-0.15deg);
+  }
+  50% {
+    transform: rotate(0.15deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-jiggle {
+    animation: none;
+  }
+}

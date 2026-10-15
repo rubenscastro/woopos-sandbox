@@ -1,3 +1,4 @@
+import { confirmIfDirty } from '../../state/unsavedGuard';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button, type ButtonState } from './Button';
@@ -137,8 +138,10 @@ export function PhonePersistentButtonHost() {
     if (shown.action === 'openCart') {
       openCartSheet();
     } else {
-      closeCartSheet();
-      navigate('/totals');
+      confirmIfDirty(() => {
+        closeCartSheet();
+        navigate('/totals');
+      });
     }
   };
 

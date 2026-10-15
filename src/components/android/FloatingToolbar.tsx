@@ -1,3 +1,4 @@
+import { confirmIfDirty } from '../../state/unsavedGuard';
 import { useState } from 'react';
 import { useNav } from '../../device/platformNav';
 import { Text } from './Text';
@@ -56,9 +57,9 @@ export function FloatingToolbar({ statusSlot }: { statusSlot?: React.ReactNode }
               padding: 'var(--space-md) 0',
             }}
           >
-            <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setMenuOpen(false); navigate('/order-history'); }} />
-            <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setMenuOpen(false); navigate('/settings'); }} />
-            <MenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setMenuOpen(false); navigate('/flows'); }} />
+            <MenuRow icon={<Description size="var(--icon-small)" />} label="Orders" onClick={() => { setMenuOpen(false); confirmIfDirty(() => navigate('/order-history')); }} />
+            <MenuRow icon={<SettingsFilled size="var(--icon-small)" />} label="Settings" onClick={() => { setMenuOpen(false); confirmIfDirty(() => navigate('/settings')); }} />
+            <MenuRow icon={<ExitToApp size="var(--icon-small)" />} label="Exit POS" onClick={() => { setMenuOpen(false); confirmIfDirty(() => navigate('/flows')); }} />
           </div>
         </>
       )}

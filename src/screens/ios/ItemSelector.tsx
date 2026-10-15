@@ -17,7 +17,16 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 import { useBarcodeSetup } from '../../tools/BarcodeSetup';
 import { useFlags } from '../../state/FlagsContext';
 import { useGeneralSettings } from '../../state/generalSettings';
-import { useCustomAmountOption } from '../../state/customAmountOption';
+import { useCustomAmountOption, hasKeypad } from '../../state/customAmountOption';
+import '../../components/versions/custom-amounts/CustomAmountFlow.css';
+import { confirmIfDirty } from '../../state/unsavedGuard';
+import { useHomeDetails, openHomeDetails, closeHomeDetails, markHomeDetailsLeaving, markHomeDetailsShown } from '../../state/homeDetails';
+import { CustomAmountDetailsView } from '../../screens/versions/custom-amounts/ios/CustomAmountDetails';
+import { TabSlideArea, TAB_ORDER } from '../../components/versions/custom-amounts/TabSlide';
+import { useHomeEdit, startHomeEdit, cancelHomeEdit, saveHomeEdit } from '../../state/homeEdit';
+import { HomeMenu } from '../../components/versions/custom-amounts/ios/HomeMenu';
+import { GlobalSearchResults } from '../../components/versions/custom-amounts/ios/GlobalSearchResults';
+import { HomeTiles } from '../../components/versions/custom-amounts/ios/HomeTiles';
 import { AddMenu } from '../../components/versions/custom-amounts/ios/AddMenu';
 import { KeypadPane } from '../../components/versions/custom-amounts/ios/KeypadPane';
 import { useCart } from '../../state/CartContext';
@@ -33,7 +42,7 @@ import { coupons } from '../../mocks/android/coupons';
  * opens the cart as a sheet. Header carries Products / Coupons tabs, a search toggle, and (on the
  * Coupons tab) a "+" that opens Create coupon. Uses the shared cart state.
  */
-type Tab = 'keypad' | 'products' | 'coupons';
+type Tab = 'home' | 'keypad' | 'products' | 'coupons';
 
 export function ItemSelector({
   initialTab = 'products',
@@ -46,22 +55,33 @@ export function ItemSelector({
   const isPhone = useIsPhone();
   const cart = useCart();
   const nav = useNav();
-  const [tabState, setTab] = useState<Tab>(initialTab);
   // Custom amounts proposal: the flow is a full-screen modal route, not an items-pane overlay.
   const { flags } = useFlags();
   const { keypadEnabled } = useGeneralSettings();
   const customFullScreen = flags.customAmounts;
   // Custom amounts proposal, Option 2: a Keypad tab, first, and the screen opens on it.
   const { option } = useCustomAmountOption();
-  const keypadAvailable = flags.customAmounts && option === 'option2' && keypadEnabled;
-  const tab: Tab = tabState === 'keypad' && !keypadAvailable ? 'products' : tabState;
-  useEffect(() => { setTab(keypadAvailable ? 'keypad' : initialTab); }, [keypadAvailable, initialTab]);
+  const keypadAvailable = flags.customAmounts && hasKeypad(option) && keypadEnabled;
+  // Home tab proposal: a Home tab of action tiles, first, and the screen opens on it.
+  const homeTab = flags.customAmounts && option === 'option4';
+  const homeEdit = useHomeEdit();
+  useEffect(() => () => cancelHomeEdit(), []);
+  // Starts on the right tab from the first render (not products, then corrected) — otherwise the tab
+  // slide plays on every mount, e.g. when a modal route closes and returns here.
+  const [tabState, setTab] = useState<Tab>(homeTab && initialTab === 'products' ? 'home' : keypadAvailable ? 'keypad' : initialTab);
+  const tab: Tab = tabState === 'home' && !homeTab ? 'products' : tabState === 'keypad' && !keypadAvailable ? 'products' : tabState;
+  useEffect(() => { setTab(homeTab && initialTab === 'products' ? 'home' : keypadAvailable ? 'keypad' : initialTab); }, [keypadAvailable, initialTab, homeTab]);
   const { openSetup } = useBarcodeSetup();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
   const [createCouponOpen, setCreateCouponOpen] = useState(autoCreateCoupon);
   const [customAmountOpen, setCustomAmountOpen] = useState(false);
+  // Custom amounts, Option 2: the details open in this pane, in place of the tabs and their content.
+  const home = useHomeDetails();
+  useEffect(() => () => closeHomeDetails(), []);
+  // On phone the cart is a drawer over this screen; tapping a custom amount in it should close it.
+  useEffect(() => { if (home.open) setCartOpen(false); }, [home.open]);
   const [checkout, setCheckout] = useState(false);
   // Shared by PosCartPane (coupon green state) and Checkout (its own skeleton) so both
   // resolve on the exact same timer — the coupons must not go green before the checkout
@@ -73,6 +93,14 @@ export function ItemSelector({
     return () => window.clearTimeout(t);
   }, [checkout]);
   const [variationOf, setVariationOf] = useState<MockProduct | null>(null);
+  // Custom amounts proposal: the variations list comes in and goes out like the details do — in from
+  // the right over the home content (which shifts left), and back out to the right. Other versions
+  // keep the plain swap.
+  const [variationsLeaving, setVariationsLeaving] = useState(false);
+  const leaveVariations = () => {
+    setVariationsLeaving(true);
+    window.setTimeout(() => { setVariationOf(null); setVariationsLeaving(false); }, 300);
+  };
   // HTTPS configuration warning (POSHTTPSConfigurationNotice, 2026-09-04 sync). Happy path by
   // default; the warning is induced from the chrome's State menu. Dismissing the banner resets
   // the menu to Happy path (upstream, dismissal also clears the main app's banner).
@@ -130,19 +158,28 @@ export function ItemSelector({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0 }}>
       {/* Header: tabs + search / create-coupon (POSPageHeaderView). Extra top padding keeps the
           title clear of the OS status bar. */}
-      <div style={{ padding: 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
-        {searchOpen ? (
+      <div style={{ padding: homeTab && tab === 'home' && homeEdit.editing ? 'var(--space-lg) var(--space-lg) 0' : 'var(--space-lg) var(--space-lg) var(--space-md)' }}>
+        {homeTab && tab === 'home' && homeEdit.editing ? (
+          // Home page edit mode (Figma 4310-42449): just the title, with Cancel and Save.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', minHeight: 'var(--size-xsmall)' }}>
+            <TabTitle label="Home" active onClick={() => {}} />
+            <div style={{ flex: 1 }} />
+            <PosButton label="Cancel" variant="outlined" size="extraSmall" onClick={cancelHomeEdit} />
+            <PosButton label="Save" variant="outlined" size="extraSmall" onClick={saveHomeEdit} />
+          </div>
+        ) : searchOpen ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
             <button type="button" aria-label="Back" onClick={() => { setSearchOpen(false); setQuery(''); }} style={plainBack}>
               <ChevronLeft size="30px" />
             </button>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', background: 'var(--color-surface-bright)', border: '2px solid var(--color-primary)', borderRadius: 'var(--radius-md)', padding: '0 var(--space-md)', minHeight: 'var(--size-xsmall)' }}>
               <Search size="var(--icon-small)" style={{ color: 'var(--color-on-surface-variant-lowest)' }} />
-              <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tab === 'products' ? 'Search products' : 'Search coupons'} style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-on-surface)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-body-md-size)' }} />
+              <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tab === 'home' ? 'Search products and coupons' : tab === 'products' ? 'Search products' : 'Search coupons'} style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-on-surface)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-body-md-size)' }} />
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+            {homeTab && <TabTitle label="Home" active={tab === 'home'} onClick={() => setTab('home')} />}
             {keypadAvailable && <TabTitle label="Keypad" active={tab === 'keypad'} onClick={() => setTab('keypad')} />}
             <TabTitle label="Products" active={tab === 'products'} onClick={() => setTab('products')} />
             <TabTitle label="Coupons" active={tab === 'coupons'} onClick={() => setTab('coupons')} />
@@ -153,6 +190,7 @@ export function ItemSelector({
                   <Plus size="var(--icon-small)" />
                 </button>
               )}
+              {homeTab && tab === 'home' && <HomeMenu onEditHomePage={startHomeEdit} />}
               {flags.customAmounts && option === 'option3' && tab === 'products' && <AddMenu onAddCustomAmount={() => nav('/custom-amount-details', { state: { fresh: true } })} />}
               <button type="button" aria-label="Search" onClick={() => { if (tab === 'keypad') setTab('products'); setSearchOpen(true); }} style={iconBtn}>
                 <Search size="var(--icon-small)" />
@@ -188,17 +226,17 @@ export function ItemSelector({
       )}
 
       {/* Extra bottom padding on tablet so the last product clears the floating menu / reader pill. */}
-      {tab === 'keypad' ? <KeypadPane clearBottom={!isPhone} /> : (
+      <TabSlideArea tab={tab} order={TAB_ORDER} enabled={flags.customAmounts} render={(t) => (t === 'home' ? (searchOpen ? <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: `0 var(--space-lg) ${isPhone ? 'var(--space-md)' : 'calc(var(--size-small) + var(--space-xl))'}` }}><GlobalSearchResults query={query} onSelectProduct={(p) => (p.variable ? setVariationOf(p) : cart.addProduct({ id: p.id, name: p.name, price: p.price }))} onSelectCoupon={(c) => cart.addCoupon(c.code, c.summary, c.discount)} /></div> : <HomeTiles onCoupon={(c) => cart.addCoupon(c.code, c.summary, c.discount)} clearBottom={!isPhone} onCustomAmount={() => openHomeDetails(undefined, true)} onApplyCoupon={() => setTab('coupons')} onProduct={(p) => (p.variable ? setVariationOf(p) : cart.addProduct({ id: p.id, name: p.name, price: p.price }))} />) : t === 'keypad' ? <KeypadPane clearBottom={!isPhone} /> : (
       <div className="woopos-no-scrollbar" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: `0 var(--space-lg) ${isPhone ? 'var(--space-md)' : 'calc(var(--size-small) + var(--space-xl))'}` }}>
         {searchOpen && !q ? (
           <PosPreSearch
-            tab={tab === 'coupons' ? 'coupons' : 'products'}
+            tab={t === 'coupons' ? 'coupons' : 'products'}
             onPick={(t) => setQuery(t)}
             onSelectProduct={(id, name, price) => cart.addProduct({ id, name, price })}
           />
         ) : (
           <>
-        {tab === 'products'
+        {t === 'products'
           ? <>
               {!searchOpen && !(flags.customAmounts && (!keypadEnabled || option !== 'option1')) && <CustomAmountEntryRow onTap={() => (customFullScreen ? nav('/custom-amount-details', { state: { fresh: true } }) : setCustomAmountOpen(true))} />}
               {shownProducts.map((p) => (
@@ -232,7 +270,7 @@ export function ItemSelector({
           </>
         )}
       </div>
-      )}
+      ))} />
 
       {isPhone && (
         <div className={cartBumping ? 'woopos-cart-bump' : undefined} style={{ padding: 'var(--space-md) var(--space-lg)' }}>
@@ -244,9 +282,30 @@ export function ItemSelector({
 
   // Variable products drill into a variations list (Item Selector → variations); simple products
   // add straight to the cart.
-  const list = variationOf ? (
+  const slideVariations = flags.customAmounts;
+  const base = variationOf && !slideVariations ? (
     <IosVariations product={variationOf} onBack={() => setVariationOf(null)} onAdd={(v) => { cart.addProduct(v); setVariationOf(null); }} />
   ) : catalog;
+  // Option 2B: the home content stays mounted and slides left while the details come in over it.
+  const list = (
+    <>
+      <div className="ca-home-shift" data-away={(home.open && !home.leaving && home.shown !== false) || (slideVariations && !!variationOf && !variationsLeaving)} style={{ height: '100%' }}>{base}</div>
+      {slideVariations && variationOf && (
+        <div style={{ position: 'absolute', inset: 0, top: isPhone ? 0 : 'var(--device-safe-top, 0px)', overflow: 'hidden', zIndex: 40 }}>
+          <div className={variationsLeaving ? 'ca-push-out' : 'ca-push-in'} style={{ height: '100%', background: 'var(--color-surface)' }}>
+            <IosVariations product={variationOf} onBack={leaveVariations} onAdd={(v) => { cart.addProduct(v); leaveVariations(); }} />
+          </div>
+        </div>
+      )}
+      {home.open && (
+        // On tablet the pane pads its top by the status bar's safe area (the catalog header sits inside
+        // that padding); the overlay is positioned against the padded box, so it clears it itself.
+        <div style={{ position: 'absolute', inset: 0, top: isPhone ? 0 : 'var(--device-safe-top, 0px)', overflow: 'hidden', zIndex: 40 }}>
+          <CustomAmountDetailsView editKey={home.editKey} fresh={home.fresh} onClose={closeHomeDetails} onLeaveStart={markHomeDetailsLeaving} onShown={markHomeDetailsShown} ctaPlacement="title" />
+        </div>
+      )}
+    </>
+  );
 
   if (isPhone) {
     return (
@@ -260,7 +319,7 @@ export function ItemSelector({
                 <div style={{ width: 40, height: 5, borderRadius: 3, background: 'var(--color-outline-variant)' }} />
               </div>
               <div style={{ flex: 1, minHeight: 0, padding: '0 var(--space-md)' }}>
-                <PosCartPane onCheckout={() => nav('/checkout')} onScanBarcode={() => { setCartOpen(false); openSetup(); }} showItemCount={false} />
+                <PosCartPane onCheckout={() => confirmIfDirty(() => nav('/checkout'))} onScanBarcode={() => { setCartOpen(false); openSetup(); }} showItemCount={false} />
               </div>
             </div>
           </div>
@@ -294,7 +353,7 @@ export function ItemSelector({
         </div>
         <div className="woopos-safe-pane" style={{ width: `${(35 / ROW) * 100}%`, minWidth: 0, background: 'var(--color-surface-bright)' }}>
           <PosCartPane
-            onCheckout={() => setCheckout(true)}
+            onCheckout={() => confirmIfDirty(() => setCheckout(true))}
             onScanBarcode={openSetup}
             hideCheckout={checkout}
             checkoutReady={checkoutReady}

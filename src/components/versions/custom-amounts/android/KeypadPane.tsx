@@ -1,8 +1,10 @@
 import { Text } from '../../../android/Text';
 import { Plus } from '../../../android/icons';
-import { useNav } from '../../../../device/platformNav';
 import { useCart } from '../../../../state/CartContext';
 import { useKeypadDraft } from '../../../../state/keypadDraft';
+import { openHomeDetails } from '../../../../state/homeDetails';
+import { useNav } from '../../../../device/platformNav';
+import { useCustomAmountOption } from '../../../../state/customAmountOption';
 import { formatUsd } from '../../../../lib/currency';
 import '../CustomAmountFlow.css';
 
@@ -10,7 +12,7 @@ import '../CustomAmountFlow.css';
  * Custom amounts proposal, Option 2 — Android Keypad tab on the item screen. The amount reads
  * out above a 3 × 4 keypad (7 8 9 / 4 5 6 / 1 2 3 / C 0 +): digits type in minor units, C
  * discards the custom amount, + adds it to the cart and resets the keypad. "Edit details" opens
- * the Review screen for the name and tax flag. Figma: POS Playground, node 4277-25934.
+ * the details: a full-screen modal in Option 2, the home's content area (in place of the tabs) in 2B. Figma: POS Playground, node 4277-25934.
  */
 const ROWS: (number | 'C' | '+')[][] = [
   [7, 8, 9],
@@ -20,8 +22,9 @@ const ROWS: (number | 'C' | '+')[][] = [
 ];
 
 export function KeypadPane({ clearBottom }: { /** Tablet: keep the grid clear of the floating menu / reader pill. */ clearBottom?: boolean }) {
-  const navigate = useNav();
   const cart = useCart();
+  const navigate = useNav();
+  const { option } = useCustomAmountOption();
   const { cents, name, taxable, typeDigit, clear } = useKeypadDraft();
 
   const press = (key: number | 'C' | '+') => {
@@ -42,7 +45,7 @@ export function KeypadPane({ clearBottom }: { /** Tablet: keep the grid clear of
         </span>
         <button
           type="button"
-          onClick={() => navigate('/custom-amount-details')}
+          onClick={() => (option === 'option2b' ? openHomeDetails() : navigate('/custom-amount-details'))}
           style={{ border: '2px solid var(--color-inverse-surface)', background: 'transparent', borderRadius: 'var(--radius-md)', padding: 'var(--space-sm) var(--space-md)', cursor: 'pointer', flex: 'none' }}
         >
           <Text variant="bodySmall" bold>Edit details</Text>

@@ -25,6 +25,7 @@ import { useOptionalSystemEvents } from '../components/versions/scaling-pos-expe
 import { ConnectivityOsHost } from '../tools/ConnectivityOsHost';
 import { useFlags, FLAG_DEFS } from '../state/FlagsContext';
 import { useCustomAmountOption, CUSTOM_AMOUNT_OPTIONS } from '../state/customAmountOption';
+import { UnsavedChangesHost } from '../components/versions/custom-amounts/UnsavedChangesHost';
 import { BarcodeSetupProvider, BarcodeSetupHost } from '../tools/BarcodeSetup';
 import { CartSheetProvider, CartSheetHost } from './CartSheet';
 import { PhonePersistentButtonHost } from '../components/android/PhonePersistentButton';
@@ -118,6 +119,7 @@ export function DeviceLayout() {
               <CartSheetHost />
               <PhonePersistentButtonHost />
               <DeviceKeyboard />
+              <UnsavedChangesHost />
             </>
           }
         >
